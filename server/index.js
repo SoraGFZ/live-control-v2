@@ -16,6 +16,7 @@ import {
   buildOverlayEvent,
   createId,
   createManualIncomingEvent,
+  getActionCommandSummary,
   matchesTrigger,
   mergeStateWithDefaults,
   normalizeBaseUrl,
@@ -355,7 +356,11 @@ function buildBridgePayload(output, action, sourceEvent) {
     output,
     actionId: action.id,
     actionName: action.name,
-    commandText: action.commandText,
+    commandText: getActionCommandSummary(action),
+    rawCommandText: action.commandText,
+    gtaMode: action.gtaMode || 'generic',
+    gtaChaosEffectId: action.gtaChaosEffectId || '',
+    gtaChaosEffectName: action.gtaChaosEffectName || '',
     message: action.overlayText || action.description || action.name,
     mediaUrl: action.mediaUrl,
     sourceEvent,
@@ -727,6 +732,31 @@ app.put('/api/state', async (request, response) => {
   broadcastStatus()
 
   response.json(savedState)
+})
+
+app.put('/api/integrations/chaosmod/catalog', async (request, response) => {
+  const nextCatalog = Array.isArray(request.body?.catalog) ? request.body.catalog : []
+  const nextSourcePath = String(request.body?.sourcePath || '').trim()
+  const nextLastError = String(request.body?.lastError || '').trim()
+  const nextState = mergeStateWithDefaults({
+    ...store.getState(),
+    integrations: {
+      ...store.getState().integrations,
+      chaosmod: {
+        ...store.getState().integrations?.chaosmod,
+        catalog: nextCatalog,
+        sourcePath: nextSourcePath,
+        syncedAt: Date.now(),
+        lastError: nextLastError,
+      },
+    },
+  })
+  const savedState = await store.setState(nextState)
+
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcastStatus()
+
+  response.json(savedState.integrations.chaosmod)
 })
 
 app.get('/api/status', (_request, response) => {

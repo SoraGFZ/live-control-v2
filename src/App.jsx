@@ -6,6 +6,7 @@ import {
   createId,
   DEFAULT_APP_STATE,
   detectMediaKind,
+  getActionCommandSummary,
   getOutputMeta,
   getTriggerLabel,
   isOverlayCapable,
@@ -416,6 +417,7 @@ function DashboardApp() {
     ? buildOverlayUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
+  const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
 
   const readyOutputs = new Set()
   appState.actions.forEach((action) => action.outputs.forEach((output) => readyOutputs.add(output)))
@@ -735,11 +737,14 @@ function DashboardApp() {
           dashboardKey={appState.profile.dashboardKey}
           remoteBaseUrl={remoteBaseUrl}
           serverStatus={serverStatus}
+          chaosModCatalog={chaosModCatalog}
+          chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
         />
       </main>
 
       {showActionModal ? (
         <ActionModal
+          chaosModCatalog={chaosModCatalog}
           isUploadingMedia={isUploadingMedia}
           mediaLibrary={mediaLibrary}
           mediaLibraryError={mediaLibraryError}
@@ -1145,10 +1150,10 @@ function ActionsSection({ actions, onCreateAction, onPreviewAction, onRemoveActi
               ))}
             </div>
 
-            {action.commandText ? (
+            {getActionCommandSummary(action) ? (
               <div className="snippet-block">
                 <span className="snippet-label">Comando / payload</span>
-                <code>{action.commandText}</code>
+                <code>{getActionCommandSummary(action)}</code>
               </div>
             ) : null}
 
@@ -1508,7 +1513,13 @@ function OverlaySection({
   )
 }
 
-function BridgesSection({ dashboardKey, remoteBaseUrl, serverStatus }) {
+function BridgesSection({
+  chaosModCatalog,
+  chaosModSourcePath,
+  dashboardKey,
+  remoteBaseUrl,
+  serverStatus,
+}) {
   const remoteMinecraftSocket = buildWebSocketUrl(remoteBaseUrl, '/ws/minecraft', dashboardKey)
   const remoteGtaSocket = buildWebSocketUrl(remoteBaseUrl, '/ws/gta', dashboardKey)
   const localMinecraftSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.minecraftPort}`
@@ -1565,6 +1576,29 @@ function BridgesSection({ dashboardKey, remoteBaseUrl, serverStatus }) {
             <code>{localGtaSocket}</code>
           </div>
           <p className="support-copy">Si activas RCON en el config local, Minecraft tambien recibe `commandText` directo sin mod adicional.</p>
+        </article>
+
+        <article className="surface-card bridge-card">
+          <span className="bridge-badge">ChaosMod</span>
+          <h3>Catalogo para GTA V</h3>
+          <p>
+            Si el bridge encuentra tu carpeta de ChaosMod, sube el catalogo a la app y te deja
+            elegir efectos desde el modal de acciones.
+          </p>
+          <div className="snippet-block">
+            <span className="snippet-label">Efectos sincronizados</span>
+            <code>{chaosModCatalog.length}</code>
+          </div>
+          {chaosModSourcePath ? (
+            <div className="snippet-block">
+              <span className="snippet-label">Carpeta detectada</span>
+              <code>{chaosModSourcePath}</code>
+            </div>
+          ) : null}
+          <p className="support-copy">
+            Para dispararlos directo, el bridge usa el menu interno de ChaosMod. Conviene dejar
+            `Enable effects menu` activo y evitar mover ese menu manualmente mientras juegas.
+          </p>
         </article>
       </div>
     </section>
@@ -1803,6 +1837,7 @@ function SectionHeader({ eyebrow, title, description, action }) {
 }
 
 function ActionModal({
+  chaosModCatalog,
   isUploadingMedia,
   mediaLibrary,
   mediaLibraryError,
@@ -1815,12 +1850,19 @@ function ActionModal({
     description: '',
     outputs: ['overlayAlert'],
     commandText: '',
+    gtaMode: 'generic',
+    gtaChaosEffectId: '',
+    gtaChaosEffectName: '',
     overlayText: '',
     mediaUrl: '',
   })
   const [errorMessage, setErrorMessage] = useState('')
   const selectedMediaItem =
     mediaLibrary.find((item) => item.url === draft.mediaUrl || item.fileName === draft.mediaUrl) || null
+  const selectedChaosModEffect =
+    chaosModCatalog.find((item) => item.id === draft.gtaChaosEffectId) || null
+  const usesGtaOutput = draft.outputs.includes('gta')
+  const usesChaosMod = usesGtaOutput && draft.gtaMode === 'chaosmod'
 
   function toggleOutput(outputId) {
     setDraft((currentDraft) => {
@@ -1848,11 +1890,18 @@ function ActionModal({
       return
     }
 
+    if (usesChaosMod && !draft.gtaChaosEffectId.trim()) {
+      setErrorMessage('Elige un efecto de ChaosMod para esta accion.')
+      return
+    }
+
     onSave({
       ...draft,
       name: draft.name.trim(),
       description: draft.description.trim(),
       commandText: draft.commandText.trim(),
+      gtaChaosEffectId: draft.gtaChaosEffectId.trim(),
+      gtaChaosEffectName: draft.gtaChaosEffectName.trim(),
       overlayText: draft.overlayText.trim(),
       mediaUrl: draft.mediaUrl.trim(),
     })
@@ -1914,15 +1963,87 @@ function ActionModal({
           </div>
 
           <label className="field-label" htmlFor="action-command">
-            Comando o payload
+            {usesChaosMod ? 'Payload opcional / nota' : 'Comando o payload'}
           </label>
           <input
             id="action-command"
             className="text-field"
-            placeholder="Ej: /summon creeper ~ ~1 ~"
+            placeholder={
+              usesChaosMod
+                ? 'Opcional. Lo puedes usar como nota o payload adicional.'
+                : 'Ej: /summon creeper ~ ~1 ~'
+            }
             value={draft.commandText}
             onChange={(event) => setDraft({ ...draft, commandText: event.target.value })}
           />
+
+          {usesGtaOutput ? (
+            <>
+              <label className="field-label" htmlFor="action-gta-mode">
+                Integracion GTA
+              </label>
+              <select
+                id="action-gta-mode"
+                className="text-field"
+                value={draft.gtaMode}
+                onChange={(event) =>
+                  setDraft((currentDraft) => ({
+                    ...currentDraft,
+                    gtaMode: event.target.value,
+                  }))
+                }
+              >
+                <option value="generic">Bridge generico / mod propio</option>
+                <option value="chaosmod">ChaosMod effect menu</option>
+              </select>
+
+              {draft.gtaMode === 'chaosmod' ? (
+                <>
+                  <label className="field-label" htmlFor="action-chaosmod-effect">
+                    Efecto de ChaosMod
+                  </label>
+                  <select
+                    id="action-chaosmod-effect"
+                    className="text-field"
+                    value={draft.gtaChaosEffectId}
+                    onChange={(event) => {
+                      const nextEffect =
+                        chaosModCatalog.find((item) => item.id === event.target.value) || null
+
+                      setDraft((currentDraft) => ({
+                        ...currentDraft,
+                        gtaChaosEffectId: event.target.value,
+                        gtaChaosEffectName: nextEffect?.name || '',
+                      }))
+                    }}
+                  >
+                    <option value="">
+                      {chaosModCatalog.length === 0
+                        ? 'Todavia no llego el catalogo de ChaosMod'
+                        : 'Selecciona un efecto'}
+                    </option>
+                    {chaosModCatalog.map((effect) => (
+                      <option key={effect.id} value={effect.id}>
+                        {effect.name} · {effect.categoryLabel}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedChaosModEffect ? (
+                    <p className="support-copy">
+                      <strong>Seleccionado:</strong> {selectedChaosModEffect.name} (
+                      {selectedChaosModEffect.categoryLabel})
+                    </p>
+                  ) : (
+                    <p className="support-copy">
+                      El bridge local lee la carpeta de ChaosMod y sube esta lista al panel para
+                      que no tengas que memorizar ids.
+                    </p>
+                  )}
+                </>
+              ) : null}
+            </>
+          ) : null}
 
           <label className="field-label" htmlFor="action-overlay">
             Texto para el overlay

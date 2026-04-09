@@ -20,6 +20,15 @@ export const LOCAL_BRIDGE_DEFAULTS = {
   gtaPort: 6136,
 }
 
+export const DEFAULT_INTEGRATIONS = {
+  chaosmod: {
+    catalog: [],
+    sourcePath: '',
+    syncedAt: null,
+    lastError: '',
+  },
+}
+
 export const DEFAULT_APP_STATE = {
   profile: {
     projectName: 'Live Control Studio',
@@ -42,6 +51,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Lanza una alerta corta con audio para nuevos seguidores.',
       outputs: ['overlayAlert', 'audio'],
       commandText: '',
+      gtaMode: 'generic',
+      gtaChaosEffectId: '',
+      gtaChaosEffectName: '',
       overlayText: 'Gracias por unirte al live.',
       mediaUrl: '',
     },
@@ -51,6 +63,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Invoca una criatura y lo anuncia en el overlay.',
       outputs: ['minecraft', 'overlayAlert'],
       commandText: '/summon zombie ~ ~1 ~',
+      gtaMode: 'generic',
+      gtaChaosEffectId: '',
+      gtaChaosEffectName: '',
       overlayText: 'Zombie invocado por el chat.',
       mediaUrl: '',
     },
@@ -60,6 +75,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Dispara un evento en tu mod local y deja un aviso visual.',
       outputs: ['gta', 'overlayMedia'],
       commandText: 'spawn-chaos-car',
+      gtaMode: 'generic',
+      gtaChaosEffectId: '',
+      gtaChaosEffectName: '',
       overlayText: 'El chat acaba de activar caos en GTA.',
       mediaUrl: '',
     },
@@ -69,6 +87,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Lee un mensaje del chat y lo muestra en overlay.',
       outputs: ['tts', 'overlayAlert'],
       commandText: '',
+      gtaMode: 'generic',
+      gtaChaosEffectId: '',
+      gtaChaosEffectName: '',
       overlayText: 'El chat tomo el micro.',
       mediaUrl: '',
     },
@@ -103,6 +124,7 @@ export const DEFAULT_APP_STATE = {
       cooldownSeconds: '4',
     },
   ],
+  integrations: DEFAULT_INTEGRATIONS,
 }
 
 export function createId(prefix) {
@@ -139,8 +161,24 @@ export function mergeStateWithDefaults(parsedState) {
       ...DEFAULT_APP_STATE.profile,
       ...(parsedState?.profile || {}),
     },
-    actions: mergedActions,
+    actions: mergedActions.map((action) => ({
+      gtaMode: 'generic',
+      gtaChaosEffectId: '',
+      gtaChaosEffectName: '',
+      ...action,
+    })),
     triggers: mergedTriggers,
+    integrations: {
+      ...DEFAULT_INTEGRATIONS,
+      ...(parsedState?.integrations || {}),
+      chaosmod: {
+        ...DEFAULT_INTEGRATIONS.chaosmod,
+        ...(parsedState?.integrations?.chaosmod || {}),
+        catalog: Array.isArray(parsedState?.integrations?.chaosmod?.catalog)
+          ? parsedState.integrations.chaosmod.catalog
+          : DEFAULT_INTEGRATIONS.chaosmod.catalog,
+      },
+    },
   }
 }
 
@@ -252,13 +290,29 @@ export function buildWebSocketUrl(baseUrl, pathname, accessKey = '') {
   return socketUrl.toString()
 }
 
+export function getActionCommandSummary(action) {
+  if (!action) {
+    return ''
+  }
+
+  if (action.gtaMode === 'chaosmod' && action.gtaChaosEffectName) {
+    return `ChaosMod: ${action.gtaChaosEffectName}`
+  }
+
+  if (action.gtaMode === 'chaosmod' && action.gtaChaosEffectId) {
+    return `ChaosMod: ${action.gtaChaosEffectId}`
+  }
+
+  return action.commandText || ''
+}
+
 export function buildOverlayEvent(action, profile, sourceEvent = null) {
   return {
     id: createId('overlay-event'),
     actionId: action.id,
     title: action.name,
     message: action.overlayText || action.description || 'Evento disparado manualmente desde el panel.',
-    commandText: action.commandText,
+    commandText: getActionCommandSummary(action),
     mediaUrl: action.mediaUrl,
     outputs: [...action.outputs],
     sourceLabel: sourceEvent?.sourceLabel || sourceEvent?.uniqueId || profile.streamerName,

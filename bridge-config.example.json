@@ -15,5 +15,14 @@
     "enabled": true,
     "localBridgeHost": "127.0.0.1",
     "localBridgePort": 6136
+  },
+  "chaosmod": {
+    "enabled": true,
+    "modPath": "C:\\Program Files\\Epic Games\\GTAV\\chaosmod",
+    "autoEnableEffectMenu": true,
+    "assumeTopSelectionOnStartup": true,
+    "gtaProcessName": "GTA5",
+    "menuOpenDelayMs": 220,
+    "keyDelayMs": 35
   }
 }

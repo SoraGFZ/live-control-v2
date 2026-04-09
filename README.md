@@ -89,6 +89,7 @@ Con Railway, el overlay y el panel ya viven en internet. Para que **Minecraft o 
   - Minecraft local: `ws://127.0.0.1:6135`
   - GTA local: `ws://127.0.0.1:6136`
 - Si activas `useRcon`, tambien ejecuta `commandText` directo por RCON.
+- Si detecta ChaosMod, sube su catalogo al panel y permite elegir efectos desde la UI.
 
 ### Flujo sugerido
 
@@ -98,6 +99,26 @@ Con Railway, el overlay y el panel ya viven en internet. Para que **Minecraft o 
 4. Si quieres comandos reales de Minecraft, activa `useRcon` y completa host, port y password.
 5. Ejecuta `npm run bridge:start`.
 6. Deja ese proceso abierto mientras juegas.
+
+## ChaosMod para GTA V
+
+Si tienes ChaosMod instalado en `C:\Program Files\Epic Games\GTAV\chaosmod`, el bridge local intenta leer:
+
+- `configs/effects.ini`
+- `configs/config.ini`
+
+### Lo que hace
+
+- Sincroniza el catalogo de efectos con el panel.
+- Habilita `EnableDebugMenu=1` en `config.ini` para poder usar el menu interno del mod.
+- Cuando una accion GTA usa modo `ChaosMod`, el bridge enfoca `GTA5`, abre el menu del mod (`CTRL + ,`), navega hasta el efecto y lo dispara.
+
+### Importante
+
+- La primera vez conviene recargar el mod o reiniciar el juego para que ChaosMod tome `EnableDebugMenu=1`.
+- El bridge asume que el selector del menu de ChaosMod arranca arriba al principio de la sesion.
+- Si abres ese menu manualmente y lo dejas en otra posicion, el bridge puede desincronizarse.
+- Si eso pasa, recarga el mod y vuelve a abrir `npm run bridge:start`.
 
 ## Proteccion basica
 
