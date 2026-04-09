@@ -591,6 +591,48 @@ function parseMusicCommentCommand(commentText, musicState) {
   return null
 }
 
+function canUserUseMusicCommands(event, musicState) {
+  const allowAllUsers = musicState?.allowAllUsers !== false
+  const allowSubscribers = Boolean(musicState?.allowSubscribers)
+  const allowModerators = Boolean(musicState?.allowModerators)
+
+  if (allowAllUsers) {
+    return true
+  }
+
+  if (allowModerators && event?.isModerator) {
+    return true
+  }
+
+  if (allowSubscribers && (event?.isSubscriber || event?.isSuperFan)) {
+    return true
+  }
+
+  return false
+}
+
+function buildMusicPermissionMessage(musicState) {
+  const labels = []
+
+  if (musicState?.allowAllUsers !== false) {
+    labels.push('todos')
+  }
+
+  if (musicState?.allowSubscribers) {
+    labels.push('super fans y suscriptores')
+  }
+
+  if (musicState?.allowModerators) {
+    labels.push('mods')
+  }
+
+  if (!labels.length) {
+    return 'El Song Request esta restringido en este momento.'
+  }
+
+  return `Este Song Request esta disponible solo para ${labels.join(', ')}.`
+}
+
 async function handleMusicPlayRequest(requester, query, musicState, source = 'comment') {
   const trimmedQuery = String(query || '').trim()
 
@@ -781,6 +823,11 @@ async function handleMusicCommentCommand(event, state) {
   }
 
   const requester = String(event.uniqueId || event.userName || 'chat').trim() || 'chat'
+
+  if (!canUserUseMusicCommands(event, musicState)) {
+    broadcastSystemMessage('warn', buildMusicPermissionMessage(musicState))
+    return true
+  }
 
   if (parsedCommand.type === 'play') {
     await handleMusicPlayRequest(requester, parsedCommand.query, musicState)
@@ -1533,9 +1580,27 @@ function extractTikTokEmotes(data) {
     .filter(Boolean)
 }
 
+function extractTikTokUserAccessFlags(data) {
+  const userData = data?.user || data?.userInfo || data?.event?.user || null
+  const subscribeInfo = userData?.subscribeInfo || data?.subscribeInfo
+  const fansClubInfo = userData?.fansClubInfo || data?.fansClubInfo
+  const fansLevel = Number(fansClubInfo?.fansLevel || 0)
+
+  return {
+    isSubscriber: Boolean(
+      data?.isSubscriberOfAnchor ||
+        userData?.isSubscriberOfAnchor ||
+        subscribeInfo?.isSubscribedToAnchor,
+    ),
+    isModerator: Boolean(data?.isModeratorOfAnchor || userData?.isModeratorOfAnchor),
+    isSuperFan: Boolean(fansClubInfo && (fansLevel > 0 || fansClubInfo?.fansClubName)),
+  }
+}
+
 function normalizeTikTokEvent(type, data) {
   const uniqueId = normalizeUserName(data)
   const normalizedEmotes = extractTikTokEmotes(data)
+  const accessFlags = extractTikTokUserAccessFlags(data)
   const baseEvent = {
     id: createId('incoming'),
     type,
@@ -1556,6 +1621,9 @@ function normalizeTikTokEvent(type, data) {
     totalLikeCount: 0,
     shareTarget: '',
     displayText: '',
+    isSubscriber: accessFlags.isSubscriber,
+    isModerator: accessFlags.isModerator,
+    isSuperFan: accessFlags.isSuperFan,
   }
 
   if (type === 'comment') {

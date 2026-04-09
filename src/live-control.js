@@ -97,6 +97,9 @@ export const DEFAULT_APP_STATE = {
     playEnabled: true,
     skipEnabled: true,
     removeEnabled: true,
+    allowAllUsers: true,
+    allowSubscribers: false,
+    allowModerators: false,
     allowExplicit: false,
     cooldownSeconds: '10',
     maxQueueLength: '10',
@@ -636,6 +639,9 @@ export function createManualIncomingEvent(type, payload = {}) {
     totalLikeCount: Number(payload.totalLikeCount || payload.likeCount || 0),
     shareTarget: payload.shareTarget || '',
     displayText: payload.displayText || '',
+    isSubscriber: Boolean(payload.isSubscriber),
+    isModerator: Boolean(payload.isModerator),
+    isSuperFan: Boolean(payload.isSuperFan),
   }
 
   if (type === 'follow') {

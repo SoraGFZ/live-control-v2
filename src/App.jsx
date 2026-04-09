@@ -3121,6 +3121,42 @@ function MusicSection({
             <label className="option-card">
               <input
                 type="checkbox"
+                checked={Boolean(music.allowAllUsers)}
+                onChange={(event) => updateMusicField('allowAllUsers', event.target.checked)}
+              />
+              <div>
+                <strong>All users</strong>
+                <span>Si esta activo, cualquier viewer puede usar los comandos de musica.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.allowSubscribers)}
+                onChange={(event) => updateMusicField('allowSubscribers', event.target.checked)}
+              />
+              <div>
+                <strong>Super Fans / Suscriptores</strong>
+                <span>Permite usar comandos a viewers con fan club o suscripcion activa.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.allowModerators)}
+                onChange={(event) => updateMusicField('allowModerators', event.target.checked)}
+              />
+              <div>
+                <strong>Mods</strong>
+                <span>Habilita Song Request para moderadores del live.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
                 checked={Boolean(music.overlayShowQueue)}
                 onChange={(event) => updateMusicField('overlayShowQueue', event.target.checked)}
               />
@@ -3239,6 +3275,19 @@ function MusicSection({
             <code>
               {music.playCommand || '!play'} artista cancion · {music.skipCommand || '!skip'} ·{' '}
               {music.removeCommand || '!quitar'}
+            </code>
+          </div>
+
+          <div className="snippet-block">
+            <span className="snippet-label">Disponibles para</span>
+            <code>
+              {[
+                music.allowAllUsers ? 'All users' : null,
+                music.allowSubscribers ? 'Super Fans / Suscriptores' : null,
+                music.allowModerators ? 'Mods' : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || 'Nadie'}
             </code>
           </div>
         </article>

@@ -45,6 +45,7 @@ El `redirect_uri` debe apuntar a:
   - `!play artista cancion`
   - `!skip`
   - `!quitar`
+- Restringir esos comandos para `All users`, `Super Fans / Suscriptores` o `Mods`.
 - Mantener una cola propia dentro de la app para poder moderar pedidos.
 - Aplicar cooldown global, limite por usuario y limite total de cola.
 - Limpiar cola pendiente e historial desde el panel.
