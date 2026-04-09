@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server/index.js",
+    "bridge:start": "node bridge/index.js",
     "tunnel": "node scripts/run-ngrok.mjs",
     "tunnel:auth": "node scripts/configure-ngrok.mjs",
     "tunnel:localtunnel": "node scripts/run-localtunnel.mjs",

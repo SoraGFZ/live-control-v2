@@ -1,0 +1,19 @@
+{
+  "serverBaseUrl": "https://TU-APP.up.railway.app",
+  "dashboardKey": "",
+  "reconnectDelayMs": 2500,
+  "minecraft": {
+    "enabled": true,
+    "localBridgeHost": "127.0.0.1",
+    "localBridgePort": 6135,
+    "useRcon": false,
+    "rconHost": "127.0.0.1",
+    "rconPort": 25575,
+    "rconPassword": ""
+  },
+  "gta": {
+    "enabled": true,
+    "localBridgeHost": "127.0.0.1",
+    "localBridgePort": 6136
+  }
+}

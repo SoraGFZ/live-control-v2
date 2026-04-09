@@ -2,12 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import {
   buildOverlayUrl,
+  buildWebSocketUrl,
   createId,
   DEFAULT_APP_STATE,
   detectMediaKind,
   getOutputMeta,
   getTriggerLabel,
   isOverlayCapable,
+  LOCAL_BRIDGE_DEFAULTS,
   mergeStateWithDefaults,
   normalizeBaseUrl,
   OUTPUT_OPTIONS,
@@ -408,6 +410,7 @@ function DashboardApp() {
 
   const overlaySlug = sanitizeSlug(appState.profile.overlaySlug)
   const localBaseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const remoteBaseUrl = appState.profile.publicBaseUrl || localBaseUrl
   const localOverlayUrl = buildOverlayUrl(localBaseUrl, overlaySlug, appState.profile.overlayKey)
   const publicOverlayUrl = appState.profile.publicBaseUrl
     ? buildOverlayUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
@@ -728,7 +731,11 @@ function DashboardApp() {
           isUploadingMedia={isUploadingMedia}
         />
 
-        <BridgesSection bridgePort={serverStatus.server.port} serverStatus={serverStatus} />
+        <BridgesSection
+          dashboardKey={appState.profile.dashboardKey}
+          remoteBaseUrl={remoteBaseUrl}
+          serverStatus={serverStatus}
+        />
       </main>
 
       {showActionModal ? (
@@ -1501,48 +1508,63 @@ function OverlaySection({
   )
 }
 
-function BridgesSection({ bridgePort, serverStatus }) {
+function BridgesSection({ dashboardKey, remoteBaseUrl, serverStatus }) {
+  const remoteMinecraftSocket = buildWebSocketUrl(remoteBaseUrl, '/ws/minecraft', dashboardKey)
+  const remoteGtaSocket = buildWebSocketUrl(remoteBaseUrl, '/ws/gta', dashboardKey)
+  const localMinecraftSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.minecraftPort}`
+  const localGtaSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.gtaPort}`
+
   return (
     <section className="panel-section" id="bridges">
       <SectionHeader
         eyebrow="Integraciones"
-        title="Bridges para TikTok y juegos"
-        description="Este bloque define el pegamento que vamos a construir a continuacion para que todo se mueva solo."
+        title="Bridge local para juegos"
+        description="El overlay ya corre publico. Ahora el juego necesita un agente local en tu PC que reciba eventos desde Railway y los ejecute cerca de Minecraft o GTA."
       />
 
       <div className="bridge-grid">
         <article className="surface-card bridge-card">
-          <span className="bridge-badge">TikTok Live</span>
-          <h3>Servicio local de ingesta</h3>
-          <p>Ya escucha eventos del live y los convierte en triggers cuando conectas el username en el panel.</p>
+          <span className="bridge-badge">Bridge local</span>
+          <h3>Agente para tu PC gamer</h3>
+          <p>Ejecuta este proceso en la misma PC donde estan Minecraft, GTA o tu mod local.</p>
           <div className="snippet-block">
-            <span className="snippet-label">Estado actual</span>
-            <code>{serverStatus.tikTok.connected ? `Conectado a @${serverStatus.tikTok.username}` : 'Esperando conexion de TikTok'}</code>
-          </div>
-        </article>
-
-        <article className="surface-card bridge-card">
-          <span className="bridge-badge">Minecraft</span>
-          <h3>Comandos para mod o RCON</h3>
-          <p>Las acciones de Minecraft se emiten por websocket y tambien intentan RCON cuando configuras host, port y password.</p>
-          <div className="snippet-block">
-            <span className="snippet-label">Socket / bridge</span>
-            <code>ws://127.0.0.1:{bridgePort}/ws/minecraft</code>
+            <span className="snippet-label">Comando</span>
+            <code>npm run bridge:start</code>
           </div>
           <p className="support-copy">
-            Clientes conectados: {serverStatus.bridges.minecraftClients}. RCON: {serverStatus.bridges.minecraftRconConnected ? 'activo' : serverStatus.bridges.minecraftRconError ? serverStatus.bridges.minecraftRconError : 'sin conexion'}
+            La primera vez te crea `bridge-config.json`. Ahi pones la URL publica de Railway,
+            el `dashboardKey` si lo usas, y los datos de RCON/local sockets.
           </p>
         </article>
 
         <article className="surface-card bridge-card">
-          <span className="bridge-badge">GTA V</span>
-          <h3>Bridge local para tu mod</h3>
-          <p>Tu mod puede conectarse a este socket y recibir payloads con actionId, commandText y contexto del evento.</p>
+          <span className="bridge-badge">Feed remoto</span>
+          <h3>Canales que escucha el bridge</h3>
+          <p>Tu bridge local se conecta a estos sockets del backend publico y recibe eventos listos para ejecutar.</p>
           <div className="snippet-block">
-            <span className="snippet-label">Socket sugerido</span>
-            <code>ws://127.0.0.1:{bridgePort}/ws/gta</code>
+            <span className="snippet-label">Minecraft remoto</span>
+            <code>{remoteMinecraftSocket}</code>
           </div>
-          <p className="support-copy">Clientes conectados: {serverStatus.bridges.gtaClients}</p>
+          <div className="snippet-block">
+            <span className="snippet-label">GTA remoto</span>
+            <code>{remoteGtaSocket}</code>
+          </div>
+          <p className="support-copy">Clientes remotos conectados ahora: Minecraft {serverStatus.bridges.minecraftClients}, GTA {serverStatus.bridges.gtaClients}.</p>
+        </article>
+
+        <article className="surface-card bridge-card">
+          <span className="bridge-badge">Salidas locales</span>
+          <h3>Donde se conectan tus juegos</h3>
+          <p>El bridge levanta sockets locales para tus mods y, si quieres, tambien manda comandos por RCON a Minecraft.</p>
+          <div className="snippet-block">
+            <span className="snippet-label">Minecraft local / mod</span>
+            <code>{localMinecraftSocket}</code>
+          </div>
+          <div className="snippet-block">
+            <span className="snippet-label">GTA local / mod</span>
+            <code>{localGtaSocket}</code>
+          </div>
+          <p className="support-copy">Si activas RCON en el config local, Minecraft tambien recibe `commandText` directo sin mod adicional.</p>
         </article>
       </div>
     </section>

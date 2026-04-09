@@ -15,6 +15,11 @@ export const TRIGGER_OPTIONS = [
   { id: 'like-burst', label: 'Rafaga de likes' },
 ]
 
+export const LOCAL_BRIDGE_DEFAULTS = {
+  minecraftPort: 6135,
+  gtaPort: 6136,
+}
+
 export const DEFAULT_APP_STATE = {
   profile: {
     projectName: 'Live Control Studio',
@@ -228,6 +233,23 @@ export function buildOverlayUrl(baseUrl, slug, overlayKey = '') {
   }
 
   return overlayUrl.toString()
+}
+
+export function buildWebSocketUrl(baseUrl, pathname, accessKey = '') {
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+
+  if (!normalizedBaseUrl) {
+    return pathname
+  }
+
+  const socketUrl = new URL(pathname, normalizedBaseUrl)
+  socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:'
+
+  if (accessKey) {
+    socketUrl.searchParams.set('key', accessKey)
+  }
+
+  return socketUrl.toString()
 }
 
 export function buildOverlayEvent(action, profile, sourceEvent = null) {

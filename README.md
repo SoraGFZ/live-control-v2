@@ -72,6 +72,33 @@ Para este proyecto conviene desplegar **la app completa** en un hosting que sopo
 - Estado y biblioteca media persistentes en el volumen.
 - Menos dependencia de tu PC para el overlay.
 
+## Bridge local para juegos
+
+Con Railway, el overlay y el panel ya viven en internet. Para que **Minecraft o GTA V reaccionen en tu PC**, corre el bridge local desde esta misma carpeta.
+
+### Archivos y comando
+
+- Config ejemplo: `bridge-config.example.json`
+- Config local real: `bridge-config.json`
+- Arranque: `npm run bridge:start`
+
+### Lo que hace el bridge
+
+- Se conecta al backend publico por `wss` en `/ws/minecraft` y `/ws/gta`.
+- Reexpone eventos para tus mods en local:
+  - Minecraft local: `ws://127.0.0.1:6135`
+  - GTA local: `ws://127.0.0.1:6136`
+- Si activas `useRcon`, tambien ejecuta `commandText` directo por RCON.
+
+### Flujo sugerido
+
+1. Abre `bridge-config.json`.
+2. Verifica que `serverBaseUrl` apunte a tu deploy de Railway.
+3. Si usas `dashboardKey` en el panel, copia la misma clave aqui.
+4. Si quieres comandos reales de Minecraft, activa `useRcon` y completa host, port y password.
+5. Ejecuta `npm run bridge:start`.
+6. Deja ese proceso abierto mientras juegas.
+
 ## Proteccion basica
 
 - `Clave del panel`: protege dashboard, APIs y websockets internos.
