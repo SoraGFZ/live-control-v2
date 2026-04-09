@@ -30,6 +30,7 @@ export const DEFAULT_INTEGRATIONS = {
 }
 
 export const DEFAULT_APP_STATE = {
+  updatedAt: 0,
   profile: {
     projectName: 'Live Control Studio',
     streamerName: 'Tu canal de TikTok',
@@ -136,6 +137,7 @@ export function createId(prefix) {
 }
 
 export function mergeStateWithDefaults(parsedState) {
+  const parsedUpdatedAt = Number(parsedState?.updatedAt || 0)
   const mergedActions = Array.isArray(parsedState?.actions)
     ? [
         ...parsedState.actions,
@@ -157,6 +159,7 @@ export function mergeStateWithDefaults(parsedState) {
 
   return {
     ...DEFAULT_APP_STATE,
+    updatedAt: Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : DEFAULT_APP_STATE.updatedAt,
     profile: {
       ...DEFAULT_APP_STATE.profile,
       ...(parsedState?.profile || {}),

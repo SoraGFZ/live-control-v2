@@ -193,6 +193,26 @@ function createActionDraft(action = null) {
   }
 }
 
+function getStateRevision(state) {
+  const numericValue = Number(state?.updatedAt || 0)
+  return Number.isFinite(numericValue) ? numericValue : 0
+}
+
+function createDashboardStatePayload(state) {
+  return {
+    updatedAt: getStateRevision(state),
+    profile: {
+      ...state.profile,
+      overlaySlug: sanitizeSlug(state.profile.overlaySlug),
+      publicBaseUrl: normalizeBaseUrl(state.profile.publicBaseUrl),
+      dashboardKey: String(state.profile.dashboardKey || '').trim(),
+      overlayKey: String(state.profile.overlayKey || '').trim(),
+    },
+    actions: state.actions,
+    triggers: state.triggers,
+  }
+}
+
 function App() {
   const route = getCurrentRoute()
 
@@ -254,29 +274,44 @@ function DashboardApp() {
 
   const loadInitialState = useCallback(
     async (accessKey = dashboardAccessKey, preserveDraft = false) => {
+      const cachedState = readStoredState()
+
       try {
         const [serverState, statusPayload, mediaPayload] = await Promise.all([
           requestJson('/api/state', {}, accessKey),
           requestJson('/api/status', {}, accessKey),
           requestJson('/api/media', {}, accessKey),
         ])
-        const mergedState = mergeStateWithDefaults(serverState)
-        const initialSnapshot = JSON.stringify(mergedState)
+        const mergedServerState = mergeStateWithDefaults(serverState)
+        const initialSnapshot = JSON.stringify(mergedServerState)
+        const shouldPreferCachedState =
+          getStateRevision(cachedState) > getStateRevision(mergedServerState)
+        const preferredState = shouldPreferCachedState
+          ? mergeStateWithDefaults({
+              ...cachedState,
+              profile: {
+                ...cachedState.profile,
+                dashboardKey: mergedServerState.profile.dashboardKey,
+                overlayKey: mergedServerState.profile.overlayKey,
+              },
+              integrations: mergedServerState.integrations,
+            })
+          : mergedServerState
 
         if (!isMountedRef.current) {
           return
         }
 
         lastSyncedSnapshotRef.current = initialSnapshot
-        setAppState(mergedState)
+        setAppState(preferredState)
         setServerStatus(statusPayload)
         setMediaLibrary(mediaPayload)
-        setTiktokUsernameDraft(mergedState.profile.tiktokUsername || '')
+        setTiktokUsernameDraft(preferredState.profile.tiktokUsername || '')
         setServerError('')
         setMediaLibraryError('')
         setDashboardAuthError('')
         setRequiresDashboardAuth(false)
-        syncDashboardAccessKey(mergedState.profile.dashboardKey || accessKey)
+        syncDashboardAccessKey(preferredState.profile.dashboardKey || accessKey)
       } catch (error) {
         if (!isMountedRef.current) {
           return
@@ -286,8 +321,6 @@ function DashboardApp() {
           handleDashboardUnauthorized(error.message, preserveDraft)
           return
         }
-
-        const cachedState = readStoredState()
         lastSyncedSnapshotRef.current = JSON.stringify(cachedState)
         setAppState(cachedState)
         setTiktokUsernameDraft(cachedState.profile.tiktokUsername || '')
@@ -304,6 +337,17 @@ function DashboardApp() {
     },
     [dashboardAccessKey, handleDashboardUnauthorized, syncDashboardAccessKey],
   )
+
+  function updateDashboardState(updater) {
+    setAppState((currentState) => {
+      const nextState = typeof updater === 'function' ? updater(currentState) : updater
+
+      return {
+        ...nextState,
+        updatedAt: Date.now(),
+      }
+    })
+  }
 
   useEffect(() => {
     isMountedRef.current = true
@@ -335,13 +379,7 @@ function DashboardApp() {
     }
 
     const timeoutId = window.setTimeout(async () => {
-      const payload = mergeStateWithDefaults({
-        ...appState,
-        profile: {
-          ...appState.profile,
-          overlaySlug: sanitizeSlug(appState.profile.overlaySlug),
-        },
-      })
+      const payload = createDashboardStatePayload(appState)
 
       try {
         setIsSavingState(true)
@@ -377,6 +415,39 @@ function DashboardApp() {
     requiresDashboardAuth,
     syncDashboardAccessKey,
   ])
+
+  useEffect(() => {
+    if (!isHydrated || requiresDashboardAuth) {
+      return undefined
+    }
+
+    function flushPendingState() {
+      const snapshot = JSON.stringify(appState)
+
+      if (snapshot === lastSyncedSnapshotRef.current) {
+        return
+      }
+
+      const requestUrl = dashboardAccessKey
+        ? `/api/state?key=${encodeURIComponent(dashboardAccessKey)}`
+        : '/api/state'
+
+      fetch(requestUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(createDashboardStatePayload(appState)),
+        keepalive: true,
+      }).catch(() => {})
+    }
+
+    window.addEventListener('pagehide', flushPendingState)
+
+    return () => {
+      window.removeEventListener('pagehide', flushPendingState)
+    }
+  }, [appState, dashboardAccessKey, isHydrated, requiresDashboardAuth])
 
   useEffect(() => {
     if (!isHydrated || requiresDashboardAuth) {
@@ -441,7 +512,7 @@ function DashboardApp() {
   appState.actions.forEach((action) => action.outputs.forEach((output) => readyOutputs.add(output)))
 
   function updateProfileField(field, value) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       profile: {
         ...currentState.profile,
@@ -456,14 +527,14 @@ function DashboardApp() {
   }
 
   function addAction(actionDraft) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       actions: [{ ...actionDraft, id: createId('action') }, ...currentState.actions],
     }))
   }
 
   function updateAction(actionDraft) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       actions: currentState.actions.map((action) =>
         action.id === actionDraft.id ? { ...action, ...actionDraft } : action,
@@ -472,14 +543,14 @@ function DashboardApp() {
   }
 
   function addTrigger(triggerDraft) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       triggers: [{ ...triggerDraft, id: createId('trigger') }, ...currentState.triggers],
     }))
   }
 
   function removeAction(actionId) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       actions: currentState.actions.filter((action) => action.id !== actionId),
       triggers: currentState.triggers.filter((trigger) => trigger.actionId !== actionId),
@@ -487,7 +558,7 @@ function DashboardApp() {
   }
 
   function removeTrigger(triggerId) {
-    setAppState((currentState) => ({
+    updateDashboardState((currentState) => ({
       ...currentState,
       triggers: currentState.triggers.filter((trigger) => trigger.id !== triggerId),
     }))
@@ -673,7 +744,7 @@ function DashboardApp() {
         },
         dashboardAccessKey,
       )
-      setAppState((currentState) => ({
+      updateDashboardState((currentState) => ({
         ...currentState,
         profile: {
           ...currentState.profile,
