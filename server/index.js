@@ -228,6 +228,9 @@ function normalizeSpotifyDevice(device) {
 
 function buildMusicStatus(state = store.getState()) {
   const music = state.music || getMusicStateSnapshot()
+  const cooldownSeconds = Math.max(0, Number(music.cooldownSeconds || 0))
+  const lastCommandAt = Number(music.lastCommandAt || 0)
+  const cooldownUntil = cooldownSeconds > 0 && lastCommandAt ? lastCommandAt + cooldownSeconds * 1000 : null
 
   return {
     configured: isSpotifyConfigured(runtimeProcess.env),
@@ -238,11 +241,15 @@ function buildMusicStatus(state = store.getState()) {
     accountProduct: spotifySession.accountProduct || '',
     devices: spotifySession.devices || [],
     currentPlayback: spotifySession.currentPlayback,
+    queue: Array.isArray(music.queue) ? music.queue : [],
+    history: Array.isArray(music.history) ? music.history : [],
     queueCount: Array.isArray(music.queue) ? music.queue.length : 0,
     historyCount: Array.isArray(music.history) ? music.history.length : 0,
     currentRequestId: music.currentRequestId || '',
     selectedDeviceId: music.selectedDeviceId || '',
     selectedDeviceName: music.selectedDeviceName || '',
+    cooldownSeconds,
+    cooldownUntil,
     lastError: spotifySession.lastError || '',
     lastSyncAt: spotifySession.lastSyncAt || null,
     commands: {
@@ -603,6 +610,7 @@ async function handleMusicPlayRequest(requester, query, musicState, source = 'co
   }
 
   const queue = Array.isArray(musicState.queue) ? musicState.queue : []
+  const cooldownSeconds = Math.max(0, Number(musicState.cooldownSeconds || 0))
   const maxQueueLength = Math.max(1, Number(musicState.maxQueueLength || 10))
   const maxRequestsPerUser = Math.max(1, Number(musicState.maxRequestsPerUser || 2))
   const normalizedRequester = String(requester || 'chat').trim().toLowerCase()
@@ -615,6 +623,20 @@ async function handleMusicPlayRequest(requester, query, musicState, source = 'co
   if (queue.length >= maxQueueLength) {
     broadcastSystemMessage('warn', 'La cola de canciones ya llego al maximo configurado.')
     return true
+  }
+
+  if (cooldownSeconds > 0 && musicState.lastCommandAt) {
+    const elapsedMs = Date.now() - Number(musicState.lastCommandAt || 0)
+    const cooldownRemainingMs = cooldownSeconds * 1000 - elapsedMs
+
+    if (cooldownRemainingMs > 0) {
+      const remainingSeconds = Math.max(1, Math.ceil(cooldownRemainingMs / 1000))
+      broadcastSystemMessage(
+        'warn',
+        `Espera ${remainingSeconds}s antes de pedir otra cancion con !play.`,
+      )
+      return true
+    }
   }
 
   if (requesterActiveItems.length >= maxRequestsPerUser) {
@@ -1180,6 +1202,7 @@ function getPublicOverlayPayload() {
     profile: getPublicProfile(),
     widgets: getPublicWidgets(),
     smartBar: buildSmartBarStatus(),
+    music: buildMusicStatus(),
   }
 }
 
@@ -1417,6 +1440,48 @@ async function removeMusicQueueRequestById(requestId) {
   })
 
   return targetRequest
+}
+
+async function clearMusicQueue() {
+  const musicState = getMusicStateSnapshot()
+  const queue = Array.isArray(musicState.queue) ? [...musicState.queue] : []
+  const removableEntries = queue.filter((entry) => entry.status === 'queued')
+
+  if (!removableEntries.length) {
+    return { removedCount: 0 }
+  }
+
+  await persistMusicState({
+    ...musicState,
+    queue: queue.filter((entry) => entry.status !== 'queued'),
+    history: trimMusicHistory([
+      ...removableEntries.map((entry) => ({
+        ...entry,
+        status: 'removed',
+        completedAt: Date.now(),
+        removedBy: 'panel',
+      })),
+      ...(musicState.history || []),
+    ]),
+  })
+
+  return { removedCount: removableEntries.length }
+}
+
+async function clearMusicHistory() {
+  const musicState = getMusicStateSnapshot()
+  const history = Array.isArray(musicState.history) ? musicState.history : []
+
+  if (!history.length) {
+    return { removedCount: 0 }
+  }
+
+  await persistMusicState({
+    ...musicState,
+    history: [],
+  })
+
+  return { removedCount: history.length }
 }
 
 function broadcastStatus() {
@@ -2303,6 +2368,30 @@ app.delete('/api/music/requests/:requestId', async (request, response) => {
   try {
     const removedRequest = await removeMusicQueueRequestById(request.params.requestId)
     response.json(removedRequest)
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/music/queue/clear', async (_request, response) => {
+  try {
+    const result = await clearMusicQueue()
+    response.json({
+      ...result,
+      status: buildMusicStatus(),
+    })
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/music/history/clear', async (_request, response) => {
+  try {
+    const result = await clearMusicHistory()
+    response.json({
+      ...result,
+      status: buildMusicStatus(),
+    })
   } catch (error) {
     response.status(400).json({ error: error.message })
   }

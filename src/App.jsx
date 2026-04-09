@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import {
   buildOverlayUrl,
+  buildSongRequestUrl,
   buildSmartBarUrl,
   buildWebSocketUrl,
   createId,
@@ -65,11 +66,15 @@ const DEFAULT_SERVER_STATUS = {
     accountProduct: '',
     devices: [],
     currentPlayback: null,
+    queue: [],
+    history: [],
     queueCount: 0,
     historyCount: 0,
     currentRequestId: '',
     selectedDeviceId: '',
     selectedDeviceName: '',
+    cooldownSeconds: 0,
+    cooldownUntil: null,
     lastError: '',
     lastSyncAt: null,
     commands: {
@@ -285,6 +290,10 @@ function getCurrentRoute() {
 
   if (first === 'overlay' && third === 'smart-bar') {
     return { kind: 'smart-bar', slug: second || 'main-stage' }
+  }
+
+  if (first === 'overlay' && third === 'song-request') {
+    return { kind: 'song-request', slug: second || 'main-stage' }
   }
 
   if (first === 'overlay') {
@@ -688,6 +697,10 @@ function App() {
     return <SmartBarScreen slug={route.slug} />
   }
 
+  if (route.kind === 'song-request') {
+    return <SongRequestScreen slug={route.slug} />
+  }
+
   return <DashboardApp />
 }
 
@@ -979,6 +992,14 @@ function DashboardApp() {
   const publicSmartBarUrl = appState.profile.publicBaseUrl
     ? buildSmartBarUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
+  const localSongRequestUrl = buildSongRequestUrl(
+    localBaseUrl,
+    overlaySlug,
+    appState.profile.overlayKey,
+  )
+  const publicSongRequestUrl = appState.profile.publicBaseUrl
+    ? buildSongRequestUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
+    : ''
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
   const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
@@ -1179,12 +1200,31 @@ function DashboardApp() {
     window.setTimeout(() => setLinkFeedback(''), 1800)
   }
 
+  async function copySongRequestUrl() {
+    const targetUrl = publicSongRequestUrl || localSongRequestUrl
+
+    try {
+      await navigator.clipboard.writeText(targetUrl)
+      setLinkFeedback(
+        publicSongRequestUrl ? 'Widget de musica publico copiado' : 'Widget de musica local copiado',
+      )
+    } catch {
+      setLinkFeedback('No se pudo copiar')
+    }
+
+    window.setTimeout(() => setLinkFeedback(''), 1800)
+  }
+
   function openOverlayWindow() {
     window.open(localOverlayUrl, '_blank', 'noopener,noreferrer')
   }
 
   function openSmartBarWindow() {
     window.open(localSmartBarUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  function openSongRequestWindow() {
+    window.open(localSongRequestUrl, '_blank', 'noopener,noreferrer')
   }
 
   async function refreshMediaLibrary() {
@@ -1504,6 +1544,40 @@ function DashboardApp() {
     }
   }
 
+  async function clearMusicQueue() {
+    try {
+      await requestJson(
+        '/api/music/queue/clear',
+        {
+          method: 'POST',
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
+  async function clearMusicHistory() {
+    try {
+      await requestJson(
+        '/api/music/history/clear',
+        {
+          method: 'POST',
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
   async function sendSampleEvent(sampleEvent, payloadOverrides = {}) {
     const payload =
       typeof sampleEvent === 'string'
@@ -1680,14 +1754,20 @@ function DashboardApp() {
         />
 
         <MusicSection
+          localSongRequestUrl={localSongRequestUrl}
           music={appState.music}
           musicStatus={serverStatus.music}
+          onClearHistory={clearMusicHistory}
+          onClearQueue={clearMusicQueue}
           onConnectSpotify={connectSpotifyMusic}
+          onCopySongRequestUrl={copySongRequestUrl}
           onDisconnectSpotify={disconnectSpotifyMusic}
+          onOpenSongRequestWindow={openSongRequestWindow}
           onSkipTrack={skipMusicTrack}
           onSyncSpotify={syncSpotifyMusic}
           onTestPlayRequest={testMusicPlayRequest}
           onRemoveRequest={removeMusicRequest}
+          publicSongRequestUrl={publicSongRequestUrl}
           updateMusicField={updateMusicField}
         />
 
@@ -2776,14 +2856,20 @@ function GamesSection({
 }
 
 function MusicSection({
+  localSongRequestUrl,
   music,
   musicStatus,
+  onClearHistory,
+  onClearQueue,
   onConnectSpotify,
+  onCopySongRequestUrl,
   onDisconnectSpotify,
+  onOpenSongRequestWindow,
   onSkipTrack,
   onSyncSpotify,
   onTestPlayRequest,
   onRemoveRequest,
+  publicSongRequestUrl,
   updateMusicField,
 }) {
   const [requesterDraft, setRequesterDraft] = useState('demo-chat')
@@ -2791,10 +2877,16 @@ function MusicSection({
   const [musicFeedback, setMusicFeedback] = useState('')
   const [isSubmittingMusicRequest, setIsSubmittingMusicRequest] = useState(false)
   const [isSkippingTrack, setIsSkippingTrack] = useState(false)
+  const [isClearingQueue, setIsClearingQueue] = useState(false)
+  const [isClearingHistory, setIsClearingHistory] = useState(false)
   const queue = Array.isArray(music.queue) ? music.queue : []
   const history = Array.isArray(music.history) ? music.history : []
   const devices = Array.isArray(musicStatus.devices) ? musicStatus.devices : []
   const currentTrack = musicStatus.currentPlayback?.track || null
+  const cooldownRemainingSeconds =
+    musicStatus.cooldownUntil && musicStatus.cooldownUntil > Date.now()
+      ? Math.max(1, Math.ceil((musicStatus.cooldownUntil - Date.now()) / 1000))
+      : 0
 
   async function handleSubmitMusicRequest() {
     setIsSubmittingMusicRequest(true)
@@ -2834,6 +2926,32 @@ function MusicSection({
       setMusicFeedback('Solicitud quitada de la cola.')
     } catch (error) {
       setMusicFeedback(error?.message || 'No pude quitar esa solicitud.')
+    }
+  }
+
+  async function handleClearQueue() {
+    setIsClearingQueue(true)
+
+    try {
+      await onClearQueue()
+      setMusicFeedback('Se limpiaron los pedidos pendientes de la cola.')
+    } catch (error) {
+      setMusicFeedback(error?.message || 'No pude limpiar la cola pendiente.')
+    } finally {
+      setIsClearingQueue(false)
+    }
+  }
+
+  async function handleClearHistory() {
+    setIsClearingHistory(true)
+
+    try {
+      await onClearHistory()
+      setMusicFeedback('Historial de canciones limpiado.')
+    } catch (error) {
+      setMusicFeedback(error?.message || 'No pude limpiar el historial.')
+    } finally {
+      setIsClearingHistory(false)
     }
   }
 
@@ -2999,6 +3117,30 @@ function MusicSection({
                 <span>Deja que el usuario quite sus pedidos pendientes antes de enviarlos a Spotify.</span>
               </div>
             </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.overlayShowQueue)}
+                onChange={(event) => updateMusicField('overlayShowQueue', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar cola en widget</strong>
+                <span>Enseña lo que viene despues de la pista actual.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.overlayShowRequester)}
+                onChange={(event) => updateMusicField('overlayShowRequester', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar quien la pidio</strong>
+                <span>Agrega el nombre del viewer en la cola del widget.</span>
+              </div>
+            </label>
           </div>
 
           <div className="mini-grid">
@@ -3057,6 +3199,39 @@ function MusicSection({
                 onChange={(event) => updateMusicField('maxRequestsPerUser', event.target.value)}
               />
             </div>
+            <div>
+              <label className="field-label" htmlFor="music-cooldown-seconds">
+                Cooldown global
+              </label>
+              <input
+                id="music-cooldown-seconds"
+                className="text-field"
+                value={music.cooldownSeconds || '10'}
+                onChange={(event) => updateMusicField('cooldownSeconds', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-overlay-title">
+                Titulo del widget
+              </label>
+              <input
+                id="music-overlay-title"
+                className="text-field"
+                value={music.overlayTitle || 'Song Request'}
+                onChange={(event) => updateMusicField('overlayTitle', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-overlay-max-visible">
+                Canciones visibles
+              </label>
+              <input
+                id="music-overlay-max-visible"
+                className="text-field"
+                value={music.overlayMaxVisible || '3'}
+                onChange={(event) => updateMusicField('overlayMaxVisible', event.target.value)}
+              />
+            </div>
           </div>
 
           <div className="snippet-block">
@@ -3077,7 +3252,37 @@ function MusicSection({
             <div className="tag-row">
               <span className="bridge-badge">{musicStatus.queueCount} en cola</span>
               <span className="bridge-badge">{musicStatus.historyCount} en historial</span>
+              {cooldownRemainingSeconds > 0 ? (
+                <span className="bridge-badge">Cooldown {cooldownRemainingSeconds}s</span>
+              ) : null}
             </div>
+          </div>
+
+          <div className="smartbar-preview-shell">
+            <span className="snippet-label">Widget de musica</span>
+            <SongRequestWidget music={music} musicStatus={musicStatus} preview />
+          </div>
+
+          <div className="link-stack">
+            <div>
+              <span className="snippet-label">Widget local</span>
+              <code className="overlay-link">{localSongRequestUrl}</code>
+            </div>
+            <div>
+              <span className="snippet-label">Widget publico</span>
+              <code className="overlay-link">
+                {publicSongRequestUrl || 'Completa la URL publica base para generar el link real.'}
+              </code>
+            </div>
+          </div>
+
+          <div className="card-actions">
+            <button className="primary-button" onClick={onCopySongRequestUrl}>
+              {publicSongRequestUrl ? 'Copiar widget publico' : 'Copiar widget local'}
+            </button>
+            <button className="secondary-button" onClick={onOpenSongRequestWindow}>
+              Abrir widget local
+            </button>
           </div>
 
           {currentTrack ? (
@@ -3137,7 +3342,16 @@ function MusicSection({
             <div className="list-shell">
               <div className="card-top">
                 <h3>Pedidos pendientes</h3>
-                <span className="state-badge">{queue.length}</span>
+                <div className="row-actions">
+                  <span className="state-badge">{queue.length}</span>
+                  <button
+                    className="ghost-button compact-button"
+                    onClick={handleClearQueue}
+                    disabled={isClearingQueue || queue.length === 0}
+                  >
+                    {isClearingQueue ? 'Limpiando...' : 'Limpiar cola'}
+                  </button>
+                </div>
               </div>
 
               {queue.length === 0 ? (
@@ -3146,6 +3360,17 @@ function MusicSection({
                 <div className="game-linked-actions">
                   {queue.map((requestItem) => (
                     <div key={requestItem.id} className="music-request-row">
+                      {requestItem.imageUrl ? (
+                        <img
+                          src={requestItem.imageUrl}
+                          alt={requestItem.name}
+                          className="music-track-cover music-track-cover-mini"
+                        />
+                      ) : (
+                        <div className="music-track-cover music-track-cover-fallback music-track-cover-mini">
+                          SP
+                        </div>
+                      )}
                       <div className="row-title-wrap">
                         <strong className="row-title">{requestItem.name}</strong>
                         <span className="row-subcopy">
@@ -3153,6 +3378,10 @@ function MusicSection({
                         </span>
                         <span className="row-subcopy">
                           {requestItem.requester} · {requestItem.query}
+                        </span>
+                        <span className="row-subcopy">
+                          {formatDurationClock(requestItem.durationMs || 0)}
+                          {requestItem.explicit ? ' · explicit' : ''}
                         </span>
                       </div>
                       <div className="row-actions">
@@ -3185,7 +3414,16 @@ function MusicSection({
             <div className="list-shell">
               <div className="card-top">
                 <h3>Historial reciente</h3>
-                <span className="state-badge">{history.length}</span>
+                <div className="row-actions">
+                  <span className="state-badge">{history.length}</span>
+                  <button
+                    className="ghost-button compact-button"
+                    onClick={handleClearHistory}
+                    disabled={isClearingHistory || history.length === 0}
+                  >
+                    {isClearingHistory ? 'Limpiando...' : 'Limpiar historial'}
+                  </button>
+                </div>
               </div>
 
               {history.length === 0 ? (
@@ -3194,13 +3432,27 @@ function MusicSection({
                 <div className="game-linked-actions">
                   {history.slice(0, 6).map((requestItem) => (
                     <div key={requestItem.id} className="music-request-row">
+                      {requestItem.imageUrl ? (
+                        <img
+                          src={requestItem.imageUrl}
+                          alt={requestItem.name}
+                          className="music-track-cover music-track-cover-mini"
+                        />
+                      ) : (
+                        <div className="music-track-cover music-track-cover-fallback music-track-cover-mini">
+                          SP
+                        </div>
+                      )}
                       <div className="row-title-wrap">
                         <strong className="row-title">{requestItem.name}</strong>
                         <span className="row-subcopy">
                           {Array.isArray(requestItem.artists) ? requestItem.artists.join(', ') : ''}
                         </span>
                         <span className="row-subcopy">
-                          {requestItem.status} · {formatDateTime(requestItem.completedAt || requestItem.playedAt)}
+                          {requestItem.requester} · {requestItem.status}
+                        </span>
+                        <span className="row-subcopy">
+                          {formatDateTime(requestItem.completedAt || requestItem.playedAt)}
                         </span>
                       </div>
                     </div>
@@ -4704,6 +4956,95 @@ function SmartBarWidget({ smartBar, smartBarStatus, compact = false }) {
   )
 }
 
+function SongRequestWidget({ music, musicStatus, preview = false }) {
+  const queue = Array.isArray(music?.queue)
+    ? music.queue
+    : Array.isArray(musicStatus?.queue)
+      ? musicStatus.queue
+      : []
+  const currentTrack = musicStatus?.currentPlayback?.track || null
+  const maxVisible = Math.max(1, Number.parseInt(String(music?.overlayMaxVisible || '3'), 10) || 3)
+  const visibleQueue = music?.overlayShowQueue
+    ? queue.filter((entry) => ['queued', 'sent'].includes(entry.status)).slice(0, maxVisible)
+    : []
+
+  if (!preview && !currentTrack && visibleQueue.length === 0) {
+    return null
+  }
+
+  return (
+    <article className={`songrequest-card ${preview ? 'compact' : ''}`}>
+      <div className="songrequest-topline">
+        <div className="songrequest-brand">
+          <span className="songrequest-kicker">Music widget</span>
+          <strong className="songrequest-title">{music?.overlayTitle || 'Song Request'}</strong>
+        </div>
+        <span className={`status-chip ${musicStatus?.connected ? 'ok' : 'off'}`}>
+          {musicStatus?.connected ? 'Spotify listo' : 'Sin conexion'}
+        </span>
+      </div>
+
+      {currentTrack ? (
+        <div className="songrequest-current">
+          {currentTrack.imageUrl ? (
+            <img src={currentTrack.imageUrl} alt={currentTrack.name} className="songrequest-cover" />
+          ) : (
+            <div className="songrequest-cover songrequest-cover-fallback">SP</div>
+          )}
+          <div className="songrequest-copy">
+            <span className="songrequest-label">Sonando ahora</span>
+            <strong>{currentTrack.name}</strong>
+            <span>{Array.isArray(currentTrack.artists) ? currentTrack.artists.join(', ') : ''}</span>
+            <span className="row-subcopy">
+              {currentTrack.albumName || 'Spotify'} · {formatDurationClock(currentTrack.durationMs || 0)}
+            </span>
+          </div>
+        </div>
+      ) : preview ? (
+        <div className="songrequest-current empty">
+          <div className="songrequest-cover songrequest-cover-fallback">♪</div>
+          <div className="songrequest-copy">
+            <span className="songrequest-label">Sonando ahora</span>
+            <strong>Tu proxima cancion aparecera aqui</strong>
+            <span>Conecta Spotify y deja el widget listo para el directo.</span>
+          </div>
+        </div>
+      ) : null}
+
+      {music?.overlayShowQueue ? (
+        <div className="songrequest-queue">
+          <div className="card-top">
+            <h3>Lo que sigue</h3>
+            <span className="state-badge">{visibleQueue.length}</span>
+          </div>
+
+          {visibleQueue.length === 0 ? (
+            preview ? <div className="empty-list">La cola visible aparecera aqui.</div> : null
+          ) : (
+            <div className="songrequest-list">
+              {visibleQueue.map((requestItem, index) => (
+                <div key={requestItem.id} className="songrequest-row">
+                  <span className="songrequest-row-index">{index + 1}</span>
+                  <div className="songrequest-row-copy">
+                    <strong>{requestItem.name}</strong>
+                    <span>{Array.isArray(requestItem.artists) ? requestItem.artists.join(', ') : ''}</span>
+                    {music?.overlayShowRequester ? (
+                      <span className="row-subcopy">Pedido por {requestItem.requester}</span>
+                    ) : null}
+                  </div>
+                  <span className="songrequest-row-duration">
+                    {formatDurationClock(requestItem.durationMs || 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </article>
+  )
+}
+
 function SmartBarScreen({ slug }) {
   const [appState, setAppState] = useState(() => readStoredState())
   const [smartBarStatus, setSmartBarStatus] = useState(DEFAULT_SERVER_STATUS.smartBar)
@@ -4819,6 +5160,141 @@ function SmartBarScreen({ slug }) {
     <div className="overlay-screen smartbar-screen">
       <div className="smartbar-stage">
         <SmartBarWidget smartBar={smartBar} smartBarStatus={smartBarStatus} />
+      </div>
+    </div>
+  )
+}
+
+function SongRequestScreen({ slug }) {
+  const [appState, setAppState] = useState(() => readStoredState())
+  const [musicStatus, setMusicStatus] = useState(DEFAULT_SERVER_STATUS.music)
+  const [overlayError, setOverlayError] = useState('')
+  const overlayAccessKey = readOverlayAccessKeyFromUrl()
+
+  useEffect(() => {
+    document.documentElement.dataset.route = 'overlay'
+    document.body.dataset.route = 'overlay'
+
+    let socket = null
+    let reconnectTimeoutId = 0
+    let isStopped = false
+    let canConnectSocket = false
+
+    async function loadOverlayState() {
+      try {
+        const overlayPayload = await requestJson(
+          '/api/status',
+          {
+            headers: overlayAccessKey ? { 'x-live-control-overlay-key': overlayAccessKey } : {},
+          },
+          '',
+        )
+        setAppState((currentState) =>
+          mergeStateWithDefaults({
+            ...currentState,
+            profile: {
+              ...currentState.profile,
+              ...(overlayPayload.profile || {}),
+            },
+            music: {
+              ...currentState.music,
+              ...(overlayPayload.music || currentState.music || {}),
+            },
+          }),
+        )
+        setMusicStatus(overlayPayload.music || DEFAULT_SERVER_STATUS.music)
+        setOverlayError('')
+        canConnectSocket = true
+      } catch (error) {
+        if (error?.status === 401) {
+          setOverlayError('Este widget necesita la clave publica correcta en la URL.')
+          return
+        }
+
+        setOverlayError('No pude cargar el widget de musica.')
+      }
+    }
+
+    function connectSocket() {
+      const socketUrl = buildWebSocketUrl(window.location.origin, '/ws/overlay', overlayAccessKey)
+      socket = new WebSocket(socketUrl)
+
+      socket.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data)
+
+          if (payload.type === 'overlay-state') {
+            setAppState((currentState) =>
+              mergeStateWithDefaults({
+                ...currentState,
+                profile: {
+                  ...currentState.profile,
+                  ...(payload.payload?.profile || {}),
+                },
+                widgets: {
+                  ...currentState.widgets,
+                  ...(payload.payload?.widgets || {}),
+                },
+                music: {
+                  ...currentState.music,
+                  ...(payload.payload?.music || {}),
+                },
+              }),
+            )
+            setMusicStatus(payload.payload?.music || DEFAULT_SERVER_STATUS.music)
+          }
+        } catch {
+          return
+        }
+      }
+
+      socket.onclose = () => {
+        if (!isStopped) {
+          reconnectTimeoutId = window.setTimeout(connectSocket, 1500)
+        }
+      }
+
+      socket.onerror = () => {
+        socket.close()
+      }
+    }
+
+    async function bootSongRequest() {
+      await loadOverlayState()
+
+      if (!isStopped && canConnectSocket) {
+        connectSocket()
+      }
+    }
+
+    bootSongRequest()
+
+    return () => {
+      isStopped = true
+      window.clearTimeout(reconnectTimeoutId)
+      socket?.close()
+    }
+  }, [overlayAccessKey, slug])
+
+  const music = appState.music || DEFAULT_APP_STATE.music
+
+  if (overlayError) {
+    return (
+      <div className="overlay-screen">
+        <div className="overlay-stage">
+          <div className="overlay-idle">
+            <span className="overlay-idle-kicker">Widget bloqueado</span>
+            <strong>{overlayError}</strong>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="overlay-screen songrequest-screen">
+      <div className="songrequest-stage">
+        <SongRequestWidget music={music} musicStatus={musicStatus} />
       </div>
     </div>
   )

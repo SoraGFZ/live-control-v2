@@ -46,7 +46,10 @@ El `redirect_uri` debe apuntar a:
   - `!skip`
   - `!quitar`
 - Mantener una cola propia dentro de la app para poder moderar pedidos.
+- Aplicar cooldown global, limite por usuario y limite total de cola.
+- Limpiar cola pendiente e historial desde el panel.
 - Enviar la siguiente cancion a Spotify cuando haya un dispositivo activo.
+- Exponer un widget web en `/overlay/<slug>/song-request` para mostrar la cancion actual y lo que sigue.
 
 ### Limite importante
 

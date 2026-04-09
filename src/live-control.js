@@ -98,10 +98,15 @@ export const DEFAULT_APP_STATE = {
     skipEnabled: true,
     removeEnabled: true,
     allowExplicit: false,
+    cooldownSeconds: '10',
     maxQueueLength: '10',
     maxRequestsPerUser: '2',
     selectedDeviceId: '',
     selectedDeviceName: '',
+    overlayTitle: 'Song Request',
+    overlayShowQueue: true,
+    overlayShowRequester: true,
+    overlayMaxVisible: '3',
     queue: [],
     history: [],
     currentRequestId: '',
@@ -434,6 +439,24 @@ export function buildSmartBarUrl(baseUrl, slug, overlayKey = '') {
   }
 
   return smartBarUrl.toString()
+}
+
+export function buildSongRequestUrl(baseUrl, slug, overlayKey = '') {
+  const normalizedSlug = sanitizeSlug(slug)
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+  const pathName = `/overlay/${normalizedSlug}/song-request`
+
+  if (!normalizedBaseUrl) {
+    return overlayKey ? `${pathName}?key=${encodeURIComponent(overlayKey)}` : pathName
+  }
+
+  const songRequestUrl = new URL(pathName, normalizedBaseUrl)
+
+  if (overlayKey) {
+    songRequestUrl.searchParams.set('key', overlayKey)
+  }
+
+  return songRequestUrl.toString()
 }
 
 export function buildWebSocketUrl(baseUrl, pathname, accessKey = '') {
