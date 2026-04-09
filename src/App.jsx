@@ -51,6 +51,57 @@ const DEFAULT_SERVER_STATUS = {
   recentDispatches: [],
 }
 
+const VISUAL_TRIGGER_OPTIONS = [
+  { id: 'gift', label: 'Gift', note: 'Regalos y combos del live.', token: 'GF' },
+  { id: 'like-burst', label: 'Likes', note: 'Rafagas y metas de likes.', token: 'LK' },
+  { id: 'follow', label: 'Follow', note: 'Nuevo seguidor en directo.', token: 'FW' },
+  { id: 'comment', label: 'Chat', note: 'Comandos del chat y mensajes.', token: 'CH' },
+  { id: 'share', label: 'Share', note: 'Cuando comparten el live.', token: 'SH' },
+]
+
+const DEFAULT_TRIGGER_MATCHES = {
+  gift: 'Rose x1',
+  follow: 'Cualquier follow',
+  comment: '!chaos',
+  share: 'Cualquier share',
+  'like-burst': '100 likes',
+}
+
+const CURATED_GIFT_CATALOG = [
+  { name: 'Rose', coins: 1, token: 'RO', accent: '#ff6f91', tags: ['popular', 'starter'] },
+  { name: 'GG', coins: 1, token: 'GG', accent: '#75d66f', tags: ['popular', 'badge'] },
+  { name: 'TikTok', coins: 1, token: 'TT', accent: '#55e3d6', tags: ['popular', 'platform'] },
+  { name: "You're awesome", coins: 1, token: 'YA', accent: '#f3b348', tags: ['popular'] },
+  { name: 'Love you so much', coins: 1, token: 'LV', accent: '#ff8d6b', tags: ['popular'] },
+  { name: 'Creeper', coins: 1, token: 'CR', accent: '#77c85d', tags: ['gaming'] },
+  { name: 'Cake Slice', coins: 1, token: 'CK', accent: '#ffb1cc', tags: ['sweet'] },
+  { name: 'Freestyle', coins: 1, token: 'FS', accent: '#74a7ff', tags: ['music'] },
+  { name: 'Oldies', coins: 1, token: 'OL', accent: '#d08bff', tags: ['music'] },
+  { name: 'Glow Stick', coins: 1, token: 'GL', accent: '#62d5ff', tags: ['party'] },
+  { name: 'Wink wink', coins: 1, token: 'WK', accent: '#ff8fd2', tags: ['cute'] },
+  { name: 'Ice Cream Cone', coins: 1, token: 'IC', accent: '#ffd66c', tags: ['sweet'] },
+  { name: 'Heart Me', coins: 1, token: 'HM', accent: '#ff7260', tags: ['popular', 'cute'] },
+  { name: 'Finger Heart', coins: 5, token: 'FH', accent: '#ff9276', tags: ['popular'] },
+  { name: 'Perfume', coins: 20, token: 'PF', accent: '#c6a0ff', tags: ['premium'] },
+  { name: 'Cap', coins: 99, token: 'CP', accent: '#f8cf63', tags: ['premium'] },
+  { name: 'Swan', coins: 699, token: 'SW', accent: '#8fd9ff', tags: ['premium'] },
+  { name: 'Lion', coins: 29999, token: 'LN', accent: '#ffc66b', tags: ['legend'] },
+]
+
+const CHAOSMOD_CATEGORY_ACCENTS = {
+  player: '#ff7b54',
+  vehicle: '#f3b348',
+  vehs: '#f3b348',
+  peds: '#79d28e',
+  weather: '#69b0ff',
+  world: '#55e3d6',
+  meta: '#c28cff',
+  misc: '#ff7fb4',
+  teleport: '#8fdcf3',
+  time: '#b8c26d',
+  weapon: '#ff8f66',
+}
+
 function getCurrentRoute() {
   if (typeof window === 'undefined') {
     return { kind: 'dashboard', slug: 'main-stage' }
@@ -190,6 +241,70 @@ function createActionDraft(action = null) {
     gtaChaosEffectName: action?.gtaChaosEffectName || '',
     overlayText: action?.overlayText || '',
     mediaUrl: action?.mediaUrl || '',
+  }
+}
+
+function normalizePickerText(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+}
+
+function buildGiftTriggerMatch(giftName, repeatCount = '1') {
+  const normalizedGiftName = String(giftName || '').trim()
+  const numericRepeatCount = Number.parseInt(String(repeatCount || '1').replace(/[^\d]/g, ''), 10)
+  const safeRepeatCount = Number.isNaN(numericRepeatCount) || numericRepeatCount <= 0 ? 1 : numericRepeatCount
+
+  if (!normalizedGiftName) {
+    return ''
+  }
+
+  return `${normalizedGiftName} x${safeRepeatCount}`
+}
+
+function parseGiftTriggerMatch(rule) {
+  const trimmedRule = String(rule || '').trim()
+  const parsedMatch = trimmedRule.match(/^(.*?)(?:\s*x(\d+))?$/i)
+
+  if (!parsedMatch) {
+    return { giftName: '', repeatCount: '1' }
+  }
+
+  return {
+    giftName: String(parsedMatch[1] || '').trim(),
+    repeatCount: parsedMatch[2] || '1',
+  }
+}
+
+function createKeywordToken(value, fallback = 'FX') {
+  const words = String(value || '')
+    .replace(/[^a-z0-9 ]/gi, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+
+  if (words.length === 0) {
+    return fallback
+  }
+
+  return words.map((word) => word.slice(0, 1).toUpperCase()).join('')
+}
+
+function getChaosModCardMeta(effect) {
+  const normalizedCategory = normalizePickerText(effect?.category || effect?.categoryLabel || 'misc')
+
+  return {
+    accent: CHAOSMOD_CATEGORY_ACCENTS[normalizedCategory] || '#55e3d6',
+    token:
+      normalizedCategory === 'vehicle' || normalizedCategory === 'vehs'
+        ? 'VH'
+        : normalizedCategory === 'player'
+          ? 'PL'
+          : normalizedCategory === 'peds'
+            ? 'PD'
+            : normalizedCategory === 'meta'
+              ? 'MT'
+              : createKeywordToken(effect?.name, 'FX'),
   }
 }
 
@@ -1978,6 +2093,8 @@ function ActionModal({
 }) {
   const [draft, setDraft] = useState(() => createActionDraft(initialAction))
   const [errorMessage, setErrorMessage] = useState('')
+  const [commandSearch, setCommandSearch] = useState('')
+  const [commandCategory, setCommandCategory] = useState('all')
   const isEditing = Boolean(initialAction?.id)
   const selectedMediaItem =
     mediaLibrary.find((item) => item.url === draft.mediaUrl || item.fileName === draft.mediaUrl) || null
@@ -1985,10 +2102,32 @@ function ActionModal({
     chaosModCatalog.find((item) => item.id === draft.gtaChaosEffectId) || null
   const usesGtaOutput = draft.outputs.includes('gta')
   const usesChaosMod = usesGtaOutput && draft.gtaMode === 'chaosmod'
+  const availableChaosModCategories = [
+    'all',
+    ...Array.from(
+      new Set(
+        chaosModCatalog
+          .map((item) => item.categoryLabel || item.category || '')
+          .filter(Boolean),
+      ),
+    ).sort((left, right) => left.localeCompare(right)),
+  ]
+  const visibleChaosModEffects = chaosModCatalog.filter((effect) => {
+    const matchesSearch = !normalizePickerText(commandSearch)
+      || normalizePickerText(`${effect.name} ${effect.categoryLabel} ${effect.category}`).includes(
+        normalizePickerText(commandSearch),
+      )
+    const effectCategory = effect.categoryLabel || effect.category || ''
+    const matchesCategory = commandCategory === 'all' || effectCategory === commandCategory
+
+    return matchesSearch && matchesCategory
+  })
 
   useEffect(() => {
     setDraft(createActionDraft(initialAction))
     setErrorMessage('')
+    setCommandSearch('')
+    setCommandCategory('all')
   }, [initialAction])
 
   function toggleOutput(outputId) {
@@ -2129,9 +2268,62 @@ function ActionModal({
                   <label className="field-label" htmlFor="action-chaosmod-effect">
                     Efecto de ChaosMod
                   </label>
+                  <div className="picker-toolbar">
+                    <input
+                      className="text-field"
+                      placeholder="Busca por nombre o categoria"
+                      value={commandSearch}
+                      onChange={(event) => setCommandSearch(event.target.value)}
+                    />
+                    <select
+                      className="text-field picker-filter"
+                      value={commandCategory}
+                      onChange={(event) => setCommandCategory(event.target.value)}
+                    >
+                      <option value="all">Todas las categorias</option>
+                      {availableChaosModCategories
+                        .filter((category) => category !== 'all')
+                        .map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="command-gallery-grid">
+                    {visibleChaosModEffects.slice(0, 120).map((effect) => {
+                      const effectVisual = getChaosModCardMeta(effect)
+
+                      return (
+                        <button
+                          key={effect.id}
+                          type="button"
+                          className={`command-picker-card ${
+                            draft.gtaChaosEffectId === effect.id ? 'selected' : ''
+                          }`}
+                          onClick={() =>
+                            setDraft((currentDraft) => ({
+                              ...currentDraft,
+                              gtaChaosEffectId: effect.id,
+                              gtaChaosEffectName: effect.name,
+                            }))
+                          }
+                        >
+                          <span
+                            className="command-picker-thumb"
+                            style={{ '--picker-accent': effectVisual.accent }}
+                          >
+                            {effectVisual.token}
+                          </span>
+                          <strong>{effect.name}</strong>
+                          <span>{effect.categoryLabel || effect.category || 'General'}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                   <select
                     id="action-chaosmod-effect"
-                    className="text-field"
+                    className="text-field picker-native-select"
                     value={draft.gtaChaosEffectId}
                     onChange={(event) => {
                       const nextEffect =
@@ -2159,12 +2351,13 @@ function ActionModal({
                   {selectedChaosModEffect ? (
                     <p className="support-copy">
                       <strong>Seleccionado:</strong> {selectedChaosModEffect.name} (
-                      {selectedChaosModEffect.categoryLabel})
+                      {selectedChaosModEffect.categoryLabel || selectedChaosModEffect.category})
                     </p>
                   ) : (
                     <p className="support-copy">
                       El bridge local lee la carpeta de ChaosMod y sube esta lista al panel para
-                      que no tengas que memorizar ids.
+                      que no tengas que memorizar ids. Si luego quieres, le sumamos iconos propios
+                      a estas tarjetas.
                     </p>
                   )}
                 </>
@@ -2270,11 +2463,51 @@ function ActionModal({
 function TriggerModal({ actions, onClose, onSave }) {
   const [draft, setDraft] = useState({
     source: 'gift',
-    match: '',
+    match: DEFAULT_TRIGGER_MATCHES.gift,
     actionId: actions[0]?.id || '',
     cooldownSeconds: '0',
   })
+  const [giftSearch, setGiftSearch] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const selectedAction = actions.find((action) => action.id === draft.actionId) || null
+  const selectedTriggerMeta =
+    VISUAL_TRIGGER_OPTIONS.find((option) => option.id === draft.source) || VISUAL_TRIGGER_OPTIONS[0]
+  const giftRuleState = parseGiftTriggerMatch(draft.match)
+  const filteredGiftCatalog = CURATED_GIFT_CATALOG.filter((gift) => {
+    const searchText = normalizePickerText(giftSearch)
+
+    if (!searchText) {
+      return true
+    }
+
+    return normalizePickerText(`${gift.name} ${gift.token} ${gift.tags.join(' ')}`).includes(searchText)
+  })
+
+  function handleSourceChange(nextSource) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      source: nextSource,
+      match: DEFAULT_TRIGGER_MATCHES[nextSource] || currentDraft.match,
+    }))
+  }
+
+  function handleGiftSelect(gift) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      source: 'gift',
+      match: buildGiftTriggerMatch(gift.name, giftRuleState.repeatCount),
+    }))
+  }
+
+  function handleGiftRepeatChange(nextValue) {
+    const activeGiftName = giftRuleState.giftName || 'Rose'
+
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      source: 'gift',
+      match: buildGiftTriggerMatch(activeGiftName, nextValue),
+    }))
+  }
 
   function handleSubmit(event) {
     event.preventDefault()
@@ -2310,14 +2543,32 @@ function TriggerModal({ actions, onClose, onSave }) {
         </div>
 
         <form className="modal-form" onSubmit={handleSubmit}>
+          <div className="field-group">
+            <span className="field-label">Activador</span>
+            <div className="source-picker-grid">
+              {VISUAL_TRIGGER_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`source-picker-card ${draft.source === option.id ? 'selected' : ''}`}
+                  onClick={() => handleSourceChange(option.id)}
+                >
+                  <span className="source-picker-token">{option.token}</span>
+                  <strong>{option.label}</strong>
+                  <span>{option.note}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className="field-label" htmlFor="trigger-source">
             Fuente
           </label>
           <select
             id="trigger-source"
-            className="text-field"
+            className="text-field picker-native-select"
             value={draft.source}
-            onChange={(event) => setDraft({ ...draft, source: event.target.value })}
+            onChange={(event) => handleSourceChange(event.target.value)}
           >
             {TRIGGER_OPTIONS.map((option) => (
               <option key={option.id} value={option.id}>
@@ -2326,23 +2577,101 @@ function TriggerModal({ actions, onClose, onSave }) {
             ))}
           </select>
 
+          {draft.source === 'gift' ? (
+            <div className="field-group">
+              <div className="picker-toolbar">
+                <input
+                  className="text-field"
+                  placeholder="Busca un gift"
+                  value={giftSearch}
+                  onChange={(event) => setGiftSearch(event.target.value)}
+                />
+                <input
+                  className="text-field picker-filter"
+                  inputMode="numeric"
+                  placeholder="x1"
+                  value={giftRuleState.repeatCount}
+                  onChange={(event) => handleGiftRepeatChange(event.target.value)}
+                />
+              </div>
+              <div className="gift-picker-grid">
+                {filteredGiftCatalog.length === 0 ? (
+                  <p className="support-copy">No encontre gifts con ese filtro.</p>
+                ) : (
+                  filteredGiftCatalog.map((gift) => (
+                    <button
+                      key={gift.name}
+                      type="button"
+                      className={`gift-picker-card ${
+                        normalizePickerText(giftRuleState.giftName) === normalizePickerText(gift.name)
+                          ? 'selected'
+                          : ''
+                      }`}
+                      onClick={() => handleGiftSelect(gift)}
+                    >
+                      <span
+                        className="gift-picker-thumb"
+                        style={{ '--picker-accent': gift.accent }}
+                      >
+                        {gift.token}
+                      </span>
+                      <strong>{gift.name}</strong>
+                      <span>{gift.coins} coin{gift.coins === 1 ? '' : 's'}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : null}
+
           <label className="field-label" htmlFor="trigger-match">
-            Que debe matchear
+            Regla final del trigger
           </label>
           <input
             id="trigger-match"
             className="text-field"
-            placeholder="Ej: Rose x1, !chaos, 100 likes..."
+            placeholder={
+              draft.source === 'gift'
+                ? 'Ej: Rose x1'
+                : draft.source === 'comment'
+                  ? 'Ej: !chaos'
+                  : draft.source === 'like-burst'
+                    ? 'Ej: 100 likes'
+                    : `Ej: ${DEFAULT_TRIGGER_MATCHES[draft.source] || 'Cualquier evento'}`
+            }
             value={draft.match}
             onChange={(event) => setDraft({ ...draft, match: event.target.value })}
           />
+          <p className="support-copy">
+            <strong>{selectedTriggerMeta.label}:</strong> {selectedTriggerMeta.note}
+          </p>
 
           <label className="field-label" htmlFor="trigger-action">
             Accion a disparar
           </label>
+          <div className="action-picker-grid">
+            {actions.map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                className={`action-picker-card ${draft.actionId === action.id ? 'selected' : ''}`}
+                onClick={() => setDraft({ ...draft, actionId: action.id })}
+              >
+                <strong>{action.name}</strong>
+                <span>{action.description || 'Sin descripcion todavia.'}</span>
+                <div className="tag-row">
+                  {action.outputs.map((output) => (
+                    <span key={output} className="tag">
+                      {getOutputMeta(output)?.label || output}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
           <select
             id="trigger-action"
-            className="text-field"
+            className="text-field picker-native-select"
             value={draft.actionId}
             onChange={(event) => setDraft({ ...draft, actionId: event.target.value })}
           >
@@ -2352,6 +2681,11 @@ function TriggerModal({ actions, onClose, onSave }) {
               </option>
             ))}
           </select>
+          {selectedAction ? (
+            <p className="support-copy">
+              <strong>Accion elegida:</strong> {selectedAction.name}
+            </p>
+          ) : null}
 
           <label className="field-label" htmlFor="trigger-cooldown">
             Cooldown en segundos

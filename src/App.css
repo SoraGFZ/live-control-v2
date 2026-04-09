@@ -579,6 +579,141 @@
   margin-top: 18px;
 }
 
+.picker-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 12px;
+}
+
+.picker-filter {
+  min-width: 0;
+}
+
+.picker-native-select {
+  display: none;
+}
+
+.source-picker-grid,
+.action-picker-grid,
+.gift-picker-grid,
+.command-gallery-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.source-picker-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.action-picker-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gift-picker-grid,
+.command-gallery-grid {
+  max-height: 320px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.gift-picker-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.command-gallery-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.source-picker-card,
+.action-picker-card,
+.gift-picker-card,
+.command-picker-card {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f4efe7;
+  border-radius: 20px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+  display: grid;
+  gap: 8px;
+}
+
+.source-picker-card:hover,
+.action-picker-card:hover,
+.gift-picker-card:hover,
+.command-picker-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 116, 47, 0.32);
+}
+
+.source-picker-card.selected,
+.action-picker-card.selected,
+.gift-picker-card.selected,
+.command-picker-card.selected {
+  border-color: rgba(255, 116, 47, 0.45);
+  background: rgba(255, 116, 47, 0.08);
+  box-shadow: 0 0 0 2px rgba(255, 116, 47, 0.14);
+}
+
+.source-picker-card span:last-child,
+.action-picker-card > span,
+.gift-picker-card span:last-child,
+.command-picker-card span:last-child {
+  color: #b6c1c6;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.source-picker-token,
+.gift-picker-thumb,
+.command-picker-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #091116;
+  background: linear-gradient(135deg, var(--picker-accent, #55e3d6), rgba(255, 255, 255, 0.95));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.source-picker-token {
+  --picker-accent: #55e3d6;
+}
+
+.gift-picker-card,
+.command-picker-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.gift-picker-card strong,
+.command-picker-card strong {
+  margin: 0;
+}
+
+.gift-picker-card strong,
+.command-picker-card strong,
+.gift-picker-card span:last-child,
+.command-picker-card span:last-child {
+  grid-column: 2;
+}
+
+.gift-picker-thumb,
+.command-picker-thumb {
+  grid-row: span 2;
+}
+
 .overlay-screen {
   min-height: 100vh;
   position: relative;
@@ -662,6 +797,10 @@
   .metric-grid,
   .pipeline-grid,
   .card-grid,
+  .source-picker-grid,
+  .action-picker-grid,
+  .gift-picker-grid,
+  .command-gallery-grid,
   .overlay-grid,
   .bridge-grid,
   .ops-grid,
@@ -702,6 +841,10 @@
   }
 
   .option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .picker-toolbar {
     grid-template-columns: 1fr;
   }
 
