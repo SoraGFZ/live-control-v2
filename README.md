@@ -113,11 +113,13 @@ Si tienes ChaosMod instalado en `C:\Program Files\Epic Games\GTAV\chaosmod`, el 
 - Sincroniza el catalogo de efectos con el panel.
 - Intenta habilitar el debug socket creando `chaosmod/.enabledebugsocket`.
 - Prioriza el disparo directo por socket hacia ChaosMod para evitar animaciones visibles y errores de seleccion.
+- Si ese socket no aparece, usa un atajo nativo por efecto para dispararlo de forma exacta.
 - Puede usar el menu interno del mod como fallback solo si activas `allowMenuFallback`.
 
 ### Importante
 
 - La primera vez conviene recargar el mod o reiniciar el juego para que ChaosMod detecte `.enabledebugsocket`.
+- La primera vez que uses un efecto por atajo, el bridge puede reasignar un shortcut en `effects.ini` y recargar el mod una sola vez para aplicarlo.
 - Si el debug socket no abre, el bridge ahora falla de forma segura por defecto en vez de navegar el menu visual y disparar otro efecto.
 - Si aun asi quieres el comportamiento viejo, puedes poner `"allowMenuFallback": true` en `bridge-config.json`.
 - Solo en ese modo fallback, el bridge usa `EnableDebugMenu=1`, asume que el selector arranca arriba y puede desincronizarse si mueves el menu a mano.

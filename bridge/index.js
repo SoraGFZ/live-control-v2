@@ -14,7 +14,18 @@ const runtimeProcess = globalThis.process
 const projectRoot = runtimeProcess.cwd()
 const CONFIG_PATH = path.join(projectRoot, 'bridge-config.json')
 const CHAOSMOD_ACTIVATOR_PATH = path.join(projectRoot, 'bridge', 'activate-chaosmod-effect.ps1')
+const CHAOSMOD_SHORTCUT_TRIGGER_PATH = path.join(
+  projectRoot,
+  'bridge',
+  'trigger-chaosmod-shortcut.ps1',
+)
 const CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG = '.enabledebugsocket'
+const CHAOSMOD_SHORTCUT_POOL = [
+  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 9)),
+  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 8)),
+  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 9) + (1 << 8)),
+  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 9) + (1 << 8)),
+]
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: 'https://TU-APP.up.railway.app',
@@ -47,6 +58,10 @@ const DEFAULT_CONFIG = {
     debugSocketPort: 31819,
     debugSocketReconnectDelayMs: 3000,
     catalogResyncIntervalMs: 30000,
+    preferShortcutFallback: true,
+    shortcutReloadDelayMs: 850,
+    shortcutPostReloadDelayMs: 1400,
+    shortcutKeyDelayMs: 45,
     menuOpenDelayMs: 220,
     keyDelayMs: 35,
   },
@@ -242,6 +257,135 @@ function updateIniValue(filePath, key, value) {
   writeFileSync(filePath, `${iniContent.trimEnd()}\n${normalizedLine}\n`, 'utf8')
 }
 
+function parseCommaSeparatedValues(valueText) {
+  const values = []
+  let currentValue = ''
+  let isInsideQuotes = false
+
+  for (const character of String(valueText || '')) {
+    if (character === '"') {
+      isInsideQuotes = !isInsideQuotes
+      currentValue += character
+      continue
+    }
+
+    if (character === ',' && !isInsideQuotes) {
+      values.push(currentValue)
+      currentValue = ''
+      continue
+    }
+
+    currentValue += character
+  }
+
+  values.push(currentValue)
+  return values
+}
+
+function parseChaosModEffectsConfig(effectsIniText) {
+  return String(effectsIniText || '')
+    .split(/\r?\n/)
+    .map((rawLine, index) => {
+      const line = rawLine.trim()
+
+      if (!line || line.startsWith('#') || line.startsWith(';') || !line.includes('=')) {
+        return {
+          kind: 'raw',
+          rawLine,
+          lineIndex: index,
+        }
+      }
+
+      const [rawId, rawConfig] = rawLine.split('=', 2)
+      const configValues = parseCommaSeparatedValues(rawConfig).map((value) => value.trim())
+
+      while (configValues.length < 8) {
+        configValues.push('')
+      }
+
+      return {
+        kind: 'effect',
+        id: rawId.trim(),
+        rawId,
+        configValues,
+        lineIndex: index,
+      }
+    })
+}
+
+function serializeChaosModEffectsConfig(parsedEntries) {
+  return `${parsedEntries
+    .map((entry) =>
+      entry.kind === 'effect'
+        ? `${entry.rawId || entry.id}=${entry.configValues.join(',')}`
+        : entry.rawLine,
+    )
+    .join('\n')}\n`
+}
+
+function decodeChaosModShortcutKeycode(shortcutKeycode) {
+  const numericShortcut = Number(shortcutKeycode || 0)
+
+  return {
+    numericShortcut,
+    keyCode: numericShortcut & 0xff,
+    isCtrlPressed: Boolean(numericShortcut & (1 << 10)),
+    isShiftPressed: Boolean(numericShortcut & (1 << 9)),
+    isAltPressed: Boolean(numericShortcut & (1 << 8)),
+  }
+}
+
+function formatChaosModShortcutLabel(shortcutKeycode) {
+  const decodedShortcut = decodeChaosModShortcutKeycode(shortcutKeycode)
+
+  if (!decodedShortcut.numericShortcut || !decodedShortcut.keyCode) {
+    return 'sin atajo'
+  }
+
+  const keyLabelMap = {
+    0x70: 'F1',
+    0x71: 'F2',
+    0x72: 'F3',
+    0x73: 'F4',
+    0x74: 'F5',
+    0x75: 'F6',
+    0x76: 'F7',
+    0x77: 'F8',
+    0x78: 'F9',
+    0x79: 'F10',
+    0x7a: 'F11',
+    0x7b: 'F12',
+    0x7c: 'F13',
+    0x7d: 'F14',
+    0x7e: 'F15',
+    0x7f: 'F16',
+    0x80: 'F17',
+    0x81: 'F18',
+    0x82: 'F19',
+    0x83: 'F20',
+    0x84: 'F21',
+    0x85: 'F22',
+    0x86: 'F23',
+    0x87: 'F24',
+  }
+  const parts = []
+
+  if (decodedShortcut.isCtrlPressed) {
+    parts.push('Ctrl')
+  }
+
+  if (decodedShortcut.isShiftPressed) {
+    parts.push('Shift')
+  }
+
+  if (decodedShortcut.isAltPressed) {
+    parts.push('Alt')
+  }
+
+  parts.push(keyLabelMap[decodedShortcut.keyCode] || `VK ${decodedShortcut.keyCode}`)
+  return parts.join(' + ')
+}
+
 function ensureFeatureFlagFile(directoryPath, featureFlagName) {
   const featureFlagPath = path.join(directoryPath, featureFlagName)
 
@@ -328,6 +472,7 @@ async function prepareChaosModCatalog(chaosModConfig) {
     return {
       catalog: [],
       sourcePath: '',
+      effectsFilePath: '',
       lastError: '',
     }
   }
@@ -340,6 +485,7 @@ async function prepareChaosModCatalog(chaosModConfig) {
     return {
       catalog: [],
       sourcePath: normalizedModPath,
+      effectsFilePath,
       lastError: 'No encontre configs/effects.ini en la carpeta de ChaosMod.',
     }
   }
@@ -365,6 +511,7 @@ async function prepareChaosModCatalog(chaosModConfig) {
   return {
     catalog: buildChaosModCatalog(effectsIniText, effectsSourceText),
     sourcePath: normalizedModPath,
+    effectsFilePath,
     lastError,
   }
 }
@@ -439,6 +586,57 @@ function runPowerShellChaosModActivator({
       }
 
       reject(new Error(stderr.trim() || `El activador de ChaosMod salio con codigo ${code}.`))
+    })
+  })
+}
+
+function runPowerShellChaosModShortcutTrigger({
+  processName,
+  shortcutKeycode,
+  reloadConfig,
+  reloadDelayMs,
+  postReloadDelayMs,
+  keyDelayMs,
+}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      'powershell',
+      [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        CHAOSMOD_SHORTCUT_TRIGGER_PATH,
+        '-ProcessName',
+        processName,
+        '-ShortcutKeycode',
+        String(shortcutKeycode),
+        '-ReloadConfig',
+        reloadConfig ? '1' : '0',
+        '-ReloadDelayMs',
+        String(reloadDelayMs),
+        '-PostReloadDelayMs',
+        String(postReloadDelayMs),
+        '-KeyDelayMs',
+        String(keyDelayMs),
+      ],
+      {
+        windowsHide: true,
+      },
+    )
+    let stderr = ''
+
+    child.stderr.on('data', (chunk) => {
+      stderr += String(chunk)
+    })
+
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve()
+        return
+      }
+
+      reject(new Error(stderr.trim() || `El disparador por atajo de ChaosMod salio con codigo ${code}.`))
     })
   })
 }
@@ -535,6 +733,7 @@ async function main() {
   const chaosModState = {
     catalog: [],
     sourcePath: '',
+    effectsFilePath: '',
     selectedIndex: bridgeConfig.chaosmod.assumeTopSelectionOnStartup ? 0 : null,
   }
   const chaosModDebugSocket =
@@ -545,6 +744,7 @@ async function main() {
   const chaosModCatalogPayload = await prepareChaosModCatalog(bridgeConfig.chaosmod)
   chaosModState.catalog = chaosModCatalogPayload.catalog
   chaosModState.sourcePath = chaosModCatalogPayload.sourcePath
+  chaosModState.effectsFilePath = chaosModCatalogPayload.effectsFilePath
 
   if (chaosModCatalogPayload.catalog.length > 0) {
     console.log(
@@ -616,6 +816,67 @@ async function main() {
     }
   }
 
+  function ensureChaosModShortcut(effectId) {
+    if (!chaosModState.effectsFilePath || !existsSync(chaosModState.effectsFilePath)) {
+      throw new Error('No encontre effects.ini para asignar un atajo de ChaosMod.')
+    }
+
+    const effectsIniText = readFileSync(chaosModState.effectsFilePath, 'utf8')
+    const parsedEntries = parseChaosModEffectsConfig(effectsIniText)
+    const effectEntries = parsedEntries.filter((entry) => entry.kind === 'effect')
+    const targetEntry = effectEntries.find((entry) => entry.id === effectId)
+
+    if (!targetEntry) {
+      throw new Error(`No encontre ${effectId} dentro de effects.ini para asignar el atajo.`)
+    }
+
+    const currentShortcut = Number(targetEntry.configValues[7] || 0)
+    const currentShortcutInUseByOtherEffect = effectEntries.some(
+      (entry) => entry.id !== effectId && Number(entry.configValues[7] || 0) === currentShortcut,
+    )
+    const currentShortcutUsesPlainExtendedFunctionKey =
+      currentShortcut >= 0x7c && currentShortcut <= 0x87
+
+    if (
+      currentShortcut > 0 &&
+      !currentShortcutInUseByOtherEffect &&
+      !currentShortcutUsesPlainExtendedFunctionKey
+    ) {
+      return {
+        shortcutKeycode: currentShortcut,
+        shortcutLabel: formatChaosModShortcutLabel(currentShortcut),
+        changed: false,
+      }
+    }
+
+    const usedShortcuts = new Set(
+      effectEntries
+        .filter((entry) => entry.id !== effectId)
+        .map((entry) => Number(entry.configValues[7] || 0))
+        .filter((shortcut) => shortcut > 0),
+    )
+    const nextShortcut = CHAOSMOD_SHORTCUT_POOL.find((shortcut) => !usedShortcuts.has(shortcut))
+
+    if (!nextShortcut) {
+      throw new Error(
+        'No encontre un atajo libre de ChaosMod para esta accion. Reduce atajos usados o amplia el pool en el bridge.',
+      )
+    }
+
+    targetEntry.configValues[7] = String(nextShortcut)
+    writeFileSync(
+      chaosModState.effectsFilePath,
+      serializeChaosModEffectsConfig(parsedEntries),
+      'utf8',
+    )
+
+    return {
+      shortcutKeycode: nextShortcut,
+      shortcutLabel: formatChaosModShortcutLabel(nextShortcut),
+      changed: true,
+    }
+  }
+
   async function executeChaosModEffect(messagePayload) {
     if (!bridgeConfig.chaosmod.enabled) {
       throw new Error('ChaosMod esta desactivado en bridge-config.json.')
@@ -632,10 +893,28 @@ async function main() {
       return
     }
 
+    if (bridgeConfig.chaosmod.preferShortcutFallback) {
+      const shortcutAssignment = ensureChaosModShortcut(messagePayload.gtaChaosEffectId)
+
+      await runPowerShellChaosModShortcutTrigger({
+        processName: bridgeConfig.chaosmod.gtaProcessName,
+        shortcutKeycode: shortcutAssignment.shortcutKeycode,
+        reloadConfig: shortcutAssignment.changed,
+        reloadDelayMs: Number(bridgeConfig.chaosmod.shortcutReloadDelayMs || 850),
+        postReloadDelayMs: Number(bridgeConfig.chaosmod.shortcutPostReloadDelayMs || 1400),
+        keyDelayMs: Number(bridgeConfig.chaosmod.shortcutKeyDelayMs || 45),
+      })
+
+      console.log(
+        `[chaosmod] efecto disparado por atajo ${shortcutAssignment.shortcutLabel}: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}${shortcutAssignment.changed ? ' (recargue el mod para aplicar el atajo)' : ''}`,
+      )
+      return
+    }
+
     if (bridgeConfig.chaosmod.preferDirectSocket && !bridgeConfig.chaosmod.allowMenuFallback) {
       const lastSocketError = chaosModDebugSocket?.getLastError()
       throw new Error(
-        `El debug socket de ChaosMod no esta disponible. Recarga el mod o reinicia GTA para habilitar el disparo directo.${lastSocketError ? ` Ultimo error: ${lastSocketError}` : ''}`,
+        `El debug socket de ChaosMod no esta disponible y el fallback por atajo esta desactivado.${lastSocketError ? ` Ultimo error: ${lastSocketError}` : ''}`,
       )
     }
 

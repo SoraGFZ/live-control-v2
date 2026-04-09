@@ -23,12 +23,16 @@
     "autoEnableEffectMenu": true,
     "autoEnableDebugSocket": true,
     "preferDirectSocket": true,
+    "preferShortcutFallback": true,
     "allowMenuFallback": false,
     "assumeTopSelectionOnStartup": true,
     "gtaProcessName": "GTA5",
     "debugSocketPort": 31819,
     "debugSocketReconnectDelayMs": 3000,
     "catalogResyncIntervalMs": 30000,
+    "shortcutReloadDelayMs": 850,
+    "shortcutPostReloadDelayMs": 1400,
+    "shortcutKeyDelayMs": 45,
     "menuOpenDelayMs": 220,
     "keyDelayMs": 35
   }
