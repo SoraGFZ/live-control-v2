@@ -522,6 +522,55 @@ function getPublicOverlayPayload() {
   }
 }
 
+function sanitizeMinecraftMirrorText(value, maxLength = 180) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+}
+
+function sanitizeMinecraftMirrorTarget(value) {
+  const cleanedValue = String(value || '')
+    .trim()
+    .split(/\s+/)[0]
+
+  return cleanedValue || '@a'
+}
+
+function buildMinecraftChatMirrorCommand(event, profile = {}) {
+  const normalizedComment = sanitizeMinecraftMirrorText(event?.comment, 180)
+
+  if (!normalizedComment) {
+    return ''
+  }
+
+  if (profile.minecraftChatMirrorSkipCommands && /^[!/]/.test(normalizedComment)) {
+    return ''
+  }
+
+  const normalizedPrefix = sanitizeMinecraftMirrorText(profile.minecraftChatMirrorPrefix || '[TikTok]', 32)
+  const normalizedUserName = sanitizeMinecraftMirrorText(
+    event?.uniqueId || event?.userName || event?.sourceLabel || 'chat',
+    28,
+  )
+  const normalizedTarget = sanitizeMinecraftMirrorTarget(profile.minecraftChatMirrorTarget || '@a')
+  const payload = JSON.stringify({
+    text: '',
+    extra: [
+      ...(normalizedPrefix ? [{ text: `${normalizedPrefix} `, color: 'light_purple' }] : []),
+      { text: normalizedUserName || 'chat', color: 'gold' },
+      { text: ': ', color: 'gray' },
+      { text: normalizedComment, color: 'white' },
+    ],
+  })
+
+  if (profile.minecraftChatMirrorMode === 'actionbar') {
+    return `/title ${normalizedTarget} actionbar ${payload}`
+  }
+
+  return `/tellraw ${normalizedTarget} ${payload}`
+}
+
 function readAccessKey(request, requestUrl = null) {
   const requestKey =
     requestUrl?.searchParams.get('key') ||
@@ -1001,6 +1050,38 @@ async function dispatchMinecraftBridgeCommand({
   return dispatchRecord
 }
 
+async function dispatchMinecraftChatMirrorEvent(
+  event,
+  state,
+  reason = 'minecraft-chat-mirror',
+  { allowWhenDisabled = false } = {},
+) {
+  if (event?.type !== 'comment') {
+    return null
+  }
+
+  const profile = state?.profile || {}
+
+  if (!allowWhenDisabled && !profile.minecraftChatMirrorEnabled) {
+    return null
+  }
+
+  const commandText = buildMinecraftChatMirrorCommand(event, profile)
+
+  if (!commandText) {
+    return null
+  }
+
+  return dispatchMinecraftBridgeCommand({
+    name: 'Chat espejo Minecraft',
+    description: `Replica el chat de ${event.uniqueId || 'TikTok'} dentro del juego.`,
+    commandText,
+    sourceEvent: event,
+    reason,
+    minecraftMode: 'generic',
+  })
+}
+
 async function processIncomingEvent(event, reason = 'tiktok') {
   const observedEmotes = [
     ...(Array.isArray(event.emotes) ? event.emotes : []),
@@ -1041,6 +1122,14 @@ async function processIncomingEvent(event, reason = 'tiktok') {
       ...smartBarRuntime,
       giftsReceived: smartBarRuntime.giftsReceived + repeatCount,
       receivedCoins: smartBarRuntime.receivedCoins + giftCoins * repeatCount,
+    }
+  }
+
+  if (event.type === 'comment') {
+    try {
+      await dispatchMinecraftChatMirrorEvent(event, state, `${reason}:mirror`)
+    } catch (error) {
+      console.warn(`[minecraft-chat-mirror] ${error.message}`)
     }
   }
 
@@ -1454,6 +1543,29 @@ app.post('/api/minecraft/test', async (request, response) => {
     sourceEvent: manualEvent,
     reason: 'manual-minecraft',
   })
+
+  response.json(dispatchRecord)
+})
+
+app.post('/api/minecraft/chat-mirror/test', async (request, response) => {
+  const manualEvent = createManualIncomingEvent('comment', {
+    userName: request.body?.userName || 'demo-chat',
+    comment: request.body?.comment || 'Hola Minecraft, este mensaje salio desde el panel.',
+  })
+  const dispatchRecord = await dispatchMinecraftChatMirrorEvent(
+    manualEvent,
+    store.getState(),
+    'manual-minecraft-chat-mirror',
+    { allowWhenDisabled: true },
+  )
+
+  if (!dispatchRecord) {
+    response.status(400).json({
+      error:
+        'No pude construir el chat espejo. Revisa el prefijo, el target y que el mensaje no sea un comando filtrado.',
+    })
+    return
+  }
 
   response.json(dispatchRecord)
 })

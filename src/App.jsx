@@ -1340,6 +1340,27 @@ function DashboardApp() {
     }
   }
 
+  async function testMinecraftChatMirror(payload = {}) {
+    try {
+      const dispatchRecord = await requestJson(
+        '/api/minecraft/chat-mirror/test',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            userName: payload.userName || 'demo-chat',
+            comment: payload.comment || 'Hola Minecraft, este mensaje salio desde el panel.',
+          }),
+        },
+        dashboardAccessKey,
+      )
+      setServerError('')
+      return dispatchRecord
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
   async function sendSampleEvent(sampleEvent, payloadOverrides = {}) {
     const payload =
       typeof sampleEvent === 'string'
@@ -1508,8 +1529,11 @@ function DashboardApp() {
           onJump={scrollToSection}
           onPreviewAction={previewAction}
           onRunMinecraftPreset={runMinecraftPreset}
+          onTestMinecraftChatMirror={testMinecraftChatMirror}
+          profile={appState.profile}
           serverStatus={serverStatus}
           triggers={appState.triggers}
+          updateProfileField={updateProfileField}
         />
 
         <EmoteLibrarySection
@@ -1981,8 +2005,11 @@ function GamesSection({
   onJump,
   onPreviewAction,
   onRunMinecraftPreset,
+  onTestMinecraftChatMirror,
+  profile,
   serverStatus,
   triggers,
+  updateProfileField,
 }) {
   const minecraftActions = groupActionsByOutput(actions, 'minecraft')
   const gtaActions = groupActionsByOutput(actions, 'gta')
@@ -2095,7 +2122,22 @@ function GamesSection({
   const [minecraftPresetCategory, setMinecraftPresetCategory] = useState('all')
   const [minecraftPresetFeedback, setMinecraftPresetFeedback] = useState('')
   const [runningMinecraftPresetId, setRunningMinecraftPresetId] = useState('')
+  const [minecraftChatMirrorFeedback, setMinecraftChatMirrorFeedback] = useState('')
+  const [minecraftChatMirrorPreviewUser, setMinecraftChatMirrorPreviewUser] = useState('demo-chat')
+  const [minecraftChatMirrorPreviewMessage, setMinecraftChatMirrorPreviewMessage] = useState(
+    'Hola Minecraft, este mensaje salio desde el panel.',
+  )
+  const [isTestingMinecraftChatMirror, setIsTestingMinecraftChatMirror] = useState(false)
   const selectedGame = gameCards.find((game) => game.id === selectedGameId) || gameCards[0]
+  const minecraftChatMirrorMode =
+    profile.minecraftChatMirrorMode === 'actionbar' ? 'actionbar' : 'tellraw'
+  const minecraftChatMirrorTarget = String(profile.minecraftChatMirrorTarget || '@a').trim() || '@a'
+  const minecraftChatMirrorPrefix = String(profile.minecraftChatMirrorPrefix || '[TikTok]').trim()
+  const minecraftChatMirrorPreviewCommand = `${
+    minecraftChatMirrorMode === 'actionbar' ? 'title' : 'tellraw'
+  } ${minecraftChatMirrorTarget} ${minecraftChatMirrorPrefix || '[TikTok]'} ${
+    minecraftChatMirrorPreviewUser || 'demo-chat'
+  }: ${minecraftChatMirrorPreviewMessage || 'Mensaje de ejemplo'}`
   const visibleMinecraftPresets = BEDROCK_BOX_PRESETS.filter((preset) => {
     const matchesSearch = !normalizePickerText(minecraftPresetSearch)
       || normalizePickerText(`${preset.name} ${preset.category} ${preset.commandText} ${preset.note}`).includes(
@@ -2122,6 +2164,26 @@ function GamesSection({
       setMinecraftPresetFeedback(error?.message || 'No pude disparar ese preset de Minecraft.')
     } finally {
       setRunningMinecraftPresetId('')
+    }
+  }
+
+  async function handleTestMinecraftChatMirror() {
+    setIsTestingMinecraftChatMirror(true)
+
+    try {
+      await onTestMinecraftChatMirror({
+        userName: minecraftChatMirrorPreviewUser,
+        comment: minecraftChatMirrorPreviewMessage,
+      })
+      setMinecraftChatMirrorFeedback(
+        'Chat espejo enviado. Si el bridge y RCON estan listos, ya deberias verlo en Minecraft.',
+      )
+    } catch (error) {
+      setMinecraftChatMirrorFeedback(
+        error?.message || 'No pude mandar el chat espejo a Minecraft desde el panel.',
+      )
+    } finally {
+      setIsTestingMinecraftChatMirror(false)
     }
   }
 
@@ -2325,6 +2387,147 @@ function GamesSection({
               <article className="surface-card game-mode-card">
                 <div className="card-top">
                   <div>
+                    <h3>Chat espejo de TikTok</h3>
+                    <p>Replica comentarios del live dentro de Minecraft usando el mismo bridge local.</p>
+                  </div>
+                  <span
+                    className={`status-chip ${profile.minecraftChatMirrorEnabled ? 'ok' : 'off'}`}
+                  >
+                    {profile.minecraftChatMirrorEnabled ? 'Activo' : 'Apagado'}
+                  </span>
+                </div>
+
+                <div className="option-grid">
+                  <label className="option-card">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(profile.minecraftChatMirrorEnabled)}
+                      onChange={(event) =>
+                        updateProfileField('minecraftChatMirrorEnabled', event.target.checked)
+                      }
+                    />
+                    <div>
+                      <strong>Activar chat espejo</strong>
+                      <span>Manda comentarios normales del live al chat del juego.</span>
+                    </div>
+                  </label>
+
+                  <label className="option-card">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(profile.minecraftChatMirrorSkipCommands)}
+                      onChange={(event) =>
+                        updateProfileField('minecraftChatMirrorSkipCommands', event.target.checked)
+                      }
+                    />
+                    <div>
+                      <strong>Ocultar comandos</strong>
+                      <span>Ignora mensajes que arrancan con `!` o `/` para no ensuciar el juego.</span>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="mini-grid">
+                  <div>
+                    <label className="field-label" htmlFor="minecraft-chat-mirror-mode">
+                      Salida dentro del juego
+                    </label>
+                    <select
+                      id="minecraft-chat-mirror-mode"
+                      className="text-field"
+                      value={minecraftChatMirrorMode}
+                      onChange={(event) =>
+                        updateProfileField('minecraftChatMirrorMode', event.target.value)
+                      }
+                    >
+                      <option value="tellraw">Chat normal</option>
+                      <option value="actionbar">Action bar</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="field-label" htmlFor="minecraft-chat-mirror-target">
+                      Objetivo en Minecraft
+                    </label>
+                    <input
+                      id="minecraft-chat-mirror-target"
+                      className="text-field"
+                      value={profile.minecraftChatMirrorTarget || '@a'}
+                      onChange={(event) =>
+                        updateProfileField('minecraftChatMirrorTarget', event.target.value)
+                      }
+                      placeholder="@a"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label" htmlFor="minecraft-chat-mirror-prefix">
+                      Prefijo
+                    </label>
+                    <input
+                      id="minecraft-chat-mirror-prefix"
+                      className="text-field"
+                      value={profile.minecraftChatMirrorPrefix || ''}
+                      onChange={(event) =>
+                        updateProfileField('minecraftChatMirrorPrefix', event.target.value)
+                      }
+                      placeholder="[TikTok]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label" htmlFor="minecraft-chat-mirror-sample-user">
+                      Usuario de prueba
+                    </label>
+                    <input
+                      id="minecraft-chat-mirror-sample-user"
+                      className="text-field"
+                      value={minecraftChatMirrorPreviewUser}
+                      onChange={(event) => setMinecraftChatMirrorPreviewUser(event.target.value)}
+                      placeholder="demo-chat"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="field-label" htmlFor="minecraft-chat-mirror-sample-message">
+                    Mensaje de prueba
+                  </label>
+                  <input
+                    id="minecraft-chat-mirror-sample-message"
+                    className="text-field"
+                    value={minecraftChatMirrorPreviewMessage}
+                    onChange={(event) => setMinecraftChatMirrorPreviewMessage(event.target.value)}
+                    placeholder="Hola Minecraft, este mensaje salio desde el panel."
+                  />
+                </div>
+
+                <div className="snippet-block">
+                  <span className="snippet-label">Vista rapida</span>
+                  <code>{minecraftChatMirrorPreviewCommand}</code>
+                </div>
+
+                <div className="row-actions">
+                  <button
+                    className="secondary-button compact-button"
+                    onClick={handleTestMinecraftChatMirror}
+                    disabled={isTestingMinecraftChatMirror}
+                  >
+                    {isTestingMinecraftChatMirror ? 'Enviando...' : 'Probar chat espejo'}
+                  </button>
+                  <button className="ghost-button compact-button" onClick={() => onJump('bridges')}>
+                    Ver bridge
+                  </button>
+                </div>
+
+                {minecraftChatMirrorFeedback ? (
+                  <span className="feedback-pill">{minecraftChatMirrorFeedback}</span>
+                ) : null}
+              </article>
+
+              <article className="surface-card game-mode-card">
+                <div className="card-top">
+                  <div>
                     <h3>Acciones ya conectadas</h3>
                     <p>Aqui tienes a mano las acciones de Minecraft que ya guardaste en tu panel.</p>
                   </div>
@@ -2387,6 +2590,14 @@ function GamesSection({
                     <span className="snippet-label">Triggers</span>
                     <p>{minecraftTriggerCount} activos</p>
                   </div>
+                  <div>
+                    <span className="snippet-label">Chat espejo</span>
+                    <p>{profile.minecraftChatMirrorEnabled ? 'Activo' : 'Apagado'}</p>
+                  </div>
+                  <div>
+                    <span className="snippet-label">Salida</span>
+                    <p>{minecraftChatMirrorMode === 'actionbar' ? 'Action bar' : 'Chat'}</p>
+                  </div>
                 </div>
 
                 <div className="snippet-block">
@@ -2395,7 +2606,7 @@ function GamesSection({
                 </div>
 
                 <p className="support-copy">
-                  Siguiente paso natural: sumar chat espejo de TikTok dentro de Minecraft y presets para mobs, clima e items.
+                  Siguiente paso natural: sumar presets por mobs, clima e items para que Minecraft quede tan completo como GTA.
                 </p>
               </article>
             </div>
