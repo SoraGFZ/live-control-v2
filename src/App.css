@@ -522,6 +522,10 @@
   grid-template-columns: minmax(220px, 1.6fr) minmax(180px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) auto;
 }
 
+.emotes-layout {
+  grid-template-columns: minmax(240px, 1.4fr) 130px minmax(180px, 1fr) auto;
+}
+
 .triggers-layout {
   grid-template-columns: 150px minmax(220px, 1.3fr) minmax(220px, 1.1fr) 110px auto;
 }
@@ -1011,6 +1015,7 @@
   }
 
   .sim-inline-fields,
+  .emotes-layout,
   .actions-layout,
   .triggers-layout {
     grid-template-columns: 1fr;

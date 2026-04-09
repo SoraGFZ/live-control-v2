@@ -168,7 +168,7 @@ function normalizeEmoteCatalogEntry(emote, sortOrder = 0) {
     id: normalizedId,
     name: normalizedName || `Emote ${normalizedId}`,
     imageUrl: String(imageUrl || '').trim(),
-    source: 'tiktok-live-connector',
+    source: String(emote?.source || 'tiktok-live-connector').trim() || 'tiktok-live-connector',
     sortOrder,
   }
 }
@@ -333,6 +333,82 @@ async function observeTikTokEmotes(emotes = [], sourceUsername = '') {
   })
 
   return nextCatalog
+}
+
+async function upsertTikTokEmoteCatalogEntry(emoteEntry) {
+  const previousState = store.getState()
+  const previousIntegration = previousState.integrations?.tiktok || {}
+  const previousCatalog = Array.isArray(previousIntegration.emoteCatalog)
+    ? previousIntegration.emoteCatalog
+    : []
+  const existingEntry = previousCatalog.find(
+    (catalogEntry) => String(catalogEntry.id) === String(emoteEntry?.id || '').trim(),
+  )
+  const normalizedEntry = normalizeEmoteCatalogEntry(
+    {
+      ...existingEntry,
+      ...emoteEntry,
+    },
+    existingEntry?.sortOrder ?? previousCatalog.length,
+  )
+
+  if (!normalizedEntry) {
+    throw new Error('Necesito al menos un id o alias para guardar el emote.')
+  }
+
+  const nextCatalog = existingEntry
+    ? previousCatalog.map((catalogEntry) =>
+        String(catalogEntry.id) === normalizedEntry.id
+          ? {
+              ...catalogEntry,
+              ...normalizedEntry,
+              sortOrder: Number.isFinite(Number(catalogEntry.sortOrder))
+                ? Number(catalogEntry.sortOrder)
+                : normalizedEntry.sortOrder,
+            }
+          : catalogEntry,
+      )
+    : [
+        ...previousCatalog,
+        {
+          ...normalizedEntry,
+          sortOrder: previousCatalog.length,
+        },
+      ]
+
+  await updateTikTokEmoteCatalog({
+    emoteCatalog: nextCatalog,
+    lastError: '',
+    sourceUsername: previousIntegration.emoteCatalogSourceUsername || '',
+  })
+
+  return store.getState().integrations.tiktok
+}
+
+async function removeTikTokEmoteCatalogEntry(emoteId) {
+  const previousState = store.getState()
+  const previousIntegration = previousState.integrations?.tiktok || {}
+  const previousCatalog = Array.isArray(previousIntegration.emoteCatalog)
+    ? previousIntegration.emoteCatalog
+    : []
+  const nextCatalog = previousCatalog.filter(
+    (catalogEntry) => String(catalogEntry.id) !== String(emoteId || '').trim(),
+  )
+
+  if (nextCatalog.length === previousCatalog.length) {
+    return previousIntegration
+  }
+
+  await updateTikTokEmoteCatalog({
+    emoteCatalog: nextCatalog.map((catalogEntry, index) => ({
+      ...catalogEntry,
+      sortOrder: index,
+    })),
+    lastError: '',
+    sourceUsername: previousIntegration.emoteCatalogSourceUsername || '',
+  })
+
+  return store.getState().integrations.tiktok
 }
 
 async function syncTikTokGiftCatalog(username, connection = null) {
@@ -1177,6 +1253,24 @@ app.post('/api/tiktok/gifts/sync', async (request, response) => {
       sourceUsername: cleanUsername,
       syncedAt: Date.now(),
     })
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/integrations/tiktok/emotes', async (request, response) => {
+  try {
+    const integration = await upsertTikTokEmoteCatalogEntry(request.body || {})
+    response.status(201).json(integration)
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.delete('/api/integrations/tiktok/emotes/:emoteId', async (request, response) => {
+  try {
+    const integration = await removeTikTokEmoteCatalogEntry(request.params.emoteId)
+    response.json(integration)
   } catch (error) {
     response.status(400).json({ error: error.message })
   }

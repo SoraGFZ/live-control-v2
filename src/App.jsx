@@ -256,6 +256,16 @@ function createActionDraft(action = null) {
   }
 }
 
+function createEmoteDraft(emote = null) {
+  return {
+    id: emote?.id || '',
+    name: emote?.name || '',
+    imageUrl: emote?.imageUrl || emote?.emoteImageUrl || '',
+    source: emote?.source || 'manual',
+    sortOrder: emote?.sortOrder,
+  }
+}
+
 function createTriggerDraft(trigger = null, actions = []) {
   return {
     id: trigger?.id,
@@ -312,6 +322,17 @@ function createKeywordToken(value, fallback = 'FX') {
   return words.map((word) => word.slice(0, 1).toUpperCase()).join('')
 }
 
+function buildManualEmoteId(value) {
+  const normalizedValue = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+
+  return normalizedValue ? `manual-${normalizedValue}` : `manual-${Date.now()}`
+}
+
 function normalizeGiftCatalogForPicker(gift, index = 0) {
   return {
     id: String(gift?.id || gift?.name || index),
@@ -331,7 +352,17 @@ function normalizeEmoteCatalogForPicker(emote, index = 0) {
     imageUrl: String(emote?.imageUrl || emote?.emoteImageUrl || ''),
     token: String(emote?.token || createKeywordToken(emote?.name || emote?.id, 'EM')),
     accent: String(emote?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
+    source: String(emote?.source || 'manual'),
+    sortOrder: emote?.sortOrder,
   }
+}
+
+function getEmoteSourceLabel(source) {
+  if (source === 'tiktok-live-connector') {
+    return 'Live'
+  }
+
+  return 'Manual'
 }
 
 function getChaosModCardMeta(effect) {
@@ -418,6 +449,8 @@ function DashboardApp() {
   const [appState, setAppState] = useState(() => readStoredState())
   const [showActionModal, setShowActionModal] = useState(false)
   const [editingActionId, setEditingActionId] = useState('')
+  const [showEmoteModal, setShowEmoteModal] = useState(false)
+  const [editingEmoteId, setEditingEmoteId] = useState('')
   const [showTriggerModal, setShowTriggerModal] = useState(false)
   const [editingTriggerId, setEditingTriggerId] = useState('')
   const [dashboardAccessKey, setDashboardAccessKey] = useState(() => readStoredDashboardAccessKey())
@@ -706,6 +739,8 @@ function DashboardApp() {
     : []
   const editingAction =
     appState.actions.find((action) => action.id === editingActionId) || null
+  const editingEmote =
+    tikTokEmoteCatalog.find((emote) => String(emote.id) === editingEmoteId) || null
   const editingTrigger =
     appState.triggers.find((trigger) => trigger.id === editingTriggerId) || null
 
@@ -779,14 +814,29 @@ function DashboardApp() {
     setShowActionModal(true)
   }
 
+  function openCreateEmoteModal() {
+    setEditingEmoteId('')
+    setShowEmoteModal(true)
+  }
+
   function openEditActionModal(actionId) {
     setEditingActionId(actionId)
     setShowActionModal(true)
   }
 
+  function openEditEmoteModal(emoteId) {
+    setEditingEmoteId(String(emoteId || ''))
+    setShowEmoteModal(true)
+  }
+
   function closeActionModal() {
     setShowActionModal(false)
     setEditingActionId('')
+  }
+
+  function closeEmoteModal() {
+    setShowEmoteModal(false)
+    setEditingEmoteId('')
   }
 
   function openCreateTriggerModal() {
@@ -897,6 +947,70 @@ function DashboardApp() {
       setMediaLibraryError('')
     } catch (error) {
       handleProtectedRequestError(error, setMediaLibraryError)
+    }
+  }
+
+  async function saveEmoteCatalogEntry(emoteDraft) {
+    const nextDraft = {
+      ...emoteDraft,
+      id: String(emoteDraft.id || '').trim() || buildManualEmoteId(emoteDraft.name),
+      name: String(emoteDraft.name || '').trim(),
+      imageUrl: String(emoteDraft.imageUrl || '').trim(),
+      source: emoteDraft.source || 'manual',
+    }
+
+    try {
+      let integration = await requestJson(
+        '/api/integrations/tiktok/emotes',
+        {
+          method: 'POST',
+          body: JSON.stringify(nextDraft),
+        },
+        dashboardAccessKey,
+      )
+
+      if (editingEmote && editingEmote.id && editingEmote.id !== nextDraft.id) {
+        integration = await requestJson(
+          `/api/integrations/tiktok/emotes/${encodeURIComponent(editingEmote.id)}`,
+          { method: 'DELETE' },
+          dashboardAccessKey,
+        )
+      }
+
+      updateDashboardState((currentState) => ({
+        ...currentState,
+        integrations: {
+          ...currentState.integrations,
+          tiktok: integration,
+        },
+      }))
+      setServerError('')
+      closeEmoteModal()
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
+  async function removeEmoteCatalogEntry(emoteId) {
+    try {
+      const integration = await requestJson(
+        `/api/integrations/tiktok/emotes/${encodeURIComponent(emoteId)}`,
+        {
+          method: 'DELETE',
+        },
+        dashboardAccessKey,
+      )
+      updateDashboardState((currentState) => ({
+        ...currentState,
+        integrations: {
+          ...currentState.integrations,
+          tiktok: integration,
+        },
+      }))
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
     }
   }
 
@@ -1082,6 +1196,13 @@ function DashboardApp() {
           tiktokUsernameDraft={tiktokUsernameDraft}
         />
 
+        <EmoteLibrarySection
+          emoteCatalog={tikTokEmoteCatalog}
+          onCreateEmote={openCreateEmoteModal}
+          onEditEmote={openEditEmoteModal}
+          onRemoveEmote={removeEmoteCatalogEntry}
+        />
+
         <SimulationsSection
           emoteCatalog={tikTokEmoteCatalog}
           giftCatalog={tikTokGiftCatalog}
@@ -1149,6 +1270,16 @@ function DashboardApp() {
 
             closeActionModal()
           }}
+          onUploadMedia={uploadMediaFile}
+        />
+      ) : null}
+
+      {showEmoteModal ? (
+        <EmoteCatalogModal
+          initialEmote={editingEmote}
+          isUploadingMedia={isUploadingMedia}
+          onClose={closeEmoteModal}
+          onSave={saveEmoteCatalogEntry}
           onUploadMedia={uploadMediaFile}
         />
       ) : null}
@@ -1248,6 +1379,9 @@ function Sidebar({ onJump }) {
         </button>
         <button className="nav-button" onClick={() => onJump('live-ops')}>
           Live Ops
+        </button>
+        <button className="nav-button" onClick={() => onJump('emotes')}>
+          Emotes
         </button>
         <button className="nav-button" onClick={() => onJump('simulations')}>
           Pruebas
@@ -1512,6 +1646,114 @@ function MetricRow({ actionCount, bridgePort, readyOutputCount, triggerCount }) 
   )
 }
 
+function EmoteLibrarySection({ emoteCatalog, onCreateEmote, onEditEmote, onRemoveEmote }) {
+  return (
+    <section className="panel-section" id="emotes">
+      <SectionHeader
+        eyebrow="Biblioteca de emotes"
+        title="Emotes"
+        description="Aqui guardas los emotes que ya viste y tambien los que quieras cargar a mano para trabajar offline."
+        action={
+          <button className="primary-button" onClick={onCreateEmote}>
+            Agregar emote
+          </button>
+        }
+      />
+
+      <EmoteListTable
+        emoteCatalog={emoteCatalog}
+        onEditEmote={onEditEmote}
+        onRemoveEmote={onRemoveEmote}
+      />
+    </section>
+  )
+}
+
+function EmoteListTable({ emoteCatalog, onEditEmote, onRemoveEmote }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const normalizedEmoteCatalog = Array.isArray(emoteCatalog)
+    ? emoteCatalog.map((emote, index) => normalizeEmoteCatalogForPicker(emote, index))
+    : []
+  const filteredEmotes = normalizedEmoteCatalog.filter((emote) =>
+    normalizePickerText(`${emote.name} ${emote.id} ${emote.source}`).includes(
+      normalizePickerText(searchQuery),
+    ),
+  )
+
+  return (
+    <div className="list-shell">
+      <div className="list-toolbar">
+        <input
+          className="text-field list-search"
+          placeholder="Buscar emotes..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+        <span className="muted-pill">
+          {filteredEmotes.length} emote{filteredEmotes.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      {filteredEmotes.length === 0 ? (
+        <div className="empty-list">
+          Todavia no hay emotes guardados. Puedes agregarlos a mano y luego el live ira sumando los
+          que aparezcan.
+        </div>
+      ) : (
+        <>
+          <div className="dense-table-head emotes-layout">
+            <div>Emote</div>
+            <div>Origen</div>
+            <div>ID</div>
+            <div />
+          </div>
+
+          <div className="dense-table">
+            {filteredEmotes.map((emote) => (
+              <article key={emote.id} className="dense-table-row emotes-layout">
+                <div className="dense-cell" data-label="Emote">
+                  <span className="gift-inline-pill">
+                    {emote.imageUrl ? (
+                      <img src={emote.imageUrl} alt={emote.name} className="gift-inline-image" />
+                    ) : (
+                      <span className="gift-inline-token" style={{ '--picker-accent': emote.accent }}>
+                        {emote.token}
+                      </span>
+                    )}
+                    <span>{emote.name}</span>
+                  </span>
+                </div>
+                <div className="dense-cell" data-label="Origen">
+                  <span className="bridge-badge">{getEmoteSourceLabel(emote.source)}</span>
+                </div>
+                <div className="dense-cell" data-label="ID">
+                  <code className="dense-code">{emote.id}</code>
+                </div>
+                <div className="dense-cell" data-label="Acciones">
+                  <div className="row-actions">
+                    <button
+                      className="ghost-button compact-button"
+                      onClick={() => onEditEmote(emote.id)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="ghost-button compact-button"
+                      onClick={() => onRemoveEmote(emote.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function SimulationsSection({ emoteCatalog, giftCatalog, onSampleEvent }) {
   const availableGiftCatalog = (giftCatalog.length ? giftCatalog : CURATED_GIFT_CATALOG).map(
     (gift, index) => normalizeGiftCatalogForPicker(gift, index),
@@ -1711,7 +1953,7 @@ function SimulationsSection({ emoteCatalog, giftCatalog, onSampleEvent }) {
               onChange={(event) => setSelectedEmoteId(event.target.value)}
             >
               {filteredEmoteCatalog.length === 0 ? (
-                <option value="">Todavia no llegaron emotes</option>
+                <option value="">Todavia no hay emotes cargados</option>
               ) : (
                 filteredEmoteCatalog.map((emote) => (
                   <option key={emote.id} value={emote.id}>
@@ -1802,7 +2044,7 @@ function SimulationsSection({ emoteCatalog, giftCatalog, onSampleEvent }) {
             </div>
             <div className="sim-note-item">
               <strong>Emote</strong>
-              <span>Se agrega solo cuando alguien manda un sticker o emote en tu live.</span>
+              <span>Puede venir del live o de tu biblioteca local para configurarlo offline.</span>
             </div>
           </div>
         </article>
@@ -3067,6 +3309,143 @@ function ActionModal({
   )
 }
 
+function EmoteCatalogModal({ initialEmote, isUploadingMedia, onClose, onSave, onUploadMedia }) {
+  const [draft, setDraft] = useState(() => createEmoteDraft(initialEmote))
+  const [errorMessage, setErrorMessage] = useState('')
+  const isEditing = Boolean(initialEmote?.id)
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+
+    if (!draft.name.trim()) {
+      setErrorMessage('Ponle un nombre al emote para reconocerlo despues.')
+      return
+    }
+
+    try {
+      await onSave({
+        ...draft,
+        id: draft.id.trim() || buildManualEmoteId(draft.name),
+        name: draft.name.trim(),
+        imageUrl: draft.imageUrl.trim(),
+      })
+    } catch (error) {
+      setErrorMessage(error.message || 'No pude guardar el emote.')
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <span className="eyebrow">{isEditing ? 'Editar emote' : 'Nuevo emote'}</span>
+            <h2>{isEditing ? 'Ajusta tu emote local' : 'Carga un emote para usarlo offline'}</h2>
+          </div>
+          <button className="icon-button" onClick={onClose}>
+            x
+          </button>
+        </div>
+
+        <form className="modal-form" onSubmit={handleSubmit}>
+          <label className="field-label" htmlFor="emote-name">
+            Nombre visible
+          </label>
+          <input
+            id="emote-name"
+            className="text-field"
+            placeholder="Ej: Corazon neon"
+            value={draft.name}
+            onChange={(event) => setDraft((currentDraft) => ({ ...currentDraft, name: event.target.value }))}
+          />
+
+          <label className="field-label" htmlFor="emote-id">
+            ID o alias
+          </label>
+          <input
+            id="emote-id"
+            className="text-field"
+            placeholder="Opcional. Si lo dejas vacio te genero uno manual."
+            value={draft.id}
+            onChange={(event) => setDraft((currentDraft) => ({ ...currentDraft, id: event.target.value }))}
+          />
+
+          <label className="field-label" htmlFor="emote-image-url">
+            Imagen del emote
+          </label>
+          <input
+            id="emote-image-url"
+            className="text-field"
+            placeholder="Pega una URL o sube la imagen a la biblioteca."
+            value={draft.imageUrl}
+            onChange={(event) =>
+              setDraft((currentDraft) => ({ ...currentDraft, imageUrl: event.target.value }))
+            }
+          />
+
+          <div className="card-actions">
+            <label className="secondary-button upload-button">
+              {isUploadingMedia ? 'Subiendo...' : 'Subir imagen'}
+              <input
+                type="file"
+                hidden
+                accept="image/*,.png,.jpg,.jpeg,.webp,.gif,.svg"
+                onChange={async (event) => {
+                  const file = event.target.files?.[0]
+
+                  if (!file) {
+                    return
+                  }
+
+                  try {
+                    const uploadedItem = await onUploadMedia(file)
+
+                    if (uploadedItem) {
+                      setDraft((currentDraft) => ({
+                        ...currentDraft,
+                        imageUrl: uploadedItem.url,
+                      }))
+                    }
+                  } finally {
+                    event.target.value = ''
+                  }
+                }}
+              />
+            </label>
+            <span className="feedback-pill">{getEmoteSourceLabel(draft.source)}</span>
+          </div>
+
+          {draft.imageUrl ? (
+            <div className="sim-gift-preview">
+              <img src={draft.imageUrl} alt={draft.name || 'Emote'} className="gift-picker-image" />
+              <div>
+                <strong>{draft.name || 'Vista previa'}</strong>
+                <p>{draft.id || 'ID manual pendiente'}</p>
+              </div>
+            </div>
+          ) : null}
+
+          <p className="support-copy">
+            Esto te deja configurar triggers de emotes aun cuando no haya live. Si despues TikTok
+            reporta ese mismo emote, el catalogo se sigue completando solo.
+          </p>
+
+          {errorMessage ? <div className="error-box">{errorMessage}</div> : null}
+
+          <div className="modal-actions">
+            <button type="button" className="ghost-button" onClick={onClose}>
+              Cancelar
+            </button>
+            <button type="submit" className="primary-button">
+              {isEditing ? 'Guardar emote' : 'Agregar emote'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function TriggerModal({ actions, emoteCatalog, giftCatalog, initialTrigger, onClose, onSave }) {
   const [draft, setDraft] = useState(() => createTriggerDraft(initialTrigger, actions))
   const [emoteSearch, setEmoteSearch] = useState('')
@@ -3314,7 +3693,7 @@ function TriggerModal({ actions, emoteCatalog, giftCatalog, initialTrigger, onCl
               <p className="support-copy">
                 {hasLiveEmoteCatalog
                   ? 'Catalogo de emotes aprendido desde tu live.'
-                  : 'Todavia no vimos emotes en este live. Cuando lleguen, apareceran aqui.'}
+                  : 'Todavia no vimos emotes en este live. Puedes agregarlos antes desde la biblioteca local.'}
               </p>
             </div>
           ) : null}
