@@ -1,0 +1,35 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gta-sky" x1="188" y1="94" x2="1416" y2="766" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB15C"/>
+      <stop offset="0.42" stop-color="#FF6E63"/>
+      <stop offset="1" stop-color="#121827"/>
+    </linearGradient>
+    <linearGradient id="gta-road" x1="0" y1="592" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#131925"/>
+      <stop offset="1" stop-color="#05070D"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" rx="56" fill="#05070D"/>
+  <rect x="32" y="32" width="1536" height="836" rx="40" fill="url(#gta-sky)"/>
+  <circle cx="1212" cy="232" r="132" fill="#FFE29F" fill-opacity="0.38"/>
+  <rect x="32" y="592" width="1536" height="276" fill="url(#gta-road)"/>
+  <rect x="112" y="522" width="1376" height="18" fill="#FFD27B" fill-opacity="0.18"/>
+  <path d="M126 702H1410C1360 654 1308 620 1240 610C1174 600 1120 614 1060 630L974 650C890 670 810 676 732 662L600 638C502 620 418 624 332 650C248 676 190 686 126 702Z" fill="#0B0E16" fill-opacity="0.76"/>
+  <path d="M366 568C408 520 480 490 562 486H844C912 486 964 504 1012 544L1110 560C1162 568 1214 592 1256 626L1326 682H1260L1212 632H1112L1070 684H542L508 632H430L366 682H284L330 626C338 616 350 598 366 568Z" fill="#12161F"/>
+  <path d="M530 534H786C844 534 884 550 926 588H486C496 560 506 548 530 534Z" fill="#1E2631"/>
+  <rect x="468" y="614" width="160" height="76" rx="28" fill="#080B11"/>
+  <rect x="1022" y="614" width="160" height="76" rx="28" fill="#080B11"/>
+  <circle cx="548" cy="652" r="46" fill="#FF9A68"/>
+  <circle cx="1102" cy="652" r="46" fill="#FF9A68"/>
+  <circle cx="548" cy="652" r="28" fill="#12161F"/>
+  <circle cx="1102" cy="652" r="28" fill="#12161F"/>
+  <rect x="1016" y="292" width="72" height="220" rx="18" fill="#271826" fill-opacity="0.54"/>
+  <rect x="1098" y="236" width="84" height="276" rx="20" fill="#321C2B" fill-opacity="0.58"/>
+  <rect x="1198" y="204" width="94" height="308" rx="22" fill="#47223A" fill-opacity="0.62"/>
+  <rect x="1310" y="260" width="72" height="252" rx="20" fill="#582B48" fill-opacity="0.58"/>
+  <g opacity="0.94">
+    <text x="116" y="724" fill="#FFF1D8" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700">GTA V</text>
+    <text x="116" y="796" fill="#FFD7AF" font-family="Arial, Helvetica, sans-serif" font-size="34" letter-spacing="8">CHAOS BRIDGE</text>
+  </g>
+</svg>

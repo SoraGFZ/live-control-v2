@@ -1,0 +1,32 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="minecraft-sky" x1="160" y1="80" x2="1350" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#88D76B"/>
+      <stop offset="1" stop-color="#17311D"/>
+    </linearGradient>
+    <linearGradient id="minecraft-ground" x1="0" y1="560" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#274C28"/>
+      <stop offset="1" stop-color="#0C1411"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" rx="56" fill="#07110E"/>
+  <rect x="32" y="32" width="1536" height="836" rx="40" fill="url(#minecraft-sky)"/>
+  <rect x="32" y="520" width="1536" height="348" rx="0" fill="url(#minecraft-ground)"/>
+  <circle cx="1280" cy="184" r="96" fill="#C6F59E" fill-opacity="0.28"/>
+  <rect x="120" y="184" width="180" height="180" rx="24" fill="#121B15" fill-opacity="0.36"/>
+  <rect x="156" y="220" width="44" height="44" rx="10" fill="#102112"/>
+  <rect x="220" y="220" width="44" height="44" rx="10" fill="#102112"/>
+  <rect x="176" y="284" width="68" height="56" rx="14" fill="#102112"/>
+  <rect x="0" y="560" width="1600" height="44" fill="#73B85B" fill-opacity="0.22"/>
+  <rect x="1040" y="348" width="150" height="262" rx="18" fill="#1D3720" fill-opacity="0.74"/>
+  <rect x="1090" y="248" width="54" height="132" rx="18" fill="#214627" fill-opacity="0.78"/>
+  <rect x="1142" y="270" width="40" height="88" rx="14" fill="#86C573" fill-opacity="0.72"/>
+  <rect x="1188" y="396" width="116" height="214" rx="18" fill="#254628" fill-opacity="0.72"/>
+  <rect x="1276" y="442" width="74" height="168" rx="18" fill="#294E2D" fill-opacity="0.66"/>
+  <rect x="980" y="442" width="84" height="168" rx="18" fill="#213E25" fill-opacity="0.64"/>
+  <path d="M108 698C192 648 284 632 364 650C424 664 486 704 558 702C654 700 734 620 834 618C914 616 980 668 1062 682C1142 696 1226 674 1304 646C1376 620 1442 602 1520 612V868H108V698Z" fill="#0B1511" fill-opacity="0.68"/>
+  <g opacity="0.92">
+    <text x="116" y="716" fill="#EAF9D8" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700">Minecraft</text>
+    <text x="116" y="790" fill="#D0E9C3" font-family="Arial, Helvetica, sans-serif" font-size="34" letter-spacing="8">BRIDGE READY</text>
+  </g>
+</svg>

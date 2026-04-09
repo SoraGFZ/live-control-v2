@@ -114,6 +114,23 @@ const CHAOSMOD_CATEGORY_ACCENTS = {
   weapon: '#ff8f66',
 }
 
+const GAME_SPOTLIGHT = {
+  minecraft: {
+    title: 'Minecraft',
+    eyebrow: 'Sandbox survival',
+    coverUrl: '/minecraft-cover.svg',
+    accent: '#7fd26b',
+    summary: 'Comandos por RCON o mod local para convertir gifts y chat en gameplay.',
+  },
+  gta: {
+    title: 'GTA V',
+    eyebrow: 'Chaos y eventos',
+    coverUrl: '/gta-v-cover.svg',
+    accent: '#ff8a5b',
+    summary: 'Bridge local con ChaosMod y acciones hechas para el directo.',
+  },
+}
+
 function getCurrentRoute() {
   if (typeof window === 'undefined') {
     return { kind: 'dashboard', slug: 'main-stage' }
@@ -1196,6 +1213,14 @@ function DashboardApp() {
           tiktokUsernameDraft={tiktokUsernameDraft}
         />
 
+        <GamesSection
+          actions={appState.actions}
+          chaosModCatalog={chaosModCatalog}
+          chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
+          onJump={scrollToSection}
+          serverStatus={serverStatus}
+        />
+
         <EmoteLibrarySection
           emoteCatalog={tikTokEmoteCatalog}
           onCreateEmote={openCreateEmoteModal}
@@ -1379,6 +1404,9 @@ function Sidebar({ onJump }) {
         </button>
         <button className="nav-button" onClick={() => onJump('live-ops')}>
           Live Ops
+        </button>
+        <button className="nav-button" onClick={() => onJump('games')}>
+          Juegos
         </button>
         <button className="nav-button" onClick={() => onJump('emotes')}>
           Emotes
@@ -1642,6 +1670,142 @@ function MetricRow({ actionCount, bridgePort, readyOutputCount, triggerCount }) 
         <strong>{bridgePort}</strong>
         <p>Donde esta corriendo el backend ahora mismo.</p>
       </article>
+    </section>
+  )
+}
+
+function GamesSection({ actions, chaosModCatalog, chaosModSourcePath, onJump, serverStatus }) {
+  const minecraftActions = actions.filter((action) => action.outputs.includes('minecraft'))
+  const gtaActions = actions.filter((action) => action.outputs.includes('gta'))
+  const localMinecraftSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.minecraftPort}`
+  const localGtaSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.gtaPort}`
+
+  const gameCards = [
+    {
+      id: 'minecraft',
+      eyebrow: GAME_SPOTLIGHT.minecraft.eyebrow,
+      title: GAME_SPOTLIGHT.minecraft.title,
+      coverUrl: GAME_SPOTLIGHT.minecraft.coverUrl,
+      coverAlt: 'Portada estilizada de Minecraft',
+      accent: GAME_SPOTLIGHT.minecraft.accent,
+      summary: GAME_SPOTLIGHT.minecraft.summary,
+      statusLabel: serverStatus.bridges.minecraftRconConnected
+        ? 'RCON enlazado'
+        : serverStatus.bridges.minecraftClients > 0
+          ? 'Mod enlazado'
+          : 'Esperando bridge',
+      statusTone:
+        serverStatus.bridges.minecraftRconConnected || serverStatus.bridges.minecraftClients > 0
+          ? 'ok'
+          : 'off',
+      stats: [
+        { label: 'Acciones listas', value: String(minecraftActions.length) },
+        { label: 'Mods conectados', value: String(serverStatus.bridges.minecraftClients) },
+        {
+          label: 'RCON',
+          value: serverStatus.bridges.minecraftRconConnected ? 'Activo' : 'Pendiente',
+        },
+      ],
+      chips: [
+        `${minecraftActions.length} accion${minecraftActions.length === 1 ? '' : 'es'}`,
+        'RCON opcional',
+        'Bridge local',
+      ],
+      endpointLabel: 'Socket local',
+      endpointValue: localMinecraftSocket,
+      extraNote: serverStatus.bridges.minecraftRconError
+        ? `RCON: ${serverStatus.bridges.minecraftRconError}`
+        : 'Puedes usar comandos directos o escuchar el socket desde tu mod.',
+    },
+    {
+      id: 'gta',
+      eyebrow: GAME_SPOTLIGHT.gta.eyebrow,
+      title: GAME_SPOTLIGHT.gta.title,
+      coverUrl: GAME_SPOTLIGHT.gta.coverUrl,
+      coverAlt: 'Portada estilizada de GTA V',
+      accent: GAME_SPOTLIGHT.gta.accent,
+      summary: GAME_SPOTLIGHT.gta.summary,
+      statusLabel: serverStatus.bridges.gtaClients > 0 ? 'Bridge enlazado' : 'Esperando bridge',
+      statusTone: serverStatus.bridges.gtaClients > 0 ? 'ok' : 'off',
+      stats: [
+        { label: 'Acciones listas', value: String(gtaActions.length) },
+        { label: 'Clientes GTA', value: String(serverStatus.bridges.gtaClients) },
+        { label: 'ChaosMod', value: `${chaosModCatalog.length} efectos` },
+      ],
+      chips: [
+        `${gtaActions.length} accion${gtaActions.length === 1 ? '' : 'es'}`,
+        'ChaosMod',
+        'Bridge local',
+      ],
+      endpointLabel: 'Socket local',
+      endpointValue: localGtaSocket,
+      extraNote: chaosModSourcePath
+        ? `ChaosMod detectado en ${chaosModSourcePath}`
+        : 'Cuando el bridge detecta ChaosMod, sube el catalogo y habilita la seleccion visual de efectos.',
+    },
+  ]
+
+  return (
+    <section className="panel-section" id="games">
+      <SectionHeader
+        eyebrow="Juegos"
+        title="Biblioteca de juegos"
+        description="Aqui concentramos cada juego, su bridge y lo que ya tienes listo para el directo. La idea es ir sumando nuevos titulos sin mezclar todo con acciones sueltas."
+      />
+
+      <div className="game-grid">
+        {gameCards.map((game) => (
+          <article key={game.id} className="surface-card game-card">
+            <img className="game-cover" src={game.coverUrl} alt={game.coverAlt} />
+
+            <div className="game-card-body">
+              <div className="card-top">
+                <div className="row-title-wrap">
+                  <span className="bridge-badge game-kicker" style={{ '--game-accent': game.accent }}>
+                    {game.eyebrow}
+                  </span>
+                  <h3>{game.title}</h3>
+                  <p>{game.summary}</p>
+                </div>
+                <span className={`status-chip ${game.statusTone}`}>{game.statusLabel}</span>
+              </div>
+
+              <div className="game-stat-grid">
+                {game.stats.map((stat) => (
+                  <div key={`${game.id}-${stat.label}`} className="game-stat-card">
+                    <span className="snippet-label">{stat.label}</span>
+                    <strong>{stat.value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="tag-row">
+                {game.chips.map((chip) => (
+                  <span key={`${game.id}-${chip}`} className="tag">
+                    {chip}
+                  </span>
+                ))}
+              </div>
+
+              <div className="snippet-block">
+                <span className="snippet-label">{game.endpointLabel}</span>
+                <code>{game.endpointValue}</code>
+              </div>
+
+              <p className="support-copy">{game.extraNote}</p>
+
+              <div className="card-actions">
+                <button className="secondary-button" onClick={() => onJump('actions')}>
+                  Ver acciones
+                </button>
+                <button className="ghost-button" onClick={() => onJump('bridges')}>
+                  Ver bridge tecnico
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   )
 }

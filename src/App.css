@@ -225,6 +225,7 @@
 .metric-grid,
 .pipeline-grid,
 .card-grid,
+.game-grid,
 .overlay-grid,
 .bridge-grid,
 .ops-grid,
@@ -252,6 +253,10 @@
 
 .bridge-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.game-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .ops-grid {
@@ -520,6 +525,58 @@
 
 .actions-layout {
   grid-template-columns: minmax(220px, 1.6fr) minmax(180px, 1fr) minmax(180px, 1.2fr) minmax(180px, 1fr) auto;
+}
+
+.game-card,
+.game-card-body,
+.game-stat-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.game-card {
+  overflow: hidden;
+  padding: 0;
+}
+
+.game-cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 36%),
+    rgba(255, 255, 255, 0.03);
+}
+
+.game-card-body {
+  padding: 22px;
+}
+
+.game-kicker {
+  background: color-mix(in srgb, var(--game-accent, #55e3d6) 22%, rgba(255, 255, 255, 0.02));
+  border-color: color-mix(in srgb, var(--game-accent, #55e3d6) 48%, rgba(255, 255, 255, 0.12));
+  color: color-mix(in srgb, var(--game-accent, #55e3d6) 74%, #fff2dd);
+}
+
+.game-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.game-stat-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.game-stat-card strong {
+  font-size: 1.2rem;
+  letter-spacing: -0.04em;
+  color: #fff3df;
 }
 
 .emotes-layout {
@@ -1000,6 +1057,7 @@
   .metric-grid,
   .pipeline-grid,
   .card-grid,
+  .game-grid,
   .source-picker-grid,
   .action-picker-grid,
   .gift-picker-grid,
@@ -1015,6 +1073,7 @@
   }
 
   .sim-inline-fields,
+  .game-stat-grid,
   .emotes-layout,
   .actions-layout,
   .triggers-layout {
