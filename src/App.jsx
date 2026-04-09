@@ -178,6 +178,21 @@ function formatDateTime(value) {
   return new Date(value).toLocaleString()
 }
 
+function createActionDraft(action = null) {
+  return {
+    id: action?.id,
+    name: action?.name || '',
+    description: action?.description || '',
+    outputs: action?.outputs?.length ? action.outputs : ['overlayAlert'],
+    commandText: action?.commandText || '',
+    gtaMode: action?.gtaMode || 'generic',
+    gtaChaosEffectId: action?.gtaChaosEffectId || '',
+    gtaChaosEffectName: action?.gtaChaosEffectName || '',
+    overlayText: action?.overlayText || '',
+    mediaUrl: action?.mediaUrl || '',
+  }
+}
+
 function App() {
   const route = getCurrentRoute()
 
@@ -191,6 +206,7 @@ function App() {
 function DashboardApp() {
   const [appState, setAppState] = useState(() => readStoredState())
   const [showActionModal, setShowActionModal] = useState(false)
+  const [editingActionId, setEditingActionId] = useState('')
   const [showTriggerModal, setShowTriggerModal] = useState(false)
   const [dashboardAccessKey, setDashboardAccessKey] = useState(() => readStoredDashboardAccessKey())
   const [dashboardAuthDraft, setDashboardAuthDraft] = useState(() => readStoredDashboardAccessKey())
@@ -418,6 +434,8 @@ function DashboardApp() {
     : ''
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
+  const editingAction =
+    appState.actions.find((action) => action.id === editingActionId) || null
 
   const readyOutputs = new Set()
   appState.actions.forEach((action) => action.outputs.forEach((output) => readyOutputs.add(output)))
@@ -444,6 +462,15 @@ function DashboardApp() {
     }))
   }
 
+  function updateAction(actionDraft) {
+    setAppState((currentState) => ({
+      ...currentState,
+      actions: currentState.actions.map((action) =>
+        action.id === actionDraft.id ? { ...action, ...actionDraft } : action,
+      ),
+    }))
+  }
+
   function addTrigger(triggerDraft) {
     setAppState((currentState) => ({
       ...currentState,
@@ -464,6 +491,21 @@ function DashboardApp() {
       ...currentState,
       triggers: currentState.triggers.filter((trigger) => trigger.id !== triggerId),
     }))
+  }
+
+  function openCreateActionModal() {
+    setEditingActionId('')
+    setShowActionModal(true)
+  }
+
+  function openEditActionModal(actionId) {
+    setEditingActionId(actionId)
+    setShowActionModal(true)
+  }
+
+  function closeActionModal() {
+    setShowActionModal(false)
+    setEditingActionId('')
   }
 
   function scrollToSection(sectionId) {
@@ -693,7 +735,7 @@ function DashboardApp() {
       <main className="main-panel">
         <HeroPanel
           overlayUrl={preferredOverlayUrl}
-          onCreateAction={() => setShowActionModal(true)}
+          onCreateAction={openCreateActionModal}
           onCreateTrigger={() => setShowTriggerModal(true)}
         />
 
@@ -711,7 +753,13 @@ function DashboardApp() {
 
         <RoadmapSection />
 
-        <ActionsSection actions={appState.actions} onCreateAction={() => setShowActionModal(true)} onPreviewAction={previewAction} onRemoveAction={removeAction} />
+        <ActionsSection
+          actions={appState.actions}
+          onCreateAction={openCreateActionModal}
+          onEditAction={openEditActionModal}
+          onPreviewAction={previewAction}
+          onRemoveAction={removeAction}
+        />
 
         <TriggersSection actions={appState.actions} onCreateTrigger={() => setShowTriggerModal(true)} onRemoveTrigger={removeTrigger} triggers={appState.triggers} />
 
@@ -745,13 +793,19 @@ function DashboardApp() {
       {showActionModal ? (
         <ActionModal
           chaosModCatalog={chaosModCatalog}
+          initialAction={editingAction}
           isUploadingMedia={isUploadingMedia}
           mediaLibrary={mediaLibrary}
           mediaLibraryError={mediaLibraryError}
-          onClose={() => setShowActionModal(false)}
+          onClose={closeActionModal}
           onSave={(actionDraft) => {
-            addAction(actionDraft)
-            setShowActionModal(false)
+            if (actionDraft.id) {
+              updateAction(actionDraft)
+            } else {
+              addAction(actionDraft)
+            }
+
+            closeActionModal()
           }}
           onUploadMedia={uploadMediaFile}
         />
@@ -1115,7 +1169,13 @@ function RoadmapSection() {
   )
 }
 
-function ActionsSection({ actions, onCreateAction, onPreviewAction, onRemoveAction }) {
+function ActionsSection({
+  actions,
+  onCreateAction,
+  onEditAction,
+  onPreviewAction,
+  onRemoveAction,
+}) {
   return (
     <section className="panel-section" id="actions">
       <SectionHeader
@@ -1172,6 +1232,9 @@ function ActionsSection({ actions, onCreateAction, onPreviewAction, onRemoveActi
               <div className="card-actions">
                 <button className="secondary-button" onClick={() => onPreviewAction(action)}>
                   {isOverlayCapable(action) ? 'Probar accion' : 'Probar bridge'}
+                </button>
+                <button className="secondary-button" onClick={() => onEditAction(action.id)}>
+                  Editar
                 </button>
                 <button className="ghost-button" onClick={() => onRemoveAction(action.id)}>
                   Eliminar
@@ -1834,6 +1897,7 @@ function SectionHeader({ eyebrow, title, description, action }) {
 
 function ActionModal({
   chaosModCatalog,
+  initialAction,
   isUploadingMedia,
   mediaLibrary,
   mediaLibraryError,
@@ -1841,24 +1905,20 @@ function ActionModal({
   onSave,
   onUploadMedia,
 }) {
-  const [draft, setDraft] = useState({
-    name: '',
-    description: '',
-    outputs: ['overlayAlert'],
-    commandText: '',
-    gtaMode: 'generic',
-    gtaChaosEffectId: '',
-    gtaChaosEffectName: '',
-    overlayText: '',
-    mediaUrl: '',
-  })
+  const [draft, setDraft] = useState(() => createActionDraft(initialAction))
   const [errorMessage, setErrorMessage] = useState('')
+  const isEditing = Boolean(initialAction?.id)
   const selectedMediaItem =
     mediaLibrary.find((item) => item.url === draft.mediaUrl || item.fileName === draft.mediaUrl) || null
   const selectedChaosModEffect =
     chaosModCatalog.find((item) => item.id === draft.gtaChaosEffectId) || null
   const usesGtaOutput = draft.outputs.includes('gta')
   const usesChaosMod = usesGtaOutput && draft.gtaMode === 'chaosmod'
+
+  useEffect(() => {
+    setDraft(createActionDraft(initialAction))
+    setErrorMessage('')
+  }, [initialAction])
 
   function toggleOutput(outputId) {
     setDraft((currentDraft) => {
@@ -1908,8 +1968,8 @@ function ActionModal({
       <div className="modal-card" onClick={(event) => event.stopPropagation()}>
         <div className="modal-head">
           <div>
-            <span className="eyebrow">Nueva accion</span>
-            <h2>Define lo que debe ocurrir</h2>
+            <span className="eyebrow">{isEditing ? 'Editar accion' : 'Nueva accion'}</span>
+            <h2>{isEditing ? 'Ajusta lo que debe ocurrir' : 'Define lo que debe ocurrir'}</h2>
           </div>
           <button className="icon-button" onClick={onClose}>
             x
@@ -2127,7 +2187,7 @@ function ActionModal({
               Cancelar
             </button>
             <button type="submit" className="primary-button">
-              Guardar accion
+              {isEditing ? 'Guardar cambios' : 'Guardar accion'}
             </button>
           </div>
         </form>
