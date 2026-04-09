@@ -20,6 +20,7 @@ import {
   matchesTrigger,
   mergeStateWithDefaults,
   normalizeBaseUrl,
+  normalizeMinecraftCommand,
   sanitizeSlug,
 } from '../src/live-control.js'
 import {
@@ -885,7 +886,7 @@ async function dispatchAction(action, sourceEvent, reason = 'manual') {
     if (action.commandText) {
       try {
         const rcon = await ensureMinecraftRcon(state.profile)
-        const response = await rcon.send(action.commandText)
+        const response = await rcon.send(normalizeMinecraftCommand(action.commandText))
 
         bridgeResults.minecraft = {
           deliveredToClients: socketHubs.minecraft.size,
@@ -930,6 +931,66 @@ async function dispatchAction(action, sourceEvent, reason = 'manual') {
     reason,
     sourceEvent,
     bridgeResults,
+    createdAt: Date.now(),
+  }
+
+  pushRecent(recentDispatches, dispatchRecord)
+  broadcast('app', { type: 'dispatch', payload: dispatchRecord })
+  broadcastStatus()
+
+  return dispatchRecord
+}
+
+async function dispatchMinecraftBridgeCommand({
+  name = 'Prueba Minecraft',
+  commandText = '',
+  sourceEvent = null,
+  reason = 'manual-minecraft',
+  minecraftMode = 'generic',
+  minecraftBedrockPresetId = '',
+  minecraftBedrockPresetName = '',
+  description = '',
+}) {
+  const trimmedCommandText = String(commandText || '').trim()
+
+  if (!trimmedCommandText) {
+    throw new Error('Necesito un comando de Minecraft para disparar la prueba.')
+  }
+
+  const bridgeAction = {
+    id: createId('minecraft-quick'),
+    name: String(name || 'Prueba Minecraft').trim(),
+    description: String(description || '').trim(),
+    outputs: ['minecraft'],
+    commandText: trimmedCommandText,
+    minecraftMode: minecraftMode || 'generic',
+    minecraftBedrockPresetId: String(minecraftBedrockPresetId || '').trim(),
+    minecraftBedrockPresetName: String(minecraftBedrockPresetName || '').trim(),
+    gtaMode: 'generic',
+    gtaChaosEffectId: '',
+    gtaChaosEffectName: '',
+    overlayText: '',
+    mediaUrl: '',
+  }
+
+  const minecraftPayload = buildBridgePayload('minecraft', bridgeAction, sourceEvent)
+  broadcast('minecraft', { type: 'minecraft-command', payload: minecraftPayload })
+
+  const dispatchRecord = {
+    id: createId('dispatch'),
+    actionId: bridgeAction.id,
+    actionName: bridgeAction.name,
+    outputs: ['minecraft'],
+    reason,
+    sourceEvent,
+    bridgeResults: {
+      minecraft: {
+        deliveredToClients: socketHubs.minecraft.size,
+        viaRcon: false,
+        bridgeOnly: true,
+        commandText: normalizeMinecraftCommand(trimmedCommandText),
+      },
+    },
     createdAt: Date.now(),
   }
 
@@ -1375,6 +1436,26 @@ app.post('/api/events/test', async (request, response) => {
   const manualEvent = createManualIncomingEvent(eventType, request.body)
   await processIncomingEvent(manualEvent, 'manual-event')
   response.json(manualEvent)
+})
+
+app.post('/api/minecraft/test', async (request, response) => {
+  const manualEvent = createManualIncomingEvent('comment', {
+    userName: request.body?.userName || 'manual-minecraft',
+    comment: request.body?.comment || request.body?.commandText || 'Prueba manual de Minecraft',
+  })
+
+  const dispatchRecord = await dispatchMinecraftBridgeCommand({
+    name: request.body?.name || 'Prueba Minecraft',
+    commandText: request.body?.commandText || '',
+    description: request.body?.description || '',
+    minecraftMode: request.body?.minecraftMode || 'generic',
+    minecraftBedrockPresetId: request.body?.minecraftBedrockPresetId || '',
+    minecraftBedrockPresetName: request.body?.minecraftBedrockPresetName || '',
+    sourceEvent: manualEvent,
+    reason: 'manual-minecraft',
+  })
+
+  response.json(dispatchRecord)
 })
 
 app.get('/api/media', async (_request, response) => {

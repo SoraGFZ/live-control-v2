@@ -7,10 +7,10 @@
     "enabled": true,
     "localBridgeHost": "127.0.0.1",
     "localBridgePort": 6135,
-    "useRcon": false,
+    "useRcon": true,
     "rconHost": "127.0.0.1",
     "rconPort": 25575,
-    "rconPassword": ""
+    "rconPassword": "REEMPLAZA_CON_TU_PASSWORD_RCON"
   },
   "gta": {
     "enabled": true,

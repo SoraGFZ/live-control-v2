@@ -172,6 +172,12 @@ export function createId(prefix) {
   return `${prefix}-${Date.now()}-${Math.round(Math.random() * 100000)}`
 }
 
+export function normalizeMinecraftCommand(commandText) {
+  return String(commandText || '')
+    .trim()
+    .replace(/^\/+/, '')
+}
+
 export function mergeStateWithDefaults(parsedState) {
   const parsedUpdatedAt = Number(parsedState?.updatedAt || 0)
   const mergedActions = Array.isArray(parsedState?.actions)

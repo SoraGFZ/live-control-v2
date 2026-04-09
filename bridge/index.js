@@ -8,6 +8,7 @@ import {
   buildWebSocketUrl,
   LOCAL_BRIDGE_DEFAULTS,
   normalizeBaseUrl,
+  normalizeMinecraftCommand,
 } from '../src/live-control.js'
 
 const runtimeProcess = globalThis.process
@@ -918,7 +919,7 @@ async function main() {
     ) {
       try {
         const rcon = await ensureMinecraftRcon(bridgeConfig.minecraft)
-        const response = await rcon.send(message.payload.rawCommandText)
+        const response = await rcon.send(normalizeMinecraftCommand(message.payload.rawCommandText))
         console.log(`[rcon:minecraft] comando ejecutado: ${response || 'sin respuesta'}`)
       } catch (error) {
         console.error(`[rcon:minecraft] error: ${error.message}`)

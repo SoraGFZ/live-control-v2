@@ -743,6 +743,56 @@
   border-color: rgba(255, 116, 47, 0.18);
 }
 
+.game-mode-grid,
+.game-mode-stack,
+.game-linked-actions {
+  display: grid;
+  gap: 18px;
+}
+
+.game-mode-grid {
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
+}
+
+.game-mode-card {
+  border-radius: 24px;
+}
+
+.game-mode-stack {
+  align-content: start;
+}
+
+.game-mode-preset-grid {
+  max-height: 420px;
+}
+
+.game-mode-preset-card {
+  align-content: start;
+}
+
+.game-mode-preset-card .dense-code {
+  word-break: break-word;
+}
+
+.game-linked-actions {
+  gap: 12px;
+}
+
+.game-linked-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.game-mode-status-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .emotes-layout {
   grid-template-columns: minmax(240px, 1.4fr) 130px minmax(180px, 1fr) auto;
 }
@@ -1425,6 +1475,8 @@
   .sim-inline-fields,
   .game-detail-hero,
   .game-detail-columns,
+  .game-mode-grid,
+  .game-mode-status-grid,
   .game-stat-grid,
   .smartbar-body,
   .emotes-layout,

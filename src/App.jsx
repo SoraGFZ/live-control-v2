@@ -605,6 +605,10 @@ function getActionDetailLine(action) {
   return action.description || 'Sin nota extra.'
 }
 
+function groupActionsByOutput(actions = [], outputId = '') {
+  return actions.filter((action) => Array.isArray(action.outputs) && action.outputs.includes(outputId))
+}
+
 function getTriggerRuleSummary(trigger) {
   if (!trigger?.match) {
     return 'Cualquier evento'
@@ -1300,6 +1304,33 @@ function DashboardApp() {
     scrollToSection('overlay')
   }
 
+  async function runMinecraftPreset(preset) {
+    try {
+      const dispatchRecord = await requestJson(
+        '/api/minecraft/test',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            name: preset?.name || 'Prueba Minecraft',
+            description: preset?.note || '',
+            commandText: preset?.commandText || '',
+            minecraftMode: 'bedrock-box',
+            minecraftBedrockPresetId: preset?.id || '',
+            minecraftBedrockPresetName: preset?.name || '',
+            userName: 'manual-minecraft',
+            comment: `Prueba Bedrock Box: ${preset?.name || 'preset'}`,
+          }),
+        },
+        dashboardAccessKey,
+      )
+      setServerError('')
+      return dispatchRecord
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
   async function sendSampleEvent(sampleEvent, payloadOverrides = {}) {
     const payload =
       typeof sampleEvent === 'string'
@@ -1466,6 +1497,8 @@ function DashboardApp() {
           chaosModCatalog={chaosModCatalog}
           chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
           onJump={scrollToSection}
+          onPreviewAction={previewAction}
+          onRunMinecraftPreset={runMinecraftPreset}
           serverStatus={serverStatus}
           triggers={appState.triggers}
         />
@@ -1937,11 +1970,15 @@ function GamesSection({
   chaosModCatalog,
   chaosModSourcePath,
   onJump,
+  onPreviewAction,
+  onRunMinecraftPreset,
   serverStatus,
   triggers,
 }) {
-  const minecraftActions = actions.filter((action) => action.outputs.includes('minecraft'))
-  const gtaActions = actions.filter((action) => action.outputs.includes('gta'))
+  const minecraftActions = groupActionsByOutput(actions, 'minecraft')
+  const gtaActions = groupActionsByOutput(actions, 'gta')
+  const bedrockBoxActions = minecraftActions.filter((action) => action.minecraftMode === 'bedrock-box')
+  const genericMinecraftActions = minecraftActions.filter((action) => action.minecraftMode !== 'bedrock-box')
   const minecraftTriggerCount = triggers.filter((trigger) =>
     minecraftActions.some((action) => action.id === trigger.actionId),
   ).length
@@ -2037,9 +2074,47 @@ function GamesSection({
         'La idea es que Minecraft termine siendo un modulo completo con presets por mobs, clima, items y minijuegos.',
     },
   ]
+  const minecraftPresetCategories = [
+    'all',
+    ...Array.from(new Set(BEDROCK_BOX_PRESETS.map((preset) => preset.category))).sort(
+      (left, right) => left.localeCompare(right),
+    ),
+  ]
 
   const [selectedGameId, setSelectedGameId] = useState(() => gameCards[0]?.id || 'gta')
+  const [minecraftPresetSearch, setMinecraftPresetSearch] = useState('')
+  const [minecraftPresetCategory, setMinecraftPresetCategory] = useState('all')
+  const [minecraftPresetFeedback, setMinecraftPresetFeedback] = useState('')
+  const [runningMinecraftPresetId, setRunningMinecraftPresetId] = useState('')
   const selectedGame = gameCards.find((game) => game.id === selectedGameId) || gameCards[0]
+  const visibleMinecraftPresets = BEDROCK_BOX_PRESETS.filter((preset) => {
+    const matchesSearch = !normalizePickerText(minecraftPresetSearch)
+      || normalizePickerText(`${preset.name} ${preset.category} ${preset.commandText} ${preset.note}`).includes(
+        normalizePickerText(minecraftPresetSearch),
+      )
+    const matchesCategory = minecraftPresetCategory === 'all' || preset.category === minecraftPresetCategory
+
+    return matchesSearch && matchesCategory
+  })
+  const featuredMinecraftActions = [...minecraftActions].sort((left, right) => {
+    const leftScore = left.minecraftMode === 'bedrock-box' ? 0 : 1
+    const rightScore = right.minecraftMode === 'bedrock-box' ? 0 : 1
+
+    return leftScore - rightScore || left.name.localeCompare(right.name)
+  })
+
+  async function handleRunMinecraftPreset(preset) {
+    setRunningMinecraftPresetId(preset.id)
+
+    try {
+      await onRunMinecraftPreset(preset)
+      setMinecraftPresetFeedback(`Preset enviado: ${preset.name}. Si el bridge esta activo, deberias verlo en Minecraft al instante.`)
+    } catch (error) {
+      setMinecraftPresetFeedback(error?.message || 'No pude disparar ese preset de Minecraft.')
+    } finally {
+      setRunningMinecraftPresetId('')
+    }
+  }
 
   return (
     <section className="panel-section" id="games">
@@ -2148,6 +2223,171 @@ function GamesSection({
           </div>
           <p className="support-copy">{selectedGame.extraNote}</p>
         </div>
+
+        {selectedGame.id === 'minecraft' ? (
+          <div className="game-mode-grid">
+            <article className="surface-card game-mode-card">
+              <div className="card-top">
+                <div>
+                  <h3>Modos de Minecraft</h3>
+                  <p>Bedrock Box ya vive aqui como modo real del juego, con presets rapidos para probar sin crear una accion antes.</p>
+                </div>
+                <div className="tag-row">
+                  <span className="bridge-badge">Bedrock Box</span>
+                  <span className="bridge-badge">{BEDROCK_BOX_PRESETS.length} presets</span>
+                </div>
+              </div>
+
+              <div className="picker-toolbar">
+                <input
+                  className="text-field"
+                  placeholder="Busca por nombre, categoria o comando"
+                  value={minecraftPresetSearch}
+                  onChange={(event) => setMinecraftPresetSearch(event.target.value)}
+                />
+                <select
+                  className="text-field picker-filter"
+                  value={minecraftPresetCategory}
+                  onChange={(event) => setMinecraftPresetCategory(event.target.value)}
+                >
+                  {minecraftPresetCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category === 'all' ? 'Todas las categorias' : category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="command-gallery-grid game-mode-preset-grid">
+                {visibleMinecraftPresets.length === 0 ? (
+                  <div className="empty-list">No encontre presets de Bedrock Box con ese filtro.</div>
+                ) : (
+                  visibleMinecraftPresets.map((preset) => {
+                    const meta = getBedrockBoxCardMeta(preset)
+                    const linkedActionCount = bedrockBoxActions.filter(
+                      (action) => action.minecraftBedrockPresetId === preset.id,
+                    ).length
+
+                    return (
+                      <article
+                        key={preset.id}
+                        className="command-picker-card game-mode-preset-card"
+                        style={{ '--picker-accent': meta.accent }}
+                      >
+                        <div className="picker-card-head">
+                          <span className="gift-picker-thumb">{meta.token}</span>
+                          <span className="tag">{preset.category}</span>
+                        </div>
+                        <strong>{preset.name}</strong>
+                        <span className="row-subcopy">{preset.note}</span>
+                        <code className="dense-code">{preset.commandText}</code>
+                        <div className="tag-row">
+                          {linkedActionCount > 0 ? (
+                            <span className="muted-pill">
+                              {linkedActionCount} accion{linkedActionCount === 1 ? '' : 'es'}
+                            </span>
+                          ) : (
+                            <span className="muted-pill">Sin acciones ligadas</span>
+                          )}
+                        </div>
+                        <div className="row-actions">
+                          <button
+                            className="secondary-button compact-button"
+                            onClick={() => handleRunMinecraftPreset(preset)}
+                            disabled={runningMinecraftPresetId === preset.id}
+                          >
+                            {runningMinecraftPresetId === preset.id ? 'Enviando...' : 'Probar ahora'}
+                          </button>
+                        </div>
+                      </article>
+                    )
+                  })
+                )}
+              </div>
+
+              {minecraftPresetFeedback ? <span className="feedback-pill">{minecraftPresetFeedback}</span> : null}
+            </article>
+
+            <div className="game-mode-stack">
+              <article className="surface-card game-mode-card">
+                <div className="card-top">
+                  <div>
+                    <h3>Acciones ya conectadas</h3>
+                    <p>Aqui tienes a mano las acciones de Minecraft que ya guardaste en tu panel.</p>
+                  </div>
+                  <span className="state-badge">{minecraftActions.length} listas</span>
+                </div>
+
+                {featuredMinecraftActions.length === 0 ? (
+                  <p className="support-copy">Todavia no creaste acciones para Minecraft. Puedes arrancar con un preset Bedrock Box o ir a la biblioteca de acciones.</p>
+                ) : (
+                  <div className="game-linked-actions">
+                    {featuredMinecraftActions.slice(0, 5).map((action) => (
+                      <div key={action.id} className="game-linked-action">
+                        <div className="row-title-wrap">
+                          <strong className="row-title">{action.name}</strong>
+                          <span className="row-subcopy">{getActionCommandSummary(action)}</span>
+                        </div>
+                        <button className="ghost-button compact-button" onClick={() => onPreviewAction(action)}>
+                          Probar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="card-actions">
+                  <button className="primary-button" onClick={() => onJump('actions')}>
+                    Gestionar acciones
+                  </button>
+                  <button className="secondary-button" onClick={() => onJump('triggers')}>
+                    Ver triggers
+                  </button>
+                </div>
+              </article>
+
+              <article className="surface-card game-mode-card">
+                <div className="card-top">
+                  <div>
+                    <h3>Estado rapido</h3>
+                    <p>Resumen de como esta quedando hoy tu modulo de Minecraft.</p>
+                  </div>
+                  <span className={`status-chip ${serverStatus.bridges.minecraftRconConnected ? 'ok' : 'off'}`}>
+                    {serverStatus.bridges.minecraftRconConnected ? 'RCON activo' : 'RCON en espera'}
+                  </span>
+                </div>
+
+                <div className="mini-grid game-mode-status-grid">
+                  <div>
+                    <span className="snippet-label">Bedrock Box</span>
+                    <p>{bedrockBoxActions.length} accion{bedrockBoxActions.length === 1 ? '' : 'es'}</p>
+                  </div>
+                  <div>
+                    <span className="snippet-label">Generico</span>
+                    <p>{genericMinecraftActions.length} accion{genericMinecraftActions.length === 1 ? '' : 'es'}</p>
+                  </div>
+                  <div>
+                    <span className="snippet-label">Bridge local</span>
+                    <p>{serverStatus.bridges.minecraftClients} cliente{serverStatus.bridges.minecraftClients === 1 ? '' : 's'}</p>
+                  </div>
+                  <div>
+                    <span className="snippet-label">Triggers</span>
+                    <p>{minecraftTriggerCount} activos</p>
+                  </div>
+                </div>
+
+                <div className="snippet-block">
+                  <span className="snippet-label">Comando base</span>
+                  <code>bedrock create | fill | tnt | randomtnt | glass_prison</code>
+                </div>
+
+                <p className="support-copy">
+                  Siguiente paso natural: sumar chat espejo de TikTok dentro de Minecraft y presets para mobs, clima e items.
+                </p>
+              </article>
+            </div>
+          </div>
+        ) : null}
       </article>
     </section>
   )
