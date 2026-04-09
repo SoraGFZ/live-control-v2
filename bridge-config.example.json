@@ -28,6 +28,7 @@
     "gtaProcessName": "GTA5",
     "debugSocketPort": 31819,
     "debugSocketReconnectDelayMs": 3000,
+    "catalogResyncIntervalMs": 30000,
     "menuOpenDelayMs": 220,
     "keyDelayMs": 35
   }

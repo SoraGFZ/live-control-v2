@@ -90,6 +90,7 @@ Con Railway, el overlay y el panel ya viven en internet. Para que **Minecraft o 
   - GTA local: `ws://127.0.0.1:6136`
 - Si activas `useRcon`, tambien ejecuta `commandText` directo por RCON.
 - Si detecta ChaosMod, sube su catalogo al panel publico y tambien al panel local si esta corriendo en `http://127.0.0.1:5123`.
+- Si Railway o tu backend local se reinician, el bridge vuelve a re-sincronizar el catalogo automaticamente.
 
 ### Flujo sugerido
 

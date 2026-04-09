@@ -46,6 +46,7 @@ const DEFAULT_CONFIG = {
     gtaProcessName: 'GTA5',
     debugSocketPort: 31819,
     debugSocketReconnectDelayMs: 3000,
+    catalogResyncIntervalMs: 30000,
     menuOpenDelayMs: 220,
     keyDelayMs: 35,
   },
@@ -171,7 +172,7 @@ async function ensureMinecraftRcon(minecraftConfig) {
   return minecraftRcon
 }
 
-function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs) {
+function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs, onOpen) {
   let socket = null
   let reconnectTimeoutId = null
   let isStopped = false
@@ -190,6 +191,9 @@ function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs) {
 
     socket.on('open', () => {
       console.log(`[remote:${channelName}] conectado`)
+      Promise.resolve(onOpen?.()).catch((error) => {
+        console.error(`[remote:${channelName}] no pude correr onOpen: ${error.message}`)
+      })
     })
 
     socket.on('message', async (rawMessage) => {
@@ -300,6 +304,23 @@ function buildChaosModSyncTargets(bridgeConfig) {
   })
 
   return targets
+}
+
+async function syncChaosModCatalogTargets(syncTargets, dashboardKey, payload, reason = 'sin motivo') {
+  await Promise.all(
+    syncTargets.map(async (target) => {
+      try {
+        await syncChaosModCatalog(target.baseUrl, dashboardKey, payload)
+        console.log(
+          `[chaosmod] catalogo sincronizado con ${target.label}: ${target.baseUrl} (${reason})`,
+        )
+      } catch (error) {
+        console.error(
+          `[chaosmod] no pude sincronizar el catalogo con ${target.label} (${target.baseUrl}) (${reason}): ${error.message}`,
+        )
+      }
+    }),
+  )
 }
 
 async function prepareChaosModCatalog(chaosModConfig) {
@@ -539,19 +560,33 @@ async function main() {
     sourcePath: chaosModCatalogPayload.sourcePath,
     lastError: chaosModCatalogPayload.lastError,
   }
+  let catalogSyncInFlight = null
+  const syncChaosModCatalogNow = async (reason) => {
+    if (catalogSyncInFlight) {
+      return catalogSyncInFlight
+    }
 
-  await Promise.all(
-    syncTargets.map(async (target) => {
-      try {
-        await syncChaosModCatalog(target.baseUrl, bridgeConfig.dashboardKey, syncPayload)
-        console.log(`[chaosmod] catalogo sincronizado con ${target.label}: ${target.baseUrl}`)
-      } catch (error) {
-        console.error(
-          `[chaosmod] no pude sincronizar el catalogo con ${target.label} (${target.baseUrl}): ${error.message}`,
-        )
-      }
-    }),
-  )
+    catalogSyncInFlight = syncChaosModCatalogTargets(
+      syncTargets,
+      bridgeConfig.dashboardKey,
+      syncPayload,
+      reason,
+    ).finally(() => {
+      catalogSyncInFlight = null
+    })
+
+    return catalogSyncInFlight
+  }
+
+  await syncChaosModCatalogNow('arranque')
+
+  const catalogResyncIntervalMs = Number(bridgeConfig.chaosmod.catalogResyncIntervalMs || 30000)
+  const catalogResyncIntervalId =
+    syncTargets.length > 0 && syncPayload.catalog.length > 0 && catalogResyncIntervalMs > 0
+      ? setInterval(() => {
+          void syncChaosModCatalogNow('resincronizacion periodica')
+        }, catalogResyncIntervalMs)
+      : null
 
   async function handleMinecraftMessage(message) {
     if (message.type !== 'minecraft-command') {
@@ -676,12 +711,14 @@ async function main() {
     remoteMinecraftUrl,
     handleMinecraftMessage,
     Number(bridgeConfig.reconnectDelayMs || 2500),
+    () => syncChaosModCatalogNow('reconexion remota'),
   )
   const stopGta = connectRemoteChannel(
     'gta',
     remoteGtaUrl,
     handleGtaMessage,
     Number(bridgeConfig.reconnectDelayMs || 2500),
+    () => syncChaosModCatalogNow('reconexion remota'),
   )
 
   console.log(`[bridge] config cargada desde ${CONFIG_PATH}`)
@@ -695,6 +732,7 @@ async function main() {
     stopMinecraft()
     stopGta()
     chaosModDebugSocket?.stop()
+    clearInterval(catalogResyncIntervalId)
     minecraftServer?.server.close()
     gtaServer?.server.close()
 
