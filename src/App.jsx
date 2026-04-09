@@ -290,6 +290,46 @@ function formatDurationClock(durationMs) {
   return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':')
 }
 
+function getSmartBarGoalValue(smartBar) {
+  const parsedGoal = Number.parseInt(String(smartBar?.winGoal || '0').replace(/[^\d]/g, ''), 10)
+  return Number.isNaN(parsedGoal) || parsedGoal <= 0 ? 0 : parsedGoal
+}
+
+function buildSmartBarMetrics(smartBar, smartBarStatus, now) {
+  const metrics = []
+
+  if (smartBar.showCoins) {
+    metrics.push({
+      id: 'coins',
+      label: 'Coins',
+      value: String(smartBarStatus.receivedCoins || 0),
+    })
+  }
+
+  if (smartBar.showFollows) {
+    metrics.push({
+      id: 'follows',
+      label: 'Follows',
+      value: String(smartBarStatus.followCount || 0),
+    })
+  }
+
+  if (smartBar.showLiveDuration) {
+    const liveDurationMs =
+      smartBarStatus.connected && smartBarStatus.sessionStartedAt
+        ? now - smartBarStatus.sessionStartedAt
+        : smartBarStatus.liveDurationMs || 0
+
+    metrics.push({
+      id: 'live-duration',
+      label: 'Tiempo',
+      value: formatDurationClock(liveDurationMs),
+    })
+  }
+
+  return metrics
+}
+
 function createActionDraft(action = null) {
   return {
     id: action?.id,
@@ -2841,6 +2881,11 @@ function OverlaySection({
         <article className="surface-card settings-card">
           <h3>Smart bar</h3>
 
+          <div className="smartbar-preview-shell">
+            <span className="snippet-label">Vista previa</span>
+            <SmartBarWidget smartBar={smartBar} smartBarStatus={serverStatus.smartBar} compact />
+          </div>
+
           <label className="field-label" htmlFor="smartbar-title">
             Titulo
           </label>
@@ -2938,6 +2983,14 @@ function OverlaySection({
             <div>
               <span className="snippet-label">Follows nuevos</span>
               <p>{serverStatus.smartBar.followCount}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Tiempo en live</span>
+              <p>{formatDurationClock(serverStatus.smartBar.liveDurationMs)}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Sesion</span>
+              <p>{serverStatus.smartBar.connected ? 'En vivo' : 'Stand by'}</p>
             </div>
           </div>
 
@@ -3398,11 +3451,85 @@ function OverlayScreen({ slug }) {
   )
 }
 
+function SmartBarWidget({ smartBar, smartBarStatus, compact = false }) {
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  const wins = Math.max(0, Number(smartBar?.currentWins || 0))
+  const goal = getSmartBarGoalValue(smartBar)
+  const progressPercent = goal > 0 ? Math.min(100, Math.round((wins / goal) * 100)) : 0
+  const secondaryMetrics = buildSmartBarMetrics(smartBar || {}, smartBarStatus || {}, now)
+
+  return (
+    <article className={`smartbar-card ${compact ? 'compact' : ''}`}>
+      <div className="smartbar-topline">
+        <div className="smartbar-brand">
+          <span className="smartbar-kicker">Live widget</span>
+          <strong className="smartbar-title">{smartBar?.title || 'Marcador del live'}</strong>
+        </div>
+        <span className={`status-chip ${smartBarStatus?.connected ? 'ok' : 'off'}`}>
+          {smartBarStatus?.connected ? 'LIVE' : 'Stand by'}
+        </span>
+      </div>
+
+      <div className="smartbar-body">
+        {smartBar?.showWins ? (
+          <div className="smartbar-primary">
+            <div className="smartbar-primary-head">
+              <span className="smartbar-primary-token">W</span>
+              <div className="smartbar-primary-copy">
+                <span className="smartbar-primary-label">Victorias</span>
+                <strong>
+                  {wins}
+                  {goal > 0 ? ` / ${goal}` : ''}
+                </strong>
+              </div>
+            </div>
+
+            <div className="smartbar-progress">
+              <div
+                className="smartbar-progress-bar"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <span className="smartbar-progress-label">
+              {goal > 0 ? `${progressPercent}% de la meta` : 'Sin meta definida'}
+            </span>
+          </div>
+        ) : null}
+
+        <div className="smartbar-secondary">
+          {secondaryMetrics.length === 0 ? (
+            <div className="smartbar-metric">
+              <span className="smartbar-metric-label">Panel</span>
+              <strong>Activa coins, follows o tiempo para completar la barra.</strong>
+            </div>
+          ) : (
+            secondaryMetrics.map((metric) => (
+              <div key={metric.id} className="smartbar-metric">
+                <span className="smartbar-metric-label">{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </article>
+  )
+}
+
 function SmartBarScreen({ slug }) {
   const [appState, setAppState] = useState(() => readStoredState())
   const [smartBarStatus, setSmartBarStatus] = useState(DEFAULT_SERVER_STATUS.smartBar)
   const [overlayError, setOverlayError] = useState('')
-  const [now, setNow] = useState(() => Date.now())
   const overlayAccessKey = readOverlayAccessKeyFromUrl()
 
   useEffect(() => {
@@ -3494,53 +3621,7 @@ function SmartBarScreen({ slug }) {
     }
   }, [overlayAccessKey, slug])
 
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setNow(Date.now())
-    }, 1000)
-
-    return () => window.clearInterval(intervalId)
-  }, [])
-
   const smartBar = appState.widgets?.smartBar || {}
-  const metrics = []
-
-  if (smartBar.showWins) {
-    metrics.push({
-      id: 'wins',
-      label: 'Wins',
-      value: `${Number(smartBar.currentWins || 0)}/${smartBar.winGoal || '0'}`,
-    })
-  }
-
-  if (smartBar.showCoins) {
-    metrics.push({
-      id: 'coins',
-      label: 'Coins',
-      value: String(smartBarStatus.receivedCoins || 0),
-    })
-  }
-
-  if (smartBar.showFollows) {
-    metrics.push({
-      id: 'follows',
-      label: 'Follows',
-      value: String(smartBarStatus.followCount || 0),
-    })
-  }
-
-  if (smartBar.showLiveDuration) {
-    const liveDurationMs =
-      smartBarStatus.connected && smartBarStatus.sessionStartedAt
-        ? now - smartBarStatus.sessionStartedAt
-        : smartBarStatus.liveDurationMs || 0
-
-    metrics.push({
-      id: 'live-duration',
-      label: 'Tiempo',
-      value: formatDurationClock(liveDurationMs),
-    })
-  }
 
   if (overlayError) {
     return (
@@ -3559,23 +3640,7 @@ function SmartBarScreen({ slug }) {
   return (
     <div className="overlay-screen smartbar-screen">
       <div className="smartbar-stage">
-        <article className="smartbar-card">
-          <div className="smartbar-header">
-            <span className="smartbar-title">{smartBar.title || 'Marcador del live'}</span>
-            <span className={`status-chip ${smartBarStatus.connected ? 'ok' : 'off'}`}>
-              {smartBarStatus.connected ? 'LIVE' : 'Stand by'}
-            </span>
-          </div>
-
-          <div className="smartbar-metrics">
-            {metrics.map((metric) => (
-              <div key={metric.id} className="smartbar-metric">
-                <span className="smartbar-metric-label">{metric.label}</span>
-                <strong>{metric.value}</strong>
-              </div>
-            ))}
-          </div>
-        </article>
+        <SmartBarWidget smartBar={smartBar} smartBarStatus={smartBarStatus} />
       </div>
     </div>
   )
