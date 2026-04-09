@@ -10,6 +10,7 @@ Panel local para conectar TikTok LIVE, mapear triggers a acciones, mostrar un ov
 - Dispara alertas de overlay, TTS y audio desde el backend local.
 - Emite eventos por WebSocket para bridges de Minecraft y GTA V.
 - Intenta enviar comandos reales a Minecraft via RCON si completas host, port y password.
+- Incluye un modulo de `Song Request` con Spotify para `!play`, `!skip` y `!quitar`.
 
 ## Scripts
 
@@ -22,6 +23,34 @@ Panel local para conectar TikTok LIVE, mapear triggers a acciones, mostrar un ov
 - `npm run tunnel:localtunnel`: abre un tunel publico con LocalTunnel como alternativa.
 - `npm run public`: compila la app, levanta el backend y abre el tunel publico.
 - `npm run lint`: valida el codigo.
+
+## Spotify Song Request
+
+### Variables necesarias
+
+Configura estas variables de entorno en tu backend o en Railway:
+
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
+- `SPOTIFY_REDIRECT_URI`
+
+El `redirect_uri` debe apuntar a:
+
+`https://TU-DOMINIO/api/music/spotify/callback`
+
+### Lo que ya hace
+
+- Conectar tu cuenta de Spotify desde la seccion `Musica`.
+- Configurar los comandos del chat:
+  - `!play artista cancion`
+  - `!skip`
+  - `!quitar`
+- Mantener una cola propia dentro de la app para poder moderar pedidos.
+- Enviar la siguiente cancion a Spotify cuando haya un dispositivo activo.
+
+### Limite importante
+
+`!quitar` solo puede borrar canciones que todavia siguen en la cola de la app. Si una cancion ya fue enviada al queue interno de Spotify, la API oficial no deja removerla directamente.
 
 ## Flujo recomendado
 

@@ -56,6 +56,28 @@ const DEFAULT_SERVER_STATUS = {
     receivedCoins: 0,
     giftsReceived: 0,
   },
+  music: {
+    configured: false,
+    enabled: false,
+    provider: 'spotify',
+    connected: false,
+    accountLabel: '',
+    accountProduct: '',
+    devices: [],
+    currentPlayback: null,
+    queueCount: 0,
+    historyCount: 0,
+    currentRequestId: '',
+    selectedDeviceId: '',
+    selectedDeviceName: '',
+    lastError: '',
+    lastSyncAt: null,
+    commands: {
+      play: '!play',
+      skip: '!skip',
+      remove: '!quitar',
+    },
+  },
   bridges: {
     dashboardClients: 0,
     overlayClients: 0,
@@ -648,6 +670,7 @@ function createDashboardStatePayload(state) {
       dashboardKey: String(state.profile.dashboardKey || '').trim(),
       overlayKey: String(state.profile.overlayKey || '').trim(),
     },
+    music: state.music,
     actions: state.actions,
     triggers: state.triggers,
     widgets: state.widgets,
@@ -985,6 +1008,16 @@ function DashboardApp() {
             : field === 'publicBaseUrl'
               ? normalizeBaseUrl(value)
               : value,
+      },
+    }))
+  }
+
+  function updateMusicField(field, value) {
+    updateDashboardState((currentState) => ({
+      ...currentState,
+      music: {
+        ...currentState.music,
+        [field]: typeof value === 'string' ? value : value,
       },
     }))
   }
@@ -1361,6 +1394,116 @@ function DashboardApp() {
     }
   }
 
+  async function connectSpotifyMusic() {
+    try {
+      const payload = await requestJson(
+        '/api/music/spotify/connect',
+        {
+          method: 'POST',
+        },
+        dashboardAccessKey,
+      )
+
+      if (!payload?.authorizationUrl) {
+        throw new Error('No pude generar la autorizacion de Spotify.')
+      }
+
+      window.location.href = payload.authorizationUrl
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+    }
+  }
+
+  async function disconnectSpotifyMusic() {
+    try {
+      await requestJson(
+        '/api/music/spotify/disconnect',
+        {
+          method: 'POST',
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+    }
+  }
+
+  async function syncSpotifyMusic() {
+    try {
+      await requestJson(
+        '/api/music/spotify/sync',
+        {
+          method: 'POST',
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+    }
+  }
+
+  async function testMusicPlayRequest(payload = {}) {
+    try {
+      await requestJson(
+        '/api/music/test-play',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            userName: payload.userName || 'demo-chat',
+            query: payload.query || '',
+          }),
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
+  async function skipMusicTrack(payload = {}) {
+    try {
+      await requestJson(
+        '/api/music/skip',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            userName: payload.userName || 'panel',
+          }),
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
+  async function removeMusicRequest(requestId) {
+    try {
+      await requestJson(
+        `/api/music/requests/${encodeURIComponent(requestId)}`,
+        {
+          method: 'DELETE',
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+      throw error
+    }
+  }
+
   async function sendSampleEvent(sampleEvent, payloadOverrides = {}) {
     const payload =
       typeof sampleEvent === 'string'
@@ -1534,6 +1677,18 @@ function DashboardApp() {
           serverStatus={serverStatus}
           triggers={appState.triggers}
           updateProfileField={updateProfileField}
+        />
+
+        <MusicSection
+          music={appState.music}
+          musicStatus={serverStatus.music}
+          onConnectSpotify={connectSpotifyMusic}
+          onDisconnectSpotify={disconnectSpotifyMusic}
+          onSkipTrack={skipMusicTrack}
+          onSyncSpotify={syncSpotifyMusic}
+          onTestPlayRequest={testMusicPlayRequest}
+          onRemoveRequest={removeMusicRequest}
+          updateMusicField={updateMusicField}
         />
 
         <EmoteLibrarySection
@@ -1731,6 +1886,9 @@ function Sidebar({ onJump }) {
         </button>
         <button className="nav-button" onClick={() => onJump('games')}>
           Juegos
+        </button>
+        <button className="nav-button" onClick={() => onJump('music')}>
+          Musica
         </button>
         <button className="nav-button" onClick={() => onJump('emotes')}>
           Emotes
@@ -2613,6 +2771,446 @@ function GamesSection({
           </div>
         ) : null}
       </article>
+    </section>
+  )
+}
+
+function MusicSection({
+  music,
+  musicStatus,
+  onConnectSpotify,
+  onDisconnectSpotify,
+  onSkipTrack,
+  onSyncSpotify,
+  onTestPlayRequest,
+  onRemoveRequest,
+  updateMusicField,
+}) {
+  const [requesterDraft, setRequesterDraft] = useState('demo-chat')
+  const [queryDraft, setQueryDraft] = useState('')
+  const [musicFeedback, setMusicFeedback] = useState('')
+  const [isSubmittingMusicRequest, setIsSubmittingMusicRequest] = useState(false)
+  const [isSkippingTrack, setIsSkippingTrack] = useState(false)
+  const queue = Array.isArray(music.queue) ? music.queue : []
+  const history = Array.isArray(music.history) ? music.history : []
+  const devices = Array.isArray(musicStatus.devices) ? musicStatus.devices : []
+  const currentTrack = musicStatus.currentPlayback?.track || null
+
+  async function handleSubmitMusicRequest() {
+    setIsSubmittingMusicRequest(true)
+
+    try {
+      await onTestPlayRequest({
+        userName: requesterDraft,
+        query: queryDraft,
+      })
+      setMusicFeedback('Solicitud enviada. Si Spotify tiene un dispositivo activo, la cola ya deberia moverse.')
+      setQueryDraft('')
+    } catch (error) {
+      setMusicFeedback(error?.message || 'No pude procesar esa solicitud de musica.')
+    } finally {
+      setIsSubmittingMusicRequest(false)
+    }
+  }
+
+  async function handleSkipTrack() {
+    setIsSkippingTrack(true)
+
+    try {
+      await onSkipTrack({
+        userName: 'panel',
+      })
+      setMusicFeedback('Spotify salto a la siguiente pista.')
+    } catch (error) {
+      setMusicFeedback(error?.message || 'No pude saltar la pista actual.')
+    } finally {
+      setIsSkippingTrack(false)
+    }
+  }
+
+  async function handleRemoveRequest(requestId) {
+    try {
+      await onRemoveRequest(requestId)
+      setMusicFeedback('Solicitud quitada de la cola.')
+    } catch (error) {
+      setMusicFeedback(error?.message || 'No pude quitar esa solicitud.')
+    }
+  }
+
+  return (
+    <section className="panel-section" id="music">
+      <SectionHeader
+        eyebrow="Musica"
+        title="Song Request"
+        description="Aqui configuras Spotify, los comandos del chat y la cola de canciones que manejaremos desde la app."
+      />
+
+      <div className="game-mode-grid music-grid">
+        <article className="surface-card game-mode-card">
+          <div className="card-top">
+            <div>
+              <h3>Spotify</h3>
+              <p>Conecta tu cuenta Premium para usar `!play`, `!skip` y `!quitar` en el chat.</p>
+            </div>
+            <span
+              className={`status-chip ${
+                musicStatus.connected ? 'ok' : musicStatus.configured ? 'warn' : 'off'
+              }`}
+            >
+              {musicStatus.connected
+                ? 'Conectado'
+                : musicStatus.configured
+                  ? 'Listo para login'
+                  : 'Falta configurar'}
+            </span>
+          </div>
+
+          <div className="mini-grid">
+            <div>
+              <span className="snippet-label">Cuenta</span>
+              <p>{musicStatus.accountLabel || 'Sin conectar'}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Plan</span>
+              <p>{musicStatus.accountProduct || 'No disponible'}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Dispositivos</span>
+              <p>{devices.length}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Ultimo sync</span>
+              <p>{formatDateTime(musicStatus.lastSyncAt)}</p>
+            </div>
+          </div>
+
+          <div>
+            <label className="field-label" htmlFor="music-device-select">
+              Dispositivo preferido
+            </label>
+            <select
+              id="music-device-select"
+              className="text-field"
+              value={music.selectedDeviceId || ''}
+              onChange={(event) => {
+                const nextDevice = devices.find((device) => device.id === event.target.value)
+                updateMusicField('selectedDeviceId', event.target.value)
+                updateMusicField('selectedDeviceName', nextDevice?.name || '')
+              }}
+            >
+              <option value="">Usar el dispositivo activo</option>
+              {devices.map((device) => (
+                <option key={device.id || device.name} value={device.id}>
+                  {device.name}
+                  {device.isActive ? ' · activo' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="row-actions">
+            {musicStatus.connected ? (
+              <>
+                <button className="primary-button" onClick={onSyncSpotify}>
+                  Sincronizar Spotify
+                </button>
+                <button className="ghost-button" onClick={onDisconnectSpotify}>
+                  Desconectar
+                </button>
+              </>
+            ) : (
+              <button className="primary-button" onClick={onConnectSpotify}>
+                Iniciar sesion con Spotify
+              </button>
+            )}
+          </div>
+
+          {musicStatus.lastError ? <div className="error-box">{musicStatus.lastError}</div> : null}
+        </article>
+
+        <article className="surface-card game-mode-card">
+          <div className="card-top">
+            <div>
+              <h3>Comandos del chat</h3>
+              <p>Estos comandos se leen directo desde TikTok y usan una cola propia para poder moderar mejor.</p>
+            </div>
+            <span className={`status-chip ${music.enabled ? 'ok' : 'off'}`}>
+              {music.enabled ? 'Modulo activo' : 'Modulo apagado'}
+            </span>
+          </div>
+
+          <div className="option-grid">
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.enabled)}
+                onChange={(event) => updateMusicField('enabled', event.target.checked)}
+              />
+              <div>
+                <strong>Activar Song Request</strong>
+                <span>Permite que el chat use los comandos de musica en vivo.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.allowExplicit)}
+                onChange={(event) => updateMusicField('allowExplicit', event.target.checked)}
+              />
+              <div>
+                <strong>Permitir explicitas</strong>
+                <span>Si esta apagado, la app intenta evitar tracks marcados como explicit.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.playEnabled)}
+                onChange={(event) => updateMusicField('playEnabled', event.target.checked)}
+              />
+              <div>
+                <strong>Habilitar play</strong>
+                <span>Comando para pedir una cancion desde el chat.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.skipEnabled)}
+                onChange={(event) => updateMusicField('skipEnabled', event.target.checked)}
+              />
+              <div>
+                <strong>Habilitar skip</strong>
+                <span>Permite saltar la pista actual desde el chat o el panel.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(music.removeEnabled)}
+                onChange={(event) => updateMusicField('removeEnabled', event.target.checked)}
+              />
+              <div>
+                <strong>Habilitar quitar</strong>
+                <span>Deja que el usuario quite sus pedidos pendientes antes de enviarlos a Spotify.</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="mini-grid">
+            <div>
+              <label className="field-label" htmlFor="music-play-command">
+                Comando play
+              </label>
+              <input
+                id="music-play-command"
+                className="text-field"
+                value={music.playCommand || '!play'}
+                onChange={(event) => updateMusicField('playCommand', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-skip-command">
+                Comando skip
+              </label>
+              <input
+                id="music-skip-command"
+                className="text-field"
+                value={music.skipCommand || '!skip'}
+                onChange={(event) => updateMusicField('skipCommand', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-remove-command">
+                Comando quitar
+              </label>
+              <input
+                id="music-remove-command"
+                className="text-field"
+                value={music.removeCommand || '!quitar'}
+                onChange={(event) => updateMusicField('removeCommand', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-queue-limit">
+                Cola maxima
+              </label>
+              <input
+                id="music-queue-limit"
+                className="text-field"
+                value={music.maxQueueLength || '10'}
+                onChange={(event) => updateMusicField('maxQueueLength', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="music-user-limit">
+                Maximo por usuario
+              </label>
+              <input
+                id="music-user-limit"
+                className="text-field"
+                value={music.maxRequestsPerUser || '2'}
+                onChange={(event) => updateMusicField('maxRequestsPerUser', event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="snippet-block">
+            <span className="snippet-label">Comandos activos</span>
+            <code>
+              {music.playCommand || '!play'} artista cancion · {music.skipCommand || '!skip'} ·{' '}
+              {music.removeCommand || '!quitar'}
+            </code>
+          </div>
+        </article>
+
+        <article className="surface-card game-mode-card music-span-2">
+          <div className="card-top">
+            <div>
+              <h3>Cola y reproduccion</h3>
+              <p>La app mantiene su propia cola para poder quitar pedidos antes de que entren al queue de Spotify.</p>
+            </div>
+            <div className="tag-row">
+              <span className="bridge-badge">{musicStatus.queueCount} en cola</span>
+              <span className="bridge-badge">{musicStatus.historyCount} en historial</span>
+            </div>
+          </div>
+
+          {currentTrack ? (
+            <div className="music-current-track">
+              {currentTrack.imageUrl ? (
+                <img src={currentTrack.imageUrl} alt={currentTrack.name} className="music-track-cover" />
+              ) : (
+                <div className="music-track-cover music-track-cover-fallback">SP</div>
+              )}
+              <div className="music-track-copy">
+                <span className="snippet-label">Sonando ahora</span>
+                <strong>{currentTrack.name}</strong>
+                <span>{Array.isArray(currentTrack.artists) ? currentTrack.artists.join(', ') : ''}</span>
+                <span className="row-subcopy">
+                  {currentTrack.albumName || 'Spotify'} · {formatDurationClock(currentTrack.durationMs || 0)}
+                </span>
+              </div>
+              <div className="row-actions">
+                <button
+                  className="secondary-button compact-button"
+                  onClick={handleSkipTrack}
+                  disabled={isSkippingTrack || !musicStatus.connected}
+                >
+                  {isSkippingTrack ? 'Saltando...' : 'Saltar pista'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="empty-list">Todavia no hay una pista activa detectada en Spotify.</div>
+          )}
+
+          <div className="picker-toolbar">
+            <input
+              className="text-field"
+              placeholder="Usuario de prueba"
+              value={requesterDraft}
+              onChange={(event) => setRequesterDraft(event.target.value)}
+            />
+            <button
+              className="primary-button"
+              onClick={handleSubmitMusicRequest}
+              disabled={isSubmittingMusicRequest || !musicStatus.connected}
+            >
+              {isSubmittingMusicRequest ? 'Buscando...' : 'Simular !play'}
+            </button>
+          </div>
+          <input
+            className="text-field"
+            placeholder="Escribe artista y cancion, por ejemplo: coldplay yellow"
+            value={queryDraft}
+            onChange={(event) => setQueryDraft(event.target.value)}
+          />
+
+          {musicFeedback ? <span className="feedback-pill">{musicFeedback}</span> : null}
+
+          <div className="music-queue-layout">
+            <div className="list-shell">
+              <div className="card-top">
+                <h3>Pedidos pendientes</h3>
+                <span className="state-badge">{queue.length}</span>
+              </div>
+
+              {queue.length === 0 ? (
+                <div className="empty-list">Aun no hay pedidos en cola.</div>
+              ) : (
+                <div className="game-linked-actions">
+                  {queue.map((requestItem) => (
+                    <div key={requestItem.id} className="music-request-row">
+                      <div className="row-title-wrap">
+                        <strong className="row-title">{requestItem.name}</strong>
+                        <span className="row-subcopy">
+                          {Array.isArray(requestItem.artists) ? requestItem.artists.join(', ') : ''}
+                        </span>
+                        <span className="row-subcopy">
+                          {requestItem.requester} · {requestItem.query}
+                        </span>
+                      </div>
+                      <div className="row-actions">
+                        <span
+                          className={`status-chip ${
+                            requestItem.status === 'playing'
+                              ? 'ok'
+                              : requestItem.status === 'sent'
+                                ? 'warn'
+                                : 'off'
+                          }`}
+                        >
+                          {requestItem.status}
+                        </span>
+                        {requestItem.status === 'queued' ? (
+                          <button
+                            className="ghost-button compact-button"
+                            onClick={() => handleRemoveRequest(requestItem.id)}
+                          >
+                            Quitar
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="list-shell">
+              <div className="card-top">
+                <h3>Historial reciente</h3>
+                <span className="state-badge">{history.length}</span>
+              </div>
+
+              {history.length === 0 ? (
+                <div className="empty-list">Todavia no hay historial de canciones pedidas.</div>
+              ) : (
+                <div className="game-linked-actions">
+                  {history.slice(0, 6).map((requestItem) => (
+                    <div key={requestItem.id} className="music-request-row">
+                      <div className="row-title-wrap">
+                        <strong className="row-title">{requestItem.name}</strong>
+                        <span className="row-subcopy">
+                          {Array.isArray(requestItem.artists) ? requestItem.artists.join(', ') : ''}
+                        </span>
+                        <span className="row-subcopy">
+                          {requestItem.status} · {formatDateTime(requestItem.completedAt || requestItem.playedAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </article>
+      </div>
     </section>
   )
 }

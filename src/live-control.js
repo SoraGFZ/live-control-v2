@@ -28,6 +28,21 @@ export const DEFAULT_INTEGRATIONS = {
     syncedAt: null,
     lastError: '',
   },
+  spotify: {
+    accessToken: '',
+    refreshToken: '',
+    expiresAt: 0,
+    scope: '',
+    authState: '',
+    accountId: '',
+    accountLabel: '',
+    accountProduct: '',
+    connectedAt: null,
+    lastSyncAt: null,
+    lastError: '',
+    devices: [],
+    currentPlayback: null,
+  },
   tiktok: {
     giftCatalog: [],
     giftCatalogSourceUsername: '',
@@ -72,6 +87,25 @@ export const DEFAULT_APP_STATE = {
     minecraftChatMirrorSkipCommands: true,
     dashboardKey: '',
     overlayKey: '',
+  },
+  music: {
+    enabled: false,
+    provider: 'spotify',
+    playCommand: '!play',
+    skipCommand: '!skip',
+    removeCommand: '!quitar',
+    playEnabled: true,
+    skipEnabled: true,
+    removeEnabled: true,
+    allowExplicit: false,
+    maxQueueLength: '10',
+    maxRequestsPerUser: '2',
+    selectedDeviceId: '',
+    selectedDeviceName: '',
+    queue: [],
+    history: [],
+    currentRequestId: '',
+    lastCommandAt: null,
   },
   actions: [
     {
@@ -211,6 +245,16 @@ export function mergeStateWithDefaults(parsedState) {
       ...DEFAULT_APP_STATE.profile,
       ...(parsedState?.profile || {}),
     },
+    music: {
+      ...DEFAULT_APP_STATE.music,
+      ...(parsedState?.music || {}),
+      queue: Array.isArray(parsedState?.music?.queue)
+        ? parsedState.music.queue
+        : DEFAULT_APP_STATE.music.queue,
+      history: Array.isArray(parsedState?.music?.history)
+        ? parsedState.music.history
+        : DEFAULT_APP_STATE.music.history,
+    },
     actions: mergedActions.map((action) => ({
       minecraftMode: 'generic',
       minecraftBedrockPresetId: '',
@@ -232,6 +276,13 @@ export function mergeStateWithDefaults(parsedState) {
     integrations: {
       ...DEFAULT_INTEGRATIONS,
       ...(parsedState?.integrations || {}),
+      spotify: {
+        ...DEFAULT_INTEGRATIONS.spotify,
+        ...(parsedState?.integrations?.spotify || {}),
+        devices: Array.isArray(parsedState?.integrations?.spotify?.devices)
+          ? parsedState.integrations.spotify.devices
+          : DEFAULT_INTEGRATIONS.spotify.devices,
+      },
       chaosmod: {
         ...DEFAULT_INTEGRATIONS.chaosmod,
         ...(parsedState?.integrations?.chaosmod || {}),

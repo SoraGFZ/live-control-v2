@@ -754,6 +754,14 @@
   grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
 }
 
+.music-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.music-span-2 {
+  grid-column: span 2;
+}
+
 .game-mode-card {
   border-radius: 24px;
 }
@@ -779,6 +787,63 @@
 }
 
 .game-linked-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.music-current-track,
+.music-queue-layout {
+  display: grid;
+  gap: 16px;
+}
+
+.music-current-track {
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  align-items: center;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.music-track-cover {
+  width: 84px;
+  height: 84px;
+  border-radius: 22px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.music-track-cover-fallback {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #081117;
+  background: linear-gradient(135deg, #75e1d3, #ffd082);
+}
+
+.music-track-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.music-track-copy strong {
+  font-size: 1.15rem;
+  color: #fff5df;
+}
+
+.music-queue-layout {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.music-request-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
@@ -1476,6 +1541,8 @@
   .game-detail-hero,
   .game-detail-columns,
   .game-mode-grid,
+  .music-grid,
+  .music-queue-layout,
   .game-mode-status-grid,
   .game-stat-grid,
   .smartbar-body,
@@ -1533,6 +1600,10 @@
     padding: 20px;
   }
 
+  .music-span-2 {
+    grid-column: auto;
+  }
+
   .option-grid {
     grid-template-columns: 1fr;
   }
@@ -1542,6 +1613,7 @@
   }
 
   .smartbar-counter,
+  .music-current-track,
   .smartbar-topline {
     grid-template-columns: 1fr;
   }

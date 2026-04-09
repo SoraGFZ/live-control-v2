@@ -1,5 +1,6 @@
 import { createServer } from 'node:http'
 import { Buffer } from 'node:buffer'
+import { randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -30,6 +31,14 @@ import {
   listMediaItems,
   removeMediaItem,
 } from './media-library.js'
+import {
+  buildSpotifyAuthorizeUrl,
+  exchangeSpotifyCode,
+  getSpotifyAppConfig,
+  isSpotifyConfigured,
+  refreshSpotifyAccessToken,
+  spotifyApiRequest,
+} from './spotify.js'
 import { StateStore } from './state-store.js'
 import { getStateFilePath } from './storage-paths.js'
 
@@ -41,6 +50,7 @@ const distDirectory = path.join(projectRoot, 'dist')
 const distIndexFile = path.join(distDirectory, 'index.html')
 const serverPort = Number(runtimeProcess.env.PORT || 5123)
 const recentLimit = 20
+const musicHistoryLimit = 20
 const cooldownTracker = new Map()
 const serverStartedAt = Date.now()
 
@@ -112,9 +122,660 @@ let smartBarRuntime = {
 const recentEvents = []
 const recentDispatches = []
 let mediaLibraryCount = (await listMediaItems()).length
+let spotifySyncInFlight = null
+let spotifySession = {
+  accessToken: '',
+  refreshToken: '',
+  expiresAt: 0,
+  scope: '',
+  authState: '',
+  connectedAt: null,
+  accountId: '',
+  accountLabel: '',
+  accountProduct: '',
+  devices: [],
+  currentPlayback: null,
+  lastSyncAt: null,
+  lastError: '',
+}
 
 function normalizeTikTokUsername(username) {
   return String(username || '').trim().replace(/^@/, '')
+}
+
+function broadcastSystemMessage(level, text) {
+  broadcast('app', {
+    type: 'system-message',
+    payload: {
+      id: createId('system'),
+      level,
+      text,
+      createdAt: Date.now(),
+    },
+  })
+}
+
+function trimMusicHistory(history = []) {
+  return history.slice(0, musicHistoryLimit)
+}
+
+function getMusicStateSnapshot() {
+  return store.getState().music || mergeStateWithDefaults().music
+}
+
+function resolveBaseUrlFromRequest(request) {
+  const forwardedProto = String(request?.headers?.['x-forwarded-proto'] || '')
+    .split(',')[0]
+    .trim()
+  const forwardedHost = String(request?.headers?.['x-forwarded-host'] || '')
+    .split(',')[0]
+    .trim()
+  const host = forwardedHost || String(request?.headers?.host || '').trim()
+  const protocol = forwardedProto || request?.protocol || 'http'
+
+  if (!host) {
+    return ''
+  }
+
+  return normalizeBaseUrl(`${protocol}://${host}`)
+}
+
+function getSpotifyRedirectUri(request = null) {
+  const spotifyConfig = getSpotifyAppConfig(runtimeProcess.env)
+
+  if (spotifyConfig.redirectUri) {
+    return spotifyConfig.redirectUri
+  }
+
+  const configuredBaseUrl =
+    normalizeBaseUrl(runtimeProcess.env.LIVE_CONTROL_PUBLIC_URL || '') ||
+    normalizeBaseUrl(store.getState().profile.publicBaseUrl) ||
+    resolveBaseUrlFromRequest(request)
+
+  return configuredBaseUrl ? `${configuredBaseUrl}/api/music/spotify/callback` : ''
+}
+
+function normalizeSpotifyTrack(track) {
+  if (!track?.id) {
+    return null
+  }
+
+  return {
+    id: String(track.id),
+    uri: String(track.uri || ''),
+    name: String(track.name || ''),
+    artists: Array.isArray(track.artists) ? track.artists.map((artist) => artist?.name).filter(Boolean) : [],
+    imageUrl: extractImageUrl(track.album?.images?.[0]) || extractImageUrl(track.album?.images?.[1]) || '',
+    durationMs: Number(track.duration_ms || 0),
+    explicit: Boolean(track.explicit),
+    albumName: String(track.album?.name || ''),
+  }
+}
+
+function normalizeSpotifyDevice(device) {
+  if (!device?.id && !device?.name) {
+    return null
+  }
+
+  return {
+    id: String(device.id || ''),
+    name: String(device.name || 'Dispositivo activo'),
+    type: String(device.type || ''),
+    isActive: Boolean(device.is_active),
+    volumePercent: Number(device.volume_percent || 0),
+  }
+}
+
+function buildMusicStatus(state = store.getState()) {
+  const music = state.music || getMusicStateSnapshot()
+
+  return {
+    configured: isSpotifyConfigured(runtimeProcess.env),
+    enabled: Boolean(music.enabled),
+    provider: music.provider || 'spotify',
+    connected: Boolean(spotifySession.refreshToken),
+    accountLabel: spotifySession.accountLabel || '',
+    accountProduct: spotifySession.accountProduct || '',
+    devices: spotifySession.devices || [],
+    currentPlayback: spotifySession.currentPlayback,
+    queueCount: Array.isArray(music.queue) ? music.queue.length : 0,
+    historyCount: Array.isArray(music.history) ? music.history.length : 0,
+    currentRequestId: music.currentRequestId || '',
+    selectedDeviceId: music.selectedDeviceId || '',
+    selectedDeviceName: music.selectedDeviceName || '',
+    lastError: spotifySession.lastError || '',
+    lastSyncAt: spotifySession.lastSyncAt || null,
+    commands: {
+      play: music.playCommand || '!play',
+      skip: music.skipCommand || '!skip',
+      remove: music.removeCommand || '!quitar',
+    },
+  }
+}
+
+async function persistMusicState(nextMusic) {
+  const currentState = store.getState()
+  const nextState = mergeStateWithDefaults({
+    ...currentState,
+    music: {
+      ...currentState.music,
+      ...nextMusic,
+      queue: Array.isArray(nextMusic?.queue) ? nextMusic.queue : currentState.music.queue,
+      history: trimMusicHistory(
+        Array.isArray(nextMusic?.history) ? nextMusic.history : currentState.music.history,
+      ),
+    },
+  })
+  const savedState = await store.setState(nextState)
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcastStatus()
+  return savedState
+}
+
+function getSelectedSpotifyDeviceId(musicState, playback = null, devices = []) {
+  const preferredId = String(musicState?.selectedDeviceId || '').trim()
+
+  if (preferredId) {
+    return preferredId
+  }
+
+  if (playback?.device?.id) {
+    return playback.device.id
+  }
+
+  return devices.find((device) => device?.isActive)?.id || ''
+}
+
+function moveMusicRequestToHistory(musicState, requestId, patch = {}) {
+  const queue = Array.isArray(musicState.queue) ? [...musicState.queue] : []
+  const requestIndex = queue.findIndex((entry) => entry.id === requestId)
+
+  if (requestIndex < 0) {
+    return musicState
+  }
+
+  const [requestEntry] = queue.splice(requestIndex, 1)
+  const nextHistory = trimMusicHistory([
+    {
+      ...requestEntry,
+      ...patch,
+    },
+    ...(Array.isArray(musicState.history) ? musicState.history : []),
+  ])
+
+  return {
+    ...musicState,
+    queue,
+    history: nextHistory,
+    currentRequestId: musicState.currentRequestId === requestId ? '' : musicState.currentRequestId,
+  }
+}
+
+async function ensureSpotifyAccessToken() {
+  const spotifyConfig = getSpotifyAppConfig(runtimeProcess.env)
+
+  if (!spotifyConfig.clientId || !spotifyConfig.clientSecret) {
+    throw new Error('Faltan SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en el backend.')
+  }
+
+  if (spotifySession.accessToken && spotifySession.expiresAt - Date.now() > 60_000) {
+    return spotifySession.accessToken
+  }
+
+  if (!spotifySession.refreshToken) {
+    throw new Error('Spotify no esta conectado todavia.')
+  }
+
+  const refreshedToken = await refreshSpotifyAccessToken({
+    clientId: spotifyConfig.clientId,
+    clientSecret: spotifyConfig.clientSecret,
+    refreshToken: spotifySession.refreshToken,
+  })
+
+  spotifySession = {
+    ...spotifySession,
+    accessToken: refreshedToken.access_token,
+    refreshToken: refreshedToken.refresh_token || spotifySession.refreshToken,
+    expiresAt: Date.now() + Number(refreshedToken.expires_in || 3600) * 1000,
+    scope: refreshedToken.scope || spotifySession.scope,
+    lastError: '',
+  }
+
+  return spotifySession.accessToken
+}
+
+async function syncSpotifyPlaybackState({ queueNextIfNeeded = true } = {}) {
+  if (spotifySyncInFlight) {
+    return spotifySyncInFlight
+  }
+
+  spotifySyncInFlight = (async () => {
+    if (!spotifySession.refreshToken && !spotifySession.accessToken) {
+      return buildMusicStatus()
+    }
+
+    const accessToken = await ensureSpotifyAccessToken()
+    const [profileResult, devicesResult, playbackResult] = await Promise.allSettled([
+      spotifyApiRequest({
+        accessToken,
+        path: 'me',
+      }),
+      spotifyApiRequest({
+        accessToken,
+        path: 'me/player/devices',
+      }),
+      spotifyApiRequest({
+        accessToken,
+        path: 'me/player',
+        expectedStatus: [200, 204],
+      }),
+    ])
+
+    if (profileResult.status === 'fulfilled') {
+      spotifySession = {
+        ...spotifySession,
+        accountId: String(profileResult.value?.id || ''),
+        accountLabel:
+          String(profileResult.value?.display_name || '').trim() ||
+          String(profileResult.value?.id || '').trim(),
+        accountProduct: String(profileResult.value?.product || '').trim(),
+      }
+    }
+
+    if (devicesResult.status !== 'fulfilled') {
+      throw devicesResult.reason
+    }
+
+    const normalizedDevices = Array.isArray(devicesResult.value?.devices)
+      ? devicesResult.value.devices.map(normalizeSpotifyDevice).filter(Boolean)
+      : []
+    const playbackPayload = playbackResult.status === 'fulfilled' ? playbackResult.value : null
+    const normalizedPlayback = playbackPayload
+      ? {
+          isPlaying: Boolean(playbackPayload.is_playing),
+          progressMs: Number(playbackPayload.progress_ms || 0),
+          device: normalizeSpotifyDevice(playbackPayload.device),
+          track: normalizeSpotifyTrack(playbackPayload.item),
+        }
+      : null
+
+    spotifySession = {
+      ...spotifySession,
+      devices: normalizedDevices,
+      currentPlayback: normalizedPlayback,
+      lastSyncAt: Date.now(),
+      lastError: '',
+    }
+
+    const originalMusicState = getMusicStateSnapshot()
+    let musicState = {
+      ...originalMusicState,
+      queue: [...(originalMusicState.queue || [])],
+      history: [...(originalMusicState.history || [])],
+    }
+    const currentTrackId = normalizedPlayback?.track?.id || ''
+    const activeRequest = musicState.queue.find((entry) => entry.id === musicState.currentRequestId)
+
+    if (activeRequest && activeRequest.trackId && currentTrackId && activeRequest.trackId !== currentTrackId) {
+      musicState = moveMusicRequestToHistory(musicState, activeRequest.id, {
+        status: 'completed',
+        completedAt: Date.now(),
+      })
+    }
+
+    const sentRequest = musicState.queue.find(
+      (entry) => entry.status === 'sent' && entry.trackId && entry.trackId === currentTrackId,
+    )
+
+    if (sentRequest) {
+      musicState = {
+        ...musicState,
+        currentRequestId: sentRequest.id,
+        queue: musicState.queue.map((entry) =>
+          entry.id === sentRequest.id
+            ? {
+                ...entry,
+                status: 'playing',
+                playedAt: entry.playedAt || Date.now(),
+              }
+            : entry,
+        ),
+      }
+    }
+
+    const hasSentPending = musicState.queue.some((entry) => entry.status === 'sent')
+    const nextQueuedRequest = musicState.queue.find((entry) => entry.status === 'queued')
+    const targetDeviceId = getSelectedSpotifyDeviceId(
+      musicState,
+      normalizedPlayback,
+      normalizedDevices,
+    )
+
+    if (queueNextIfNeeded && nextQueuedRequest && targetDeviceId && !hasSentPending) {
+      await spotifyApiRequest({
+        accessToken,
+        path: 'me/player/queue',
+        method: 'POST',
+        query: {
+          uri: nextQueuedRequest.uri,
+          device_id: targetDeviceId,
+        },
+        expectedStatus: 204,
+      })
+
+      musicState = {
+        ...musicState,
+        queue: musicState.queue.map((entry) =>
+          entry.id === nextQueuedRequest.id
+            ? {
+                ...entry,
+                status: 'sent',
+                queuedAt: Date.now(),
+              }
+            : entry,
+        ),
+      }
+    }
+
+    if (JSON.stringify(musicState) !== JSON.stringify(originalMusicState)) {
+      await persistMusicState(musicState)
+    } else {
+      broadcastStatus()
+    }
+    return buildMusicStatus()
+  })()
+    .catch((error) => {
+      spotifySession = {
+        ...spotifySession,
+        lastError: error.message,
+      }
+      broadcastStatus()
+      throw error
+    })
+    .finally(() => {
+      spotifySyncInFlight = null
+    })
+
+  return spotifySyncInFlight
+}
+
+async function searchSpotifyTrack(query, allowExplicit = false) {
+  const accessToken = await ensureSpotifyAccessToken()
+  const searchResponse = await spotifyApiRequest({
+    accessToken,
+    path: 'search',
+    query: {
+      q: query,
+      type: 'track',
+      limit: 5,
+    },
+  })
+
+  const normalizedTracks = Array.isArray(searchResponse?.tracks?.items)
+    ? searchResponse.tracks.items.map(normalizeSpotifyTrack).filter(Boolean)
+    : []
+
+  if (allowExplicit) {
+    return normalizedTracks[0] || null
+  }
+
+  return normalizedTracks.find((track) => !track.explicit) || normalizedTracks[0] || null
+}
+
+function createMusicQueueEntry({ requester, query, track, source = 'comment' }) {
+  return {
+    id: createId('music-request'),
+    requester: String(requester || 'chat').trim() || 'chat',
+    source,
+    query: String(query || '').trim(),
+    trackId: track.id,
+    uri: track.uri,
+    name: track.name,
+    artists: track.artists,
+    imageUrl: track.imageUrl,
+    durationMs: track.durationMs,
+    explicit: Boolean(track.explicit),
+    albumName: track.albumName || '',
+    status: 'queued',
+    createdAt: Date.now(),
+    queuedAt: null,
+    playedAt: null,
+  }
+}
+
+function parseMusicCommentCommand(commentText, musicState) {
+  const normalizedComment = String(commentText || '').trim()
+
+  if (!normalizedComment || !musicState?.enabled) {
+    return null
+  }
+
+  const playCommand = String(musicState.playCommand || '!play').trim()
+  const skipCommand = String(musicState.skipCommand || '!skip').trim()
+  const removeCommand = String(musicState.removeCommand || '!quitar').trim()
+  const normalizedLowerCase = normalizedComment.toLowerCase()
+
+  if (
+    musicState.playEnabled &&
+    playCommand &&
+    normalizedLowerCase.startsWith(playCommand.toLowerCase())
+  ) {
+    return {
+      type: 'play',
+      query: normalizedComment.slice(playCommand.length).trim(),
+    }
+  }
+
+  if (musicState.skipEnabled && skipCommand && normalizedLowerCase === skipCommand.toLowerCase()) {
+    return { type: 'skip' }
+  }
+
+  if (
+    musicState.removeEnabled &&
+    removeCommand &&
+    normalizedLowerCase.startsWith(removeCommand.toLowerCase())
+  ) {
+    return {
+      type: 'remove',
+      query: normalizedComment.slice(removeCommand.length).trim(),
+    }
+  }
+
+  return null
+}
+
+async function handleMusicPlayRequest(requester, query, musicState, source = 'comment') {
+  const trimmedQuery = String(query || '').trim()
+
+  if (!trimmedQuery) {
+    broadcastSystemMessage('warn', 'Usa !play seguido del artista o nombre de la cancion.')
+    return true
+  }
+
+  if (!isSpotifyConfigured(runtimeProcess.env)) {
+    broadcastSystemMessage('warn', 'Spotify todavia no esta configurado en el backend.')
+    return true
+  }
+
+  if (!spotifySession.refreshToken) {
+    broadcastSystemMessage('warn', 'Conecta tu cuenta de Spotify en la seccion Musica antes de usar !play.')
+    return true
+  }
+
+  const queue = Array.isArray(musicState.queue) ? musicState.queue : []
+  const maxQueueLength = Math.max(1, Number(musicState.maxQueueLength || 10))
+  const maxRequestsPerUser = Math.max(1, Number(musicState.maxRequestsPerUser || 2))
+  const normalizedRequester = String(requester || 'chat').trim().toLowerCase()
+  const requesterActiveItems = queue.filter(
+    (entry) =>
+      String(entry.requester || '').trim().toLowerCase() === normalizedRequester &&
+      ['queued', 'sent', 'playing'].includes(entry.status),
+  )
+
+  if (queue.length >= maxQueueLength) {
+    broadcastSystemMessage('warn', 'La cola de canciones ya llego al maximo configurado.')
+    return true
+  }
+
+  if (requesterActiveItems.length >= maxRequestsPerUser) {
+    broadcastSystemMessage('warn', `${requester} ya llego al limite de canciones pendientes.`)
+    return true
+  }
+
+  const selectedTrack = await searchSpotifyTrack(trimmedQuery, Boolean(musicState.allowExplicit))
+
+  if (!selectedTrack) {
+    broadcastSystemMessage('warn', `No encontre una cancion para "${trimmedQuery}".`)
+    return true
+  }
+
+  if (selectedTrack.explicit && !musicState.allowExplicit) {
+    broadcastSystemMessage('warn', 'La mejor coincidencia era explicita y ese contenido esta bloqueado.')
+    return true
+  }
+
+  const nextRequest = createMusicQueueEntry({
+    requester,
+    query: trimmedQuery,
+    track: selectedTrack,
+    source,
+  })
+
+  await persistMusicState({
+    ...musicState,
+    queue: [...queue, nextRequest],
+    lastCommandAt: Date.now(),
+  })
+  broadcastSystemMessage(
+    'info',
+    `${nextRequest.requester} pidio ${nextRequest.name} · ${nextRequest.artists.join(', ')}`,
+  )
+  await syncSpotifyPlaybackState({ queueNextIfNeeded: true })
+  return true
+}
+
+async function handleMusicSkipRequest(requester, musicState) {
+  if (!spotifySession.refreshToken) {
+    broadcastSystemMessage('warn', 'Spotify no esta conectado, asi que no puedo usar !skip.')
+    return true
+  }
+
+  await syncSpotifyPlaybackState({ queueNextIfNeeded: false })
+  const accessToken = await ensureSpotifyAccessToken()
+  const targetDeviceId = getSelectedSpotifyDeviceId(
+    musicState,
+    spotifySession.currentPlayback,
+    spotifySession.devices,
+  )
+
+  await spotifyApiRequest({
+    accessToken,
+    path: 'me/player/next',
+    method: 'POST',
+    query: {
+      device_id: targetDeviceId || undefined,
+    },
+    expectedStatus: 204,
+  })
+
+  let nextMusicState = {
+    ...musicState,
+    queue: [...(musicState.queue || [])],
+    history: [...(musicState.history || [])],
+  }
+
+  if (nextMusicState.currentRequestId) {
+    nextMusicState = moveMusicRequestToHistory(nextMusicState, nextMusicState.currentRequestId, {
+      status: 'skipped',
+      completedAt: Date.now(),
+      skippedBy: String(requester || 'panel').trim() || 'panel',
+    })
+  }
+
+  await persistMusicState(nextMusicState)
+  broadcastSystemMessage('info', `${requester} salto la cancion actual.`)
+  await syncSpotifyPlaybackState({ queueNextIfNeeded: true })
+  return true
+}
+
+async function handleMusicRemoveRequest(requester, filterQuery, musicState) {
+  const normalizedRequester = String(requester || 'chat').trim().toLowerCase()
+  const normalizedFilter = String(filterQuery || '').trim().toLowerCase()
+  const queue = Array.isArray(musicState.queue) ? [...musicState.queue] : []
+  const removableEntries = queue.filter((entry) => {
+    if (String(entry.requester || '').trim().toLowerCase() !== normalizedRequester) {
+      return false
+    }
+
+    if (entry.status !== 'queued') {
+      return false
+    }
+
+    if (!normalizedFilter) {
+      return true
+    }
+
+    return `${entry.name} ${entry.artists?.join(' ')} ${entry.query}`
+      .toLowerCase()
+      .includes(normalizedFilter)
+  })
+
+  if (!removableEntries.length) {
+    broadcastSystemMessage('warn', 'No encontre canciones pendientes tuyas para quitar.')
+    return true
+  }
+
+  const removableIds = new Set(removableEntries.map((entry) => entry.id))
+  await persistMusicState({
+    ...musicState,
+    queue: queue.filter((entry) => !removableIds.has(entry.id)),
+    history: trimMusicHistory([
+      ...removableEntries.map((entry) => ({
+        ...entry,
+        status: 'removed',
+        completedAt: Date.now(),
+      })),
+      ...(musicState.history || []),
+    ]),
+    lastCommandAt: Date.now(),
+  })
+  broadcastSystemMessage(
+    'info',
+    `${requester} quito ${removableEntries.length} cancion${removableEntries.length === 1 ? '' : 'es'} de la cola.`,
+  )
+  return true
+}
+
+async function handleMusicCommentCommand(event, state) {
+  if (event?.type !== 'comment') {
+    return false
+  }
+
+  const musicState = state.music || getMusicStateSnapshot()
+  const parsedCommand = parseMusicCommentCommand(event.comment, musicState)
+
+  if (!parsedCommand) {
+    return false
+  }
+
+  const requester = String(event.uniqueId || event.userName || 'chat').trim() || 'chat'
+
+  if (parsedCommand.type === 'play') {
+    await handleMusicPlayRequest(requester, parsedCommand.query, musicState)
+    return true
+  }
+
+  if (parsedCommand.type === 'skip') {
+    await handleMusicSkipRequest(requester, musicState)
+    return true
+  }
+
+  if (parsedCommand.type === 'remove') {
+    await handleMusicRemoveRequest(requester, parsedCommand.query, musicState)
+    return true
+  }
+
+  return false
 }
 
 function extractImageUrl(imageValue) {
@@ -704,10 +1365,58 @@ function buildStatus() {
     mediaLibrary: {
       count: mediaLibraryCount,
     },
+    music: buildMusicStatus(state),
     smartBar: buildSmartBarStatus(),
     recentEvents,
     recentDispatches,
   }
+}
+
+function resetSpotifySession() {
+  spotifySession = {
+    accessToken: '',
+    refreshToken: '',
+    expiresAt: 0,
+    scope: '',
+    authState: '',
+    connectedAt: null,
+    accountId: '',
+    accountLabel: '',
+    accountProduct: '',
+    devices: [],
+    currentPlayback: null,
+    lastSyncAt: null,
+    lastError: '',
+  }
+}
+
+async function removeMusicQueueRequestById(requestId) {
+  const musicState = getMusicStateSnapshot()
+  const queue = Array.isArray(musicState.queue) ? [...musicState.queue] : []
+  const targetRequest = queue.find((entry) => entry.id === requestId)
+
+  if (!targetRequest) {
+    throw new Error('No encontre esa solicitud en la cola.')
+  }
+
+  if (targetRequest.status !== 'queued') {
+    throw new Error('Solo puedo quitar canciones que todavia no fueron enviadas a Spotify.')
+  }
+
+  await persistMusicState({
+    ...musicState,
+    queue: queue.filter((entry) => entry.id !== requestId),
+    history: trimMusicHistory([
+      {
+        ...targetRequest,
+        status: 'removed',
+        completedAt: Date.now(),
+      },
+      ...(musicState.history || []),
+    ]),
+  })
+
+  return targetRequest
 }
 
 function broadcastStatus() {
@@ -1125,15 +1834,25 @@ async function processIncomingEvent(event, reason = 'tiktok') {
     }
   }
 
+  let handledMusicCommand = false
+
   if (event.type === 'comment') {
     try {
       await dispatchMinecraftChatMirrorEvent(event, state, `${reason}:mirror`)
     } catch (error) {
       console.warn(`[minecraft-chat-mirror] ${error.message}`)
     }
+
+    try {
+      handledMusicCommand = await handleMusicCommentCommand(event, state)
+    } catch (error) {
+      console.warn(`[music] ${error.message}`)
+    }
   }
 
-  const matchedTriggers = state.triggers.filter((trigger) => matchesTrigger(trigger, event))
+  const matchedTriggers = handledMusicCommand
+    ? []
+    : state.triggers.filter((trigger) => matchesTrigger(trigger, event))
 
   for (const trigger of matchedTriggers) {
     const cooldownMs = Number(trigger.cooldownSeconds || 0) * 1000
@@ -1374,6 +2093,62 @@ app.get('/api/overlay/:slug', requireOverlayAccess, (_request, response) => {
   response.json(getPublicOverlayPayload())
 })
 
+app.get('/api/music/spotify/callback', async (request, response) => {
+  const redirectBaseUrl =
+    normalizeBaseUrl(store.getState().profile.publicBaseUrl) ||
+    resolveBaseUrlFromRequest(request) ||
+    'http://127.0.0.1:5123'
+
+  try {
+    const spotifyConfig = getSpotifyAppConfig(runtimeProcess.env)
+    const redirectUri = getSpotifyRedirectUri(request)
+    const returnedCode = String(request.query?.code || '').trim()
+    const returnedState = String(request.query?.state || '').trim()
+    const returnedError = String(request.query?.error || '').trim()
+
+    if (returnedError) {
+      throw new Error(`Spotify rechazo la autorizacion: ${returnedError}`)
+    }
+
+    if (!spotifyConfig.clientId || !spotifyConfig.clientSecret || !redirectUri) {
+      throw new Error('Falta configurar Spotify en el backend antes de autorizar la cuenta.')
+    }
+
+    if (!returnedCode || !returnedState || returnedState !== spotifySession.authState) {
+      throw new Error('La respuesta de Spotify no coincide con el estado esperado.')
+    }
+
+    const tokenPayload = await exchangeSpotifyCode({
+      clientId: spotifyConfig.clientId,
+      clientSecret: spotifyConfig.clientSecret,
+      code: returnedCode,
+      redirectUri,
+    })
+
+    spotifySession = {
+      ...spotifySession,
+      accessToken: tokenPayload.access_token,
+      refreshToken: tokenPayload.refresh_token || spotifySession.refreshToken,
+      expiresAt: Date.now() + Number(tokenPayload.expires_in || 3600) * 1000,
+      scope: tokenPayload.scope || '',
+      authState: '',
+      connectedAt: Date.now(),
+      lastError: '',
+    }
+
+    await syncSpotifyPlaybackState({ queueNextIfNeeded: false })
+    broadcastSystemMessage('info', 'Spotify quedo conectado y listo para Song Request.')
+    response.redirect(`${redirectBaseUrl}/?spotify=connected#music`)
+  } catch (error) {
+    spotifySession = {
+      ...spotifySession,
+      authState: '',
+      lastError: error.message,
+    }
+    response.redirect(`${redirectBaseUrl}/?spotify=error#music`)
+  }
+})
+
 app.use('/api', requireDashboardAccess)
 
 app.get('/api/state', (_request, response) => {
@@ -1447,6 +2222,90 @@ app.put('/api/integrations/chaosmod/catalog', async (request, response) => {
 
 app.get('/api/status', (_request, response) => {
   response.json(buildStatus())
+})
+
+app.post('/api/music/spotify/connect', async (request, response) => {
+  const spotifyConfig = getSpotifyAppConfig(runtimeProcess.env)
+  const redirectUri = getSpotifyRedirectUri(request)
+
+  if (!spotifyConfig.clientId || !spotifyConfig.clientSecret) {
+    response.status(400).json({
+      error: 'Faltan SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en el backend.',
+    })
+    return
+  }
+
+  if (!redirectUri) {
+    response.status(400).json({
+      error:
+        'No pude resolver la URL de callback de Spotify. Configura SPOTIFY_REDIRECT_URI o una URL publica base.',
+    })
+    return
+  }
+
+  spotifySession = {
+    ...spotifySession,
+    authState: randomBytes(16).toString('hex'),
+    lastError: '',
+  }
+
+  response.json({
+    authorizationUrl: buildSpotifyAuthorizeUrl({
+      clientId: spotifyConfig.clientId,
+      redirectUri,
+      state: spotifySession.authState,
+    }),
+    redirectUri,
+  })
+})
+
+app.post('/api/music/spotify/disconnect', async (_request, response) => {
+  resetSpotifySession()
+  broadcastSystemMessage('info', 'Spotify se desconecto del modulo de musica.')
+  broadcastStatus()
+  response.json(buildMusicStatus())
+})
+
+app.post('/api/music/spotify/sync', async (_request, response) => {
+  try {
+    const musicStatus = await syncSpotifyPlaybackState({ queueNextIfNeeded: true })
+    response.json(musicStatus)
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/music/test-play', async (request, response) => {
+  try {
+    const musicState = getMusicStateSnapshot()
+    await handleMusicPlayRequest(
+      request.body?.userName || 'demo-chat',
+      request.body?.query || '',
+      musicState,
+      'manual',
+    )
+    response.json(buildMusicStatus())
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.post('/api/music/skip', async (request, response) => {
+  try {
+    await handleMusicSkipRequest(request.body?.userName || 'panel', getMusicStateSnapshot())
+    response.json(buildMusicStatus())
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
+app.delete('/api/music/requests/:requestId', async (request, response) => {
+  try {
+    const removedRequest = await removeMusicQueueRequestById(request.params.requestId)
+    response.json(removedRequest)
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
 })
 
 app.post('/api/tiktok/connect', async (request, response) => {
@@ -1651,6 +2510,16 @@ function bindBridgeSocket(channel) {
 bindBridgeSocket('minecraft')
 bindBridgeSocket('gta')
 
+const spotifyPollingIntervalId = setInterval(() => {
+  if (!spotifySession.refreshToken) {
+    return
+  }
+
+  void syncSpotifyPlaybackState({ queueNextIfNeeded: true }).catch(() => {
+    // noop
+  })
+}, 15000)
+
 httpServer.on('upgrade', (request, socket, head) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`)
   const pathname = requestUrl.pathname
@@ -1722,6 +2591,7 @@ httpServer.listen(serverPort, () => {
 
 async function shutdown() {
   await disconnectTikTok()
+  clearInterval(spotifyPollingIntervalId)
 
   if (minecraftRcon) {
     try {
