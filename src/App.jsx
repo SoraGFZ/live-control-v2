@@ -250,6 +250,16 @@ function createActionDraft(action = null) {
   }
 }
 
+function createTriggerDraft(trigger = null, actions = []) {
+  return {
+    id: trigger?.id,
+    source: trigger?.source || 'gift',
+    match: trigger?.match || DEFAULT_TRIGGER_MATCHES.gift,
+    actionId: trigger?.actionId || actions[0]?.id || '',
+    cooldownSeconds: String(trigger?.cooldownSeconds || '0'),
+  }
+}
+
 function normalizePickerText(value) {
   return String(value || '')
     .trim()
@@ -331,6 +341,38 @@ function getStateRevision(state) {
   return Number.isFinite(numericValue) ? numericValue : 0
 }
 
+function getActionDetailLine(action) {
+  if (action.overlayText) {
+    return `Overlay: ${action.overlayText}`
+  }
+
+  if (action.mediaUrl) {
+    return `Media: ${truncateValue(action.mediaUrl)}`
+  }
+
+  return action.description || 'Sin nota extra.'
+}
+
+function getTriggerRuleSummary(trigger) {
+  if (!trigger?.match) {
+    return 'Cualquier evento'
+  }
+
+  if (trigger.source === 'gift') {
+    const parsedGift = parseGiftTriggerMatch(trigger.match)
+    return parsedGift.giftName
+      ? `${parsedGift.giftName} x${parsedGift.repeatCount || '1'}`
+      : trigger.match
+  }
+
+  if (trigger.source === 'like-burst') {
+    const likeThreshold = String(trigger.match).match(/\d+/)?.[0]
+    return likeThreshold ? `${likeThreshold} likes` : trigger.match
+  }
+
+  return trigger.match
+}
+
 function createDashboardStatePayload(state) {
   return {
     updatedAt: getStateRevision(state),
@@ -361,6 +403,7 @@ function DashboardApp() {
   const [showActionModal, setShowActionModal] = useState(false)
   const [editingActionId, setEditingActionId] = useState('')
   const [showTriggerModal, setShowTriggerModal] = useState(false)
+  const [editingTriggerId, setEditingTriggerId] = useState('')
   const [dashboardAccessKey, setDashboardAccessKey] = useState(() => readStoredDashboardAccessKey())
   const [dashboardAuthDraft, setDashboardAuthDraft] = useState(() => readStoredDashboardAccessKey())
   const [dashboardAuthError, setDashboardAuthError] = useState('')
@@ -644,6 +687,8 @@ function DashboardApp() {
     : []
   const editingAction =
     appState.actions.find((action) => action.id === editingActionId) || null
+  const editingTrigger =
+    appState.triggers.find((trigger) => trigger.id === editingTriggerId) || null
 
   const readyOutputs = new Set()
   appState.actions.forEach((action) => action.outputs.forEach((output) => readyOutputs.add(output)))
@@ -686,6 +731,15 @@ function DashboardApp() {
     }))
   }
 
+  function updateTrigger(triggerDraft) {
+    updateDashboardState((currentState) => ({
+      ...currentState,
+      triggers: currentState.triggers.map((trigger) =>
+        trigger.id === triggerDraft.id ? { ...trigger, ...triggerDraft } : trigger,
+      ),
+    }))
+  }
+
   function removeAction(actionId) {
     updateDashboardState((currentState) => ({
       ...currentState,
@@ -714,6 +768,21 @@ function DashboardApp() {
   function closeActionModal() {
     setShowActionModal(false)
     setEditingActionId('')
+  }
+
+  function openCreateTriggerModal() {
+    setEditingTriggerId('')
+    setShowTriggerModal(true)
+  }
+
+  function openEditTriggerModal(triggerId) {
+    setEditingTriggerId(triggerId)
+    setShowTriggerModal(true)
+  }
+
+  function closeTriggerModal() {
+    setShowTriggerModal(false)
+    setEditingTriggerId('')
   }
 
   function scrollToSection(sectionId) {
@@ -833,25 +902,30 @@ function DashboardApp() {
     scrollToSection('overlay')
   }
 
-  async function sendSampleEvent(sampleType) {
+  async function sendSampleEvent(sampleEvent, payloadOverrides = {}) {
     const payload =
-      sampleType === 'follow'
-        ? {
-            type: 'follow',
-            userName: 'demo-follow',
-          }
-        : sampleType === 'gift'
+      typeof sampleEvent === 'string'
+        ? sampleEvent === 'follow'
           ? {
-              type: 'gift',
-              userName: 'demo-gifter',
-              giftName: 'Rose',
-              repeatCount: 1,
+              type: 'follow',
+              userName: 'demo-follow',
+              ...payloadOverrides,
             }
-          : {
-              type: 'comment',
-              userName: 'demo-chat',
-            comment: '!voz',
-          }
+          : sampleEvent === 'gift'
+            ? {
+                type: 'gift',
+                userName: 'demo-gifter',
+                giftName: 'Rose',
+                repeatCount: 1,
+                ...payloadOverrides,
+              }
+            : {
+                type: 'comment',
+                userName: 'demo-chat',
+                comment: '!voz',
+                ...payloadOverrides,
+              }
+        : sampleEvent
 
     try {
       await requestJson(
@@ -966,7 +1040,14 @@ function DashboardApp() {
         <HeroPanel
           overlayUrl={preferredOverlayUrl}
           onCreateAction={openCreateActionModal}
-          onCreateTrigger={() => setShowTriggerModal(true)}
+          onCreateTrigger={openCreateTriggerModal}
+        />
+
+        <MetricRow
+          actionCount={appState.actions.length}
+          bridgePort={serverStatus.server.port}
+          readyOutputCount={readyOutputs.size}
+          triggerCount={appState.triggers.length}
         />
 
         <LiveOpsSection
@@ -981,9 +1062,7 @@ function DashboardApp() {
           tiktokUsernameDraft={tiktokUsernameDraft}
         />
 
-        <MetricRow actionCount={appState.actions.length} bridgePort={serverStatus.server.port} readyOutputCount={readyOutputs.size} triggerCount={appState.triggers.length} />
-
-        <RoadmapSection />
+        <SimulationsSection giftCatalog={tikTokGiftCatalog} onSampleEvent={sendSampleEvent} />
 
         <ActionsSection
           actions={appState.actions}
@@ -993,7 +1072,14 @@ function DashboardApp() {
           onRemoveAction={removeAction}
         />
 
-        <TriggersSection actions={appState.actions} onCreateTrigger={() => setShowTriggerModal(true)} onRemoveTrigger={removeTrigger} triggers={appState.triggers} />
+        <TriggersSection
+          actions={appState.actions}
+          giftCatalog={tikTokGiftCatalog}
+          onCreateTrigger={openCreateTriggerModal}
+          onEditTrigger={openEditTriggerModal}
+          onRemoveTrigger={removeTrigger}
+          triggers={appState.triggers}
+        />
 
         <OverlaySection
           linkFeedback={linkFeedback}
@@ -1003,7 +1089,6 @@ function DashboardApp() {
           onCopyOverlayUrl={copyOverlayUrl}
           onOpenOverlayWindow={openOverlayWindow}
           onRefreshMedia={refreshMediaLibrary}
-          onSampleEvent={sendSampleEvent}
           onUploadMedia={uploadMediaFile}
           localOverlayUrl={localOverlayUrl}
           publicOverlayUrl={publicOverlayUrl}
@@ -1045,12 +1130,19 @@ function DashboardApp() {
 
       {showTriggerModal ? (
         <TriggerModal
+          key={editingTrigger?.id || 'new-trigger'}
           actions={appState.actions}
           giftCatalog={tikTokGiftCatalog}
-          onClose={() => setShowTriggerModal(false)}
+          initialTrigger={editingTrigger}
+          onClose={closeTriggerModal}
           onSave={(triggerDraft) => {
-            addTrigger(triggerDraft)
-            setShowTriggerModal(false)
+            if (triggerDraft.id) {
+              updateTrigger(triggerDraft)
+            } else {
+              addTrigger(triggerDraft)
+            }
+
+            closeTriggerModal()
           }}
         />
       ) : null}
@@ -1062,12 +1154,9 @@ function DashboardBootScreen() {
   return (
     <div className="auth-shell">
       <article className="auth-card">
-        <span className="eyebrow">Conectando panel</span>
-        <h1>Estamos levantando tu centro de control.</h1>
-        <p>
-          Reviso el backend local, el estado guardado y la seguridad del panel antes de mostrarte
-          todo.
-        </p>
+        <span className="eyebrow">Cargando panel</span>
+        <h1>Un segundo, ya te muestro todo.</h1>
+        <p>Estoy trayendo la configuracion guardada, el estado del backend y las claves del panel.</p>
       </article>
     </div>
   )
@@ -1083,10 +1172,10 @@ function DashboardAccessGate({
     <div className="auth-shell">
       <article className="auth-card">
         <span className="eyebrow">Panel protegido</span>
-        <h1>Ingresa la clave del dashboard.</h1>
+        <h1>Ingresa la clave del panel.</h1>
         <p>
-          Esta clave protege el panel, las APIs y los sockets internos cuando publicas la app con
-          una URL real.
+          Esta clave protege el panel, las APIs y los sockets internos cuando lo publicas con una
+          URL real.
         </p>
 
         <label className="field-label" htmlFor="dashboard-access-key">
@@ -1124,9 +1213,7 @@ function Sidebar({ onJump }) {
       <div className="brand-block">
         <span className="brand-kicker">TikTok Live x Games</span>
         <div className="brand-title">Live Control</div>
-        <p className="brand-copy">
-          Unificamos triggers del live, acciones de juegos y overlay en una sola mesa de control.
-        </p>
+        <p className="brand-copy">Configura gifts, comandos y overlay desde un solo panel.</p>
       </div>
 
       <nav className="sidebar-nav" aria-label="Secciones del panel">
@@ -1135,6 +1222,9 @@ function Sidebar({ onJump }) {
         </button>
         <button className="nav-button" onClick={() => onJump('live-ops')}>
           Live Ops
+        </button>
+        <button className="nav-button" onClick={() => onJump('simulations')}>
+          Pruebas
         </button>
         <button className="nav-button" onClick={() => onJump('actions')}>
           Acciones
@@ -1151,9 +1241,9 @@ function Sidebar({ onJump }) {
       </nav>
 
       <div className="sidebar-card">
-        <span className="sidebar-card-label">Estado del MVP</span>
-        <strong>Control local funcional</strong>
-        <p>Panel, backend, overlay y bridges websocket ya quedaron en la misma app.</p>
+        <span className="sidebar-card-label">Estado</span>
+        <strong>Base funcional</strong>
+        <p>Panel, overlay publico, gifts reales y bridge local ya estan conectados.</p>
       </div>
     </aside>
   )
@@ -1163,10 +1253,10 @@ function HeroPanel({ overlayUrl, onCreateAction, onCreateTrigger }) {
   return (
     <section className="hero-panel" id="overview">
       <div className="hero-copy">
-        <span className="eyebrow">MVP para tu app tipo TikFinity</span>
-        <h1>Construimos el centro de control para tus lives caoticos.</h1>
+        <span className="eyebrow">Panel principal</span>
+        <h1>Acciones, triggers y overlay en un solo lugar.</h1>
         <p className="hero-text">
-          Esta base ya ordena acciones, triggers y un overlay con link propio para empezar a probar alertas, medios y comandos de juego.
+          Conecta tu live, arma reglas y prueba todo desde aqui sin perderte entre ventanas.
         </p>
 
         <div className="hero-actions">
@@ -1181,19 +1271,20 @@ function HeroPanel({ overlayUrl, onCreateAction, onCreateTrigger }) {
 
       <div className="hero-stack">
         <article className="signal-card">
-          <span className="signal-label">Pipeline que vamos a cerrar</span>
+          <span className="signal-label">Flujo</span>
           <div className="signal-flow">
             <span>TikTok Live</span>
+            <span>Trigger</span>
             <span>Accion</span>
             <span>Juego / Overlay</span>
           </div>
-          <p>El siguiente backend local solo tiene que escuchar eventos, resolver triggers y despachar la accion correcta.</p>
+          <p>Entra un evento, se revisa la regla y se despacha la accion al overlay o al juego.</p>
         </article>
 
         <article className="signal-card">
-          <span className="signal-label">Overlay listo para pruebas</span>
+          <span className="signal-label">Overlay</span>
           <code>{overlayUrl}</code>
-          <p>Puedes abrirlo ya mismo en otra ventana para validar estilo, capas y tiempos de alerta.</p>
+          <p>Ese link es el que usas para probar alertas o pegar el widget en LIVE Studio.</p>
         </article>
       </div>
     </section>
@@ -1215,8 +1306,8 @@ function LiveOpsSection({
     <section className="panel-section" id="live-ops">
       <SectionHeader
         eyebrow="Operacion en vivo"
-        title="Conexion real con TikTok y estado del backend"
-        description="Desde aqui conectas el live, revisas eventos entrantes y confirmas que overlay y bridges estan vivos."
+        title="TikTok y backend"
+        description="Conecta tu usuario, revisa si entran eventos y confirma que el backend sigue respondiendo."
       />
 
       <div className="ops-grid">
@@ -1224,7 +1315,7 @@ function LiveOpsSection({
           <div className="card-top">
             <div>
               <h3>TikTok LIVE</h3>
-              <p>Conecta por username y deja que el backend resuelva follows, gifts, comments y likes.</p>
+              <p>Conecta por username y deja que el backend escuche follows, gifts, comentarios y likes.</p>
             </div>
             <span className={`status-chip ${serverStatus.tikTok.connected ? 'ok' : serverStatus.tikTok.connecting ? 'warn' : 'off'}`}>
               {serverStatus.tikTok.connected
@@ -1289,7 +1380,7 @@ function LiveOpsSection({
           <div className="card-top">
             <div>
               <h3>Backend local</h3>
-              <p>Este proceso es el que persiste configuracion y reparte eventos a overlay, dashboard y juegos.</p>
+              <p>Este proceso guarda la configuracion y reparte eventos a overlay, panel y juegos.</p>
             </div>
             <span className={`status-chip ${serverError ? 'warn' : 'ok'}`}>
               {serverError ? 'Atencion' : 'Activo'}
@@ -1360,58 +1451,231 @@ function MetricRow({ actionCount, bridgePort, readyOutputCount, triggerCount }) 
   return (
     <section className="metric-grid">
       <article className="metric-card">
-        <span className="metric-label">Acciones creadas</span>
+        <span className="metric-label">Acciones</span>
         <strong>{actionCount}</strong>
-        <p>Biblioteca reutilizable para eventos del live.</p>
+        <p>Tu biblioteca de respuestas para el live.</p>
       </article>
       <article className="metric-card">
-        <span className="metric-label">Triggers mapeados</span>
+        <span className="metric-label">Triggers</span>
         <strong>{triggerCount}</strong>
-        <p>Reglas que uniran follows, gifts y comentarios con acciones.</p>
+        <p>Reglas activas entre eventos y acciones.</p>
       </article>
       <article className="metric-card">
-        <span className="metric-label">Salidas modeladas</span>
+        <span className="metric-label">Salidas</span>
         <strong>{readyOutputCount}</strong>
-        <p>Overlay, audio y bridges de juego ya contemplados en la data.</p>
+        <p>Overlay, audio y juegos listos para usar.</p>
       </article>
       <article className="metric-card">
-        <span className="metric-label">Bridge local planeado</span>
+        <span className="metric-label">Puerto del backend</span>
         <strong>{bridgePort}</strong>
-        <p>Puerto sugerido para el servicio Node que hara de pegamento.</p>
+        <p>Donde esta corriendo el backend ahora mismo.</p>
       </article>
     </section>
   )
 }
 
-function RoadmapSection() {
+function SimulationsSection({ giftCatalog, onSampleEvent }) {
+  const availableGiftCatalog = (giftCatalog.length ? giftCatalog : CURATED_GIFT_CATALOG).map(
+    (gift, index) => normalizeGiftCatalogForPicker(gift, index),
+  )
+  const [demoUser, setDemoUser] = useState('demo-live')
+  const [likeCount, setLikeCount] = useState('100')
+  const [commentText, setCommentText] = useState('!voz')
+  const [giftSearch, setGiftSearch] = useState('')
+  const [giftRepeatCount, setGiftRepeatCount] = useState('1')
+  const [selectedGiftId, setSelectedGiftId] = useState(() => availableGiftCatalog[0]?.id || '')
+  const filteredGiftCatalog = availableGiftCatalog.filter((gift) =>
+    normalizePickerText(`${gift.name} ${gift.coins} ${gift.token}`).includes(
+      normalizePickerText(giftSearch),
+    ),
+  )
+  const selectedGift =
+    filteredGiftCatalog.find((gift) => gift.id === selectedGiftId)
+    || availableGiftCatalog.find((gift) => gift.id === selectedGiftId)
+    || filteredGiftCatalog[0]
+    || availableGiftCatalog[0]
+    || null
+
   return (
-    <section className="panel-section">
+    <section className="panel-section" id="simulations">
       <SectionHeader
-        eyebrow="Roadmap operativo"
-        title="Como se conecta todo"
-        description="La idea del producto ya queda repartida en bloques claros para que avanzar no sea un salto al vacio."
+        eyebrow="Pruebas"
+        title="Simular eventos"
+        description="Estas pruebas entran por el backend y recorren la misma logica que un evento real del live."
       />
 
-      <div className="pipeline-grid">
-        <article className="surface-card pipeline-card">
-          <span className="step-index">01</span>
-          <h3>Ingesta del live</h3>
-          <p>Un servicio local recibe follows, gifts, comentarios y likes desde TikTok.</p>
+      <div className="sim-grid">
+        <article className="surface-card sim-card">
+          <div className="card-top">
+            <div>
+              <h3>Disparar prueba</h3>
+              <p>Ideal para revisar triggers, overlay y logs antes de salir en vivo.</p>
+            </div>
+            <span className="state-badge">Backend real</span>
+          </div>
+
+          <label className="field-label" htmlFor="sim-demo-user">
+            Usuario de prueba
+          </label>
+          <input
+            id="sim-demo-user"
+            className="text-field"
+            value={demoUser}
+            onChange={(event) => setDemoUser(event.target.value)}
+          />
+
+          <div className="sim-button-grid">
+            <button
+              className="secondary-button"
+              onClick={() => onSampleEvent({ type: 'follow', userName: demoUser || 'demo-follow' })}
+            >
+              Simular follow
+            </button>
+            <button
+              className="secondary-button"
+              onClick={() => onSampleEvent({ type: 'share', userName: demoUser || 'demo-share' })}
+            >
+              Simular share
+            </button>
+          </div>
+
+          <div className="sim-inline-fields">
+            <input
+              className="text-field"
+              inputMode="numeric"
+              value={likeCount}
+              onChange={(event) => setLikeCount(event.target.value)}
+              placeholder="100"
+            />
+            <button
+              className="secondary-button"
+              onClick={() =>
+                onSampleEvent({
+                  type: 'like-burst',
+                  userName: demoUser || 'demo-likes',
+                  likeCount: Number.parseInt(likeCount || '0', 10) || 0,
+                })
+              }
+            >
+              Simular likes
+            </button>
+          </div>
+
+          <div className="sim-inline-fields">
+            <input
+              className="text-field"
+              value={commentText}
+              onChange={(event) => setCommentText(event.target.value)}
+              placeholder="Ej: !voz"
+            />
+            <button
+              className="secondary-button"
+              onClick={() =>
+                onSampleEvent({
+                  type: 'comment',
+                  userName: demoUser || 'demo-chat',
+                  comment: commentText || '!voz',
+                })
+              }
+            >
+              Simular chat
+            </button>
+          </div>
+
+          <div className="sim-gift-controls">
+            <div className="sim-inline-fields">
+              <input
+                className="text-field"
+                value={giftSearch}
+                onChange={(event) => setGiftSearch(event.target.value)}
+                placeholder="Buscar gift"
+              />
+              <input
+                className="text-field sim-count-field"
+                inputMode="numeric"
+                value={giftRepeatCount}
+                onChange={(event) => setGiftRepeatCount(event.target.value)}
+                placeholder="x1"
+              />
+            </div>
+
+            <select
+              className="text-field"
+              value={selectedGift?.id || ''}
+              onChange={(event) => setSelectedGiftId(event.target.value)}
+            >
+              {filteredGiftCatalog.map((gift) => (
+                <option key={gift.id} value={gift.id}>
+                  {gift.name} - {gift.coins} coin{gift.coins === 1 ? '' : 's'}
+                </option>
+              ))}
+            </select>
+
+            <button
+              className="secondary-button"
+              onClick={() =>
+                onSampleEvent({
+                  type: 'gift',
+                  userName: demoUser || 'demo-gift',
+                  giftName: selectedGift?.name || 'Rose',
+                  repeatCount: Number.parseInt(giftRepeatCount || '1', 10) || 1,
+                })
+              }
+            >
+              Simular gift
+            </button>
+          </div>
         </article>
-        <article className="surface-card pipeline-card">
-          <span className="step-index">02</span>
-          <h3>Motor de triggers</h3>
-          <p>Revisa reglas, cooldowns y decide que accion reusable debe dispararse.</p>
-        </article>
-        <article className="surface-card pipeline-card">
-          <span className="step-index">03</span>
-          <h3>Dispatcher de acciones</h3>
-          <p>Ejecuta overlay, audio, TTS o comandos para Minecraft y GTA segun cada caso.</p>
-        </article>
-        <article className="surface-card pipeline-card">
-          <span className="step-index">04</span>
-          <h3>Salida al live</h3>
-          <p>Tu overlay muestra alertas y los juegos reciben eventos desde mods o bridges.</p>
+
+        <article className="surface-card sim-card">
+          <div className="card-top">
+            <div>
+              <h3>Catalogo activo</h3>
+              <p>Lo que ves aqui sale del catalogo real de TikTok cuando ya lo sincronizaste.</p>
+            </div>
+            <span className="bridge-badge">
+              {availableGiftCatalog.length} regalo{availableGiftCatalog.length === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          {selectedGift ? (
+            <div className="sim-gift-preview">
+              {selectedGift.imageUrl ? (
+                <img src={selectedGift.imageUrl} alt={selectedGift.name} className="gift-picker-image" />
+              ) : (
+                <span className="gift-picker-thumb" style={{ '--picker-accent': selectedGift.accent }}>
+                  {selectedGift.token}
+                </span>
+              )}
+              <div>
+                <strong>{selectedGift.name}</strong>
+                <p>
+                  {selectedGift.coins} coin{selectedGift.coins === 1 ? '' : 's'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="support-copy">Todavia no hay gifts cargados en el panel.</p>
+          )}
+
+          <div className="sim-note-list">
+            <div className="sim-note-item">
+              <strong>Follow y share</strong>
+              <span>Sirven para ver si la accion entra, hace match y se despacha.</span>
+            </div>
+            <div className="sim-note-item">
+              <strong>Likes</strong>
+              <span>Respeta reglas por cantidad, por ejemplo `100 likes`.</span>
+            </div>
+            <div className="sim-note-item">
+              <strong>Chat</strong>
+              <span>Perfecto para probar comandos como `!voz` o `!chaos`.</span>
+            </div>
+            <div className="sim-note-item">
+              <strong>Gift</strong>
+              <span>Usa el mismo nombre que luego llega desde TikTok.</span>
+            </div>
+          </div>
         </article>
       </div>
     </section>
@@ -1429,8 +1693,8 @@ function ActionsSection({
     <section className="panel-section" id="actions">
       <SectionHeader
         eyebrow="Biblioteca de acciones"
-        title="Acciones reutilizables para el directo"
-        description="Aqui defines lo que debe pasar cuando un trigger se active."
+        title="Acciones"
+        description="Aqui guardas todo lo que puede pasar despues: overlay, audio, GTA, Minecraft o TTS."
         action={
           <button className="primary-button" onClick={onCreateAction}>
             Crear accion
@@ -1438,71 +1702,112 @@ function ActionsSection({
         }
       />
 
-      <div className="card-grid">
-        {actions.map((action) => (
-          <article key={action.id} className="surface-card action-card">
-            <div className="card-top">
-              <div>
-                <h3>{action.name}</h3>
-                <p>{action.description || 'Sin descripcion todavia.'}</p>
-              </div>
-              <span className="state-badge">
-                {action.outputs.length} salida{action.outputs.length === 1 ? '' : 's'}
-              </span>
-            </div>
-
-            <div className="tag-row">
-              {action.outputs.map((output) => (
-                <span key={output} className="tag">
-                  {getOutputMeta(output)?.label || output}
-                </span>
-              ))}
-            </div>
-
-            {getActionCommandSummary(action) ? (
-              <div className="snippet-block">
-                <span className="snippet-label">Comando / payload</span>
-                <code>{getActionCommandSummary(action)}</code>
-              </div>
-            ) : null}
-
-            {action.overlayText ? (
-              <p className="support-copy">
-                <strong>Overlay:</strong> {action.overlayText}
-              </p>
-            ) : null}
-
-              {action.mediaUrl ? (
-                <p className="support-copy">
-                  <strong>Media:</strong> {truncateValue(action.mediaUrl)}
-                </p>
-              ) : null}
-
-              <div className="card-actions">
-                <button className="secondary-button" onClick={() => onPreviewAction(action)}>
-                  {isOverlayCapable(action) ? 'Probar accion' : 'Probar bridge'}
-                </button>
-                <button className="secondary-button" onClick={() => onEditAction(action.id)}>
-                  Editar
-                </button>
-                <button className="ghost-button" onClick={() => onRemoveAction(action.id)}>
-                  Eliminar
-                </button>
-              </div>
-            </article>
-        ))}
-      </div>
+      <ActionListTable
+        actions={actions}
+        onEditAction={onEditAction}
+        onPreviewAction={onPreviewAction}
+        onRemoveAction={onRemoveAction}
+      />
     </section>
   )
 }
 
-function TriggersSection({ actions, onCreateTrigger, onRemoveTrigger, triggers }) {
+function ActionListTable({ actions, onEditAction, onPreviewAction, onRemoveAction }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const filteredActions = actions.filter((action) =>
+    normalizePickerText(
+      `${action.name} ${action.description} ${getActionCommandSummary(action)} ${action.outputs.join(' ')} ${action.overlayText} ${action.mediaUrl}`,
+    ).includes(normalizePickerText(searchQuery)),
+  )
+
+  return (
+    <div className="list-shell">
+      <div className="list-toolbar">
+        <input
+          className="text-field list-search"
+          placeholder="Buscar acciones..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+        <span className="muted-pill">
+          {filteredActions.length} accion{filteredActions.length === 1 ? '' : 'es'}
+        </span>
+      </div>
+
+      <div className="dense-table">
+        <div className="dense-table-head actions-layout">
+          <span>Accion</span>
+          <span>Salidas</span>
+          <span>Comando</span>
+          <span>Detalle</span>
+          <span>Controles</span>
+        </div>
+
+        {filteredActions.length === 0 ? (
+          <div className="empty-list">No encontre acciones con ese filtro.</div>
+        ) : (
+          filteredActions.map((action) => (
+            <article key={action.id} className="dense-table-row actions-layout">
+              <div className="dense-cell" data-label="Accion">
+                <div className="row-title-wrap">
+                  <strong className="row-title">{action.name}</strong>
+                  <span className="row-subcopy">{action.description || 'Sin descripcion.'}</span>
+                </div>
+              </div>
+
+              <div className="dense-cell" data-label="Salidas">
+                <div className="output-chip-row">
+                  {action.outputs.map((output) => (
+                    <span key={output} className="tag">
+                      {getOutputMeta(output)?.label || output}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="dense-cell" data-label="Comando">
+                <code className="dense-code">{getActionCommandSummary(action) || 'Sin comando'}</code>
+              </div>
+
+              <div className="dense-cell" data-label="Detalle">
+                <span className="row-subcopy">{getActionDetailLine(action)}</span>
+              </div>
+
+              <div className="dense-cell" data-label="Controles">
+                <div className="row-actions">
+                  <button className="secondary-button compact-button" onClick={() => onPreviewAction(action)}>
+                    {isOverlayCapable(action) ? 'Probar' : 'Bridge'}
+                  </button>
+                  <button className="ghost-button compact-button" onClick={() => onEditAction(action.id)}>
+                    Editar
+                  </button>
+                  <button className="ghost-button compact-button" onClick={() => onRemoveAction(action.id)}>
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TriggersSection({
+  actions,
+  giftCatalog,
+  onCreateTrigger,
+  onEditTrigger,
+  onRemoveTrigger,
+  triggers,
+}) {
   return (
     <section className="panel-section" id="triggers">
       <SectionHeader
         eyebrow="Motor de disparo"
-        title="Triggers del live"
-        description="Mapea un evento de TikTok al comportamiento que quieras ejecutar."
+        title="Triggers"
+        description="Cada regla une un evento del live con una accion."
         action={
           <button className="primary-button" onClick={onCreateTrigger} disabled={actions.length === 0}>
             Crear trigger
@@ -1510,26 +1815,126 @@ function TriggersSection({ actions, onCreateTrigger, onRemoveTrigger, triggers }
         }
       />
 
-      <div className="card-grid trigger-grid">
-        {triggers.map((trigger) => {
-          const linkedAction = actions.find((action) => action.id === trigger.actionId)
-
-          return (
-            <article key={trigger.id} className="surface-card trigger-card">
-              <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
-              <h3>{trigger.match}</h3>
-              <p>
-                Dispara <strong>{linkedAction?.name || 'Accion eliminada'}</strong>
-              </p>
-              <p className="support-copy">Cooldown: {trigger.cooldownSeconds || '0'} segundos</p>
-              <button className="ghost-button" onClick={() => onRemoveTrigger(trigger.id)}>
-                Eliminar
-              </button>
-            </article>
-          )
-        })}
-      </div>
+      <TriggerListTable
+        actions={actions}
+        giftCatalog={giftCatalog}
+        onEditTrigger={onEditTrigger}
+        onRemoveTrigger={onRemoveTrigger}
+        triggers={triggers}
+      />
     </section>
+  )
+}
+
+function TriggerListTable({ actions, giftCatalog, onEditTrigger, onRemoveTrigger, triggers }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const normalizedGiftCatalog = (giftCatalog.length ? giftCatalog : CURATED_GIFT_CATALOG).map(
+    (gift, index) => normalizeGiftCatalogForPicker(gift, index),
+  )
+  const filteredTriggers = triggers.filter((trigger) => {
+    const linkedAction = actions.find((action) => action.id === trigger.actionId)
+    return normalizePickerText(
+      `${trigger.source} ${trigger.match} ${linkedAction?.name || ''} ${linkedAction?.description || ''}`,
+    ).includes(normalizePickerText(searchQuery))
+  })
+
+  function renderTriggerVisual(trigger) {
+    if (trigger.source !== 'gift') {
+      return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
+    }
+
+    const parsedGift = parseGiftTriggerMatch(trigger.match)
+    const linkedGift = normalizedGiftCatalog.find(
+      (gift) => normalizePickerText(gift.name) === normalizePickerText(parsedGift.giftName),
+    )
+
+    if (!linkedGift) {
+      return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
+    }
+
+    return (
+      <span className="gift-inline-pill">
+        {linkedGift.imageUrl ? (
+          <img src={linkedGift.imageUrl} alt={linkedGift.name} className="gift-inline-image" />
+        ) : (
+          <span className="gift-inline-token" style={{ '--picker-accent': linkedGift.accent }}>
+            {linkedGift.token}
+          </span>
+        )}
+        <span>{linkedGift.name}</span>
+      </span>
+    )
+  }
+
+  return (
+    <div className="list-shell">
+      <div className="list-toolbar">
+        <input
+          className="text-field list-search"
+          placeholder="Buscar triggers..."
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+        />
+        <span className="muted-pill">
+          {filteredTriggers.length} trigger{filteredTriggers.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      <div className="dense-table">
+        <div className="dense-table-head triggers-layout">
+          <span>Activador</span>
+          <span>Regla</span>
+          <span>Accion</span>
+          <span>Cooldown</span>
+          <span>Controles</span>
+        </div>
+
+        {filteredTriggers.length === 0 ? (
+          <div className="empty-list">No encontre triggers con ese filtro.</div>
+        ) : (
+          filteredTriggers.map((trigger) => {
+            const linkedAction = actions.find((action) => action.id === trigger.actionId)
+
+            return (
+              <article key={trigger.id} className="dense-table-row triggers-layout">
+                <div className="dense-cell" data-label="Activador">
+                  {renderTriggerVisual(trigger)}
+                </div>
+
+                <div className="dense-cell" data-label="Regla">
+                  <div className="row-title-wrap">
+                    <strong className="row-title">{getTriggerRuleSummary(trigger)}</strong>
+                    <span className="row-subcopy">{getTriggerLabel(trigger.source)}</span>
+                  </div>
+                </div>
+
+                <div className="dense-cell" data-label="Accion">
+                  <div className="row-title-wrap">
+                    <strong className="row-title">{linkedAction?.name || 'Accion eliminada'}</strong>
+                    <span className="row-subcopy">{linkedAction?.description || 'Sin descripcion.'}</span>
+                  </div>
+                </div>
+
+                <div className="dense-cell" data-label="Cooldown">
+                  <span className="row-subcopy">{trigger.cooldownSeconds || '0'} seg</span>
+                </div>
+
+                <div className="dense-cell" data-label="Controles">
+                  <div className="row-actions">
+                    <button className="ghost-button compact-button" onClick={() => onEditTrigger(trigger.id)}>
+                      Editar
+                    </button>
+                    <button className="ghost-button compact-button" onClick={() => onRemoveTrigger(trigger.id)}>
+                      Eliminar
+                    </button>
+                  </div>
+                </div>
+              </article>
+            )
+          })
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -1542,7 +1947,6 @@ function OverlaySection({
   onCopyOverlayUrl,
   onOpenOverlayWindow,
   onRefreshMedia,
-  onSampleEvent,
   onUploadMedia,
   publicOverlayUrl,
   profile,
@@ -1554,8 +1958,8 @@ function OverlaySection({
     <section className="panel-section" id="overlay">
       <SectionHeader
         eyebrow="Salida visual"
-        title="Overlay con URL propia"
-        description="La ruta de overlay vive dentro de esta misma app para que ya puedas abrirla aparte y testear alertas."
+        title="Overlay"
+        description="Aqui dejas la URL, las claves y tu biblioteca local para las alertas."
       />
 
       <div className="overlay-grid">
@@ -1657,10 +2061,7 @@ function OverlaySection({
               </code>
             </div>
           </div>
-          <p>
-            Usa la URL publica en LIVE Studio. La local sigue sirviendo para pruebas rapidas dentro
-            de tu PC.
-          </p>
+          <p>Usa la URL publica en LIVE Studio. La local te sirve para ver el overlay en tu PC.</p>
           <div className="card-actions">
             <button className="primary-button" onClick={onCopyOverlayUrl}>
               {publicOverlayUrl ? 'Copiar URL publica' : 'Copiar URL local'}
@@ -1670,27 +2071,6 @@ function OverlaySection({
             </button>
           </div>
           {linkFeedback ? <span className="feedback-pill">{linkFeedback}</span> : null}
-        </article>
-
-        <article className="surface-card test-card">
-          <h3>Pruebas rapidas</h3>
-          <p className="test-card-copy">
-            Estas demos ya pasan por el backend local, asi que validan overlay, triggers y logs de verdad.
-          </p>
-          <p>
-            Estas demos sirven para validar diseño, timing y lectura del overlay antes de tener el bridge real de TikTok.
-          </p>
-          <div className="stacked-actions">
-            <button className="secondary-button" onClick={() => onSampleEvent('follow')}>
-              Probar alerta de follow
-            </button>
-            <button className="secondary-button" onClick={() => onSampleEvent('gift')}>
-              Probar alerta de gift
-            </button>
-            <button className="secondary-button" onClick={() => onSampleEvent('tts')}>
-              Probar comentario !voz
-            </button>
-          </div>
         </article>
 
         <article className="surface-card checklist-card">
@@ -1727,7 +2107,8 @@ function OverlaySection({
           />
 
           <p className="support-copy">
-            El backend corre en el puerto <strong>{serverPort}</strong>. Si completas el RCON, las acciones de Minecraft intentan enviar el comando real.
+            El backend corre en el puerto <strong>{serverPort}</strong>. Si completas el RCON, las
+            acciones de Minecraft intentan enviar el comando real.
           </p>
           <div className="snippet-block">
             <span className="snippet-label">Comando rapido</span>
@@ -1838,7 +2219,7 @@ function BridgesSection({
       <SectionHeader
         eyebrow="Integraciones"
         title="Bridge local para juegos"
-        description="El overlay ya corre publico. Ahora el juego necesita un agente local en tu PC que reciba eventos desde Railway y los ejecute cerca de Minecraft o GTA."
+        description="El overlay ya corre publico. Los juegos necesitan un agente local en tu PC para ejecutar lo que llega desde Railway."
       />
 
       <div className="bridge-grid">
@@ -2523,15 +2904,11 @@ function ActionModal({
   )
 }
 
-function TriggerModal({ actions, giftCatalog, onClose, onSave }) {
-  const [draft, setDraft] = useState({
-    source: 'gift',
-    match: DEFAULT_TRIGGER_MATCHES.gift,
-    actionId: actions[0]?.id || '',
-    cooldownSeconds: '0',
-  })
+function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave }) {
+  const [draft, setDraft] = useState(() => createTriggerDraft(initialTrigger, actions))
   const [giftSearch, setGiftSearch] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const isEditing = Boolean(initialTrigger?.id)
   const hasLiveGiftCatalog = Array.isArray(giftCatalog) && giftCatalog.length > 0
   const availableGiftCatalog = (hasLiveGiftCatalog ? giftCatalog : CURATED_GIFT_CATALOG).map(
     (gift, index) => normalizeGiftCatalogForPicker(gift, index),
@@ -2603,8 +2980,8 @@ function TriggerModal({ actions, giftCatalog, onClose, onSave }) {
       <div className="modal-card" onClick={(event) => event.stopPropagation()}>
         <div className="modal-head">
           <div>
-            <span className="eyebrow">Nuevo trigger</span>
-            <h2>Conecta un evento con una accion</h2>
+            <span className="eyebrow">{isEditing ? 'Editar trigger' : 'Nuevo trigger'}</span>
+            <h2>{isEditing ? 'Ajusta la regla y la accion' : 'Conecta un evento con una accion'}</h2>
           </div>
           <button className="icon-button" onClick={onClose}>
             x
@@ -2782,7 +3159,7 @@ function TriggerModal({ actions, giftCatalog, onClose, onSave }) {
               Cancelar
             </button>
             <button type="submit" className="primary-button">
-              Guardar trigger
+              {isEditing ? 'Guardar cambios' : 'Guardar trigger'}
             </button>
           </div>
         </form>
