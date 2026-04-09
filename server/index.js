@@ -105,6 +105,157 @@ const recentEvents = []
 const recentDispatches = []
 let mediaLibraryCount = (await listMediaItems()).length
 
+function normalizeTikTokUsername(username) {
+  return String(username || '').trim().replace(/^@/, '')
+}
+
+function extractImageUrl(imageValue) {
+  if (!imageValue) {
+    return ''
+  }
+
+  if (typeof imageValue === 'string') {
+    return imageValue
+  }
+
+  if (Array.isArray(imageValue.urlList) && imageValue.urlList[0]) {
+    return String(imageValue.urlList[0])
+  }
+
+  if (Array.isArray(imageValue.url_list) && imageValue.url_list[0]) {
+    return String(imageValue.url_list[0])
+  }
+
+  if (Array.isArray(imageValue.urls) && imageValue.urls[0]) {
+    return String(imageValue.urls[0])
+  }
+
+  if (imageValue.url) {
+    return String(imageValue.url)
+  }
+
+  return ''
+}
+
+function normalizeGiftCatalogEntry(gift, sortOrder = 0) {
+  const normalizedName = String(
+    gift?.name || gift?.describe || gift?.displayName || gift?.giftName || '',
+  ).trim()
+  const normalizedId = String(gift?.id || gift?.giftId || gift?.gift_id || normalizedName || sortOrder)
+  const normalizedCoins = Number(
+    gift?.diamond_count || gift?.diamondCount || gift?.coins || gift?.price || 0,
+  )
+  const staticImageUrl =
+    extractImageUrl(gift?.giftImage) ||
+    extractImageUrl(gift?.gift_image) ||
+    extractImageUrl(gift?.previewImage) ||
+    extractImageUrl(gift?.preview_image) ||
+    extractImageUrl(gift?.image) ||
+    extractImageUrl(gift?.icon) ||
+    extractImageUrl(gift?.giftLabelIcon) ||
+    extractImageUrl(gift?.gift_label_icon)
+  const animatedImageUrl =
+    extractImageUrl(gift?.animatedImage) ||
+    extractImageUrl(gift?.animated_image) ||
+    extractImageUrl(gift?.gifImage) ||
+    extractImageUrl(gift?.gif_image) ||
+    extractImageUrl(gift?.dynamicImage) ||
+    extractImageUrl(gift?.dynamic_image)
+
+  return {
+    id: normalizedId,
+    name: normalizedName || `Gift ${normalizedId}`,
+    coins: Number.isFinite(normalizedCoins) ? normalizedCoins : 0,
+    imageUrl: staticImageUrl || animatedImageUrl,
+    animatedImageUrl,
+    source: 'tiktok-live-connector',
+    sortOrder,
+  }
+}
+
+async function updateTikTokGiftCatalog({
+  giftCatalog = null,
+  lastError = '',
+  sourceUsername = '',
+} = {}) {
+  const previousState = store.getState()
+  const previousIntegration = previousState.integrations?.tiktok || {}
+  const nextState = mergeStateWithDefaults({
+    ...previousState,
+    integrations: {
+      ...previousState.integrations,
+      tiktok: {
+        ...previousIntegration,
+        giftCatalog:
+          giftCatalog === null ? previousIntegration.giftCatalog || [] : giftCatalog,
+        sourceUsername: sourceUsername || previousIntegration.sourceUsername || '',
+        syncedAt: Date.now(),
+        lastError: String(lastError || '').trim(),
+      },
+    },
+  })
+  const savedState = await store.setState(nextState)
+
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcastStatus()
+
+  return savedState.integrations.tiktok
+}
+
+async function syncTikTokGiftCatalog(username, connection = null) {
+  const cleanUsername = normalizeTikTokUsername(username)
+
+  if (!cleanUsername) {
+    throw new Error('Necesitas un username de TikTok para sincronizar gifts.')
+  }
+
+  let ownedConnection = null
+
+  try {
+    const activeConnection =
+      connection ||
+      new TikTokLiveConnection(cleanUsername, {
+        processInitialData: false,
+        enableExtendedGiftInfo: true,
+        fetchRoomInfoOnConnect: false,
+      })
+
+    if (!connection) {
+      ownedConnection = activeConnection
+    }
+
+    const availableGifts = await activeConnection.fetchAvailableGifts()
+    const giftCatalog = Array.isArray(availableGifts)
+      ? availableGifts
+          .map((gift, index) => normalizeGiftCatalogEntry(gift, index))
+          .filter((gift) => gift.id && gift.name)
+      : []
+
+    await updateTikTokGiftCatalog({
+      giftCatalog,
+      lastError: '',
+      sourceUsername: cleanUsername,
+    })
+
+    return giftCatalog
+  } catch (error) {
+    await updateTikTokGiftCatalog({
+      giftCatalog: null,
+      lastError: error.message,
+      sourceUsername: cleanUsername,
+    })
+    throw error
+  } finally {
+    if (ownedConnection) {
+      try {
+        await ownedConnection.disconnect()
+      } catch {
+        // noop
+      }
+    }
+  }
+}
+
 function getDashboardAccessKey() {
   return String(store.getState().profile.dashboardKey || '').trim()
 }
@@ -222,6 +373,7 @@ function broadcast(channel, payload) {
 
 function buildStatus() {
   const state = store.getState()
+  const tikTokIntegration = state.integrations?.tiktok || {}
 
   return {
     server: {
@@ -231,7 +383,15 @@ function buildStatus() {
       hasStaticBuild: existsSync(distIndexFile),
     },
     profile: state.profile,
-    tikTok: tikTokStatus,
+    tikTok: {
+      ...tikTokStatus,
+      giftCatalogCount: Array.isArray(tikTokIntegration.giftCatalog)
+        ? tikTokIntegration.giftCatalog.length
+        : 0,
+      giftCatalogSyncedAt: tikTokIntegration.syncedAt || null,
+      giftCatalogLastError: tikTokIntegration.lastError || '',
+      giftCatalogSourceUsername: tikTokIntegration.sourceUsername || '',
+    },
     bridges: {
       dashboardClients: socketHubs.app.size,
       overlayClients: socketHubs.overlay.size,
@@ -617,7 +777,7 @@ async function disconnectTikTok() {
 }
 
 async function connectTikTok(username) {
-  const cleanUsername = String(username || '').trim().replace(/^@/, '')
+  const cleanUsername = normalizeTikTokUsername(username)
 
   if (!cleanUsername) {
     throw new Error('Necesitas un username de TikTok para conectar.')
@@ -625,7 +785,6 @@ async function connectTikTok(username) {
 
   await disconnectTikTok()
 
-  const currentState = store.getState()
   await store.updateProfile({
     tiktokUsername: cleanUsername,
   })
@@ -669,8 +828,32 @@ async function connectTikTok(username) {
       },
     })
 
+    try {
+      const syncedGifts = await syncTikTokGiftCatalog(cleanUsername, connection)
+
+      broadcast('app', {
+        type: 'system-message',
+        payload: {
+          id: createId('system'),
+          level: 'info',
+          text: `Catalogo de gifts sincronizado: ${syncedGifts.length} regalos.`,
+          createdAt: Date.now(),
+        },
+      })
+    } catch (giftError) {
+      broadcast('app', {
+        type: 'system-message',
+        payload: {
+          id: createId('system'),
+          level: 'warn',
+          text: `El live conecto, pero no pude sincronizar gifts: ${giftError.message}`,
+          createdAt: Date.now(),
+        },
+      })
+    }
+
     return {
-      state: currentState,
+      state: store.getState(),
       status: buildStatus(),
     }
   } catch (error) {
@@ -778,6 +961,28 @@ app.post('/api/tiktok/connect', async (request, response) => {
 app.post('/api/tiktok/disconnect', async (_request, response) => {
   await disconnectTikTok()
   response.json(buildStatus())
+})
+
+app.post('/api/tiktok/gifts/sync', async (request, response) => {
+  try {
+    const requestedUsername =
+      request.body?.username || store.getState().profile.tiktokUsername || tikTokStatus.username
+    const cleanUsername = normalizeTikTokUsername(requestedUsername)
+    const canReuseConnection =
+      tikTokConnection && normalizeTikTokUsername(tikTokStatus.username) === cleanUsername
+    const giftCatalog = await syncTikTokGiftCatalog(
+      cleanUsername,
+      canReuseConnection ? tikTokConnection : null,
+    )
+
+    response.json({
+      count: giftCatalog.length,
+      sourceUsername: cleanUsername,
+      syncedAt: Date.now(),
+    })
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
 })
 
 app.post('/api/actions/:actionId/test', async (request, response) => {

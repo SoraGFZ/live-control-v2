@@ -27,6 +27,12 @@ export const DEFAULT_INTEGRATIONS = {
     syncedAt: null,
     lastError: '',
   },
+  tiktok: {
+    giftCatalog: [],
+    sourceUsername: '',
+    syncedAt: null,
+    lastError: '',
+  },
 }
 
 export const DEFAULT_APP_STATE = {
@@ -180,6 +186,13 @@ export function mergeStateWithDefaults(parsedState) {
         catalog: Array.isArray(parsedState?.integrations?.chaosmod?.catalog)
           ? parsedState.integrations.chaosmod.catalog
           : DEFAULT_INTEGRATIONS.chaosmod.catalog,
+      },
+      tiktok: {
+        ...DEFAULT_INTEGRATIONS.tiktok,
+        ...(parsedState?.integrations?.tiktok || {}),
+        giftCatalog: Array.isArray(parsedState?.integrations?.tiktok?.giftCatalog)
+          ? parsedState.integrations.tiktok.giftCatalog
+          : DEFAULT_INTEGRATIONS.tiktok.giftCatalog,
       },
     },
   }

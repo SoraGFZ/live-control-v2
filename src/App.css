@@ -673,10 +673,16 @@
 
 .source-picker-token,
 .gift-picker-thumb,
+.gift-picker-image,
 .command-picker-thumb {
   width: 52px;
   height: 52px;
   border-radius: 16px;
+}
+
+.source-picker-token,
+.gift-picker-thumb,
+.command-picker-thumb {
   display: inline-grid;
   place-items: center;
   font-weight: 700;
@@ -710,8 +716,15 @@
 }
 
 .gift-picker-thumb,
+.gift-picker-image,
 .command-picker-thumb {
   grid-row: span 2;
+}
+
+.gift-picker-image {
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px;
 }
 
 .overlay-screen {

@@ -38,6 +38,10 @@ const DEFAULT_SERVER_STATUS = {
     lastError: '',
     lastConnectedAt: null,
     lastEventAt: null,
+    giftCatalogCount: 0,
+    giftCatalogSyncedAt: null,
+    giftCatalogLastError: '',
+    giftCatalogSourceUsername: '',
   },
   bridges: {
     dashboardClients: 0,
@@ -87,6 +91,8 @@ const CURATED_GIFT_CATALOG = [
   { name: 'Swan', coins: 699, token: 'SW', accent: '#8fd9ff', tags: ['premium'] },
   { name: 'Lion', coins: 29999, token: 'LN', accent: '#ffc66b', tags: ['legend'] },
 ]
+
+const GIFT_CARD_ACCENTS = ['#ff6f91', '#55e3d6', '#f3b348', '#74a7ff', '#ff8d6b', '#c28cff']
 
 const CHAOSMOD_CATEGORY_ACCENTS = {
   player: '#ff7b54',
@@ -290,6 +296,18 @@ function createKeywordToken(value, fallback = 'FX') {
   return words.map((word) => word.slice(0, 1).toUpperCase()).join('')
 }
 
+function normalizeGiftCatalogForPicker(gift, index = 0) {
+  return {
+    id: String(gift?.id || gift?.name || index),
+    name: String(gift?.name || `Gift ${index + 1}`),
+    coins: Number(gift?.coins || 0),
+    imageUrl: String(gift?.imageUrl || gift?.animatedImageUrl || ''),
+    token: String(gift?.token || createKeywordToken(gift?.name, 'GF')),
+    accent: String(gift?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
+    tags: Array.isArray(gift?.tags) ? gift.tags : [],
+  }
+}
+
 function getChaosModCardMeta(effect) {
   const normalizedCategory = normalizePickerText(effect?.category || effect?.categoryLabel || 'misc')
 
@@ -351,6 +369,7 @@ function DashboardApp() {
   const [mediaLibrary, setMediaLibrary] = useState([])
   const [mediaLibraryError, setMediaLibraryError] = useState('')
   const [isUploadingMedia, setIsUploadingMedia] = useState(false)
+  const [isSyncingGiftCatalog, setIsSyncingGiftCatalog] = useState(false)
   const [serverStatus, setServerStatus] = useState(DEFAULT_SERVER_STATUS)
   const [serverError, setServerError] = useState('')
   const [isHydrated, setIsHydrated] = useState(false)
@@ -620,6 +639,9 @@ function DashboardApp() {
     : ''
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
+  const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
+    ? appState.integrations.tiktok.giftCatalog
+    : []
   const editingAction =
     appState.actions.find((action) => action.id === editingActionId) || null
 
@@ -849,7 +871,7 @@ function DashboardApp() {
   async function connectTikTok() {
     try {
       const normalizedUsername = tiktokUsernameDraft.trim().replace(/^@/, '')
-      const statusPayload = await requestJson(
+      await requestJson(
         '/api/tiktok/connect',
         {
           method: 'POST',
@@ -867,7 +889,7 @@ function DashboardApp() {
         },
       }))
       setTiktokUsernameDraft(normalizedUsername)
-      setServerStatus(statusPayload)
+      await loadInitialState(dashboardAccessKey, true)
       setServerError('')
     } catch (error) {
       handleProtectedRequestError(error, setServerError)
@@ -887,6 +909,28 @@ function DashboardApp() {
       setServerError('')
     } catch (error) {
       handleProtectedRequestError(error, setServerError)
+    }
+  }
+
+  async function syncTikTokGiftCatalog() {
+    try {
+      setIsSyncingGiftCatalog(true)
+      await requestJson(
+        '/api/tiktok/gifts/sync',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            username: tiktokUsernameDraft.trim().replace(/^@/, ''),
+          }),
+        },
+        dashboardAccessKey,
+      )
+      await loadInitialState(dashboardAccessKey, true)
+      setServerError('')
+    } catch (error) {
+      handleProtectedRequestError(error, setServerError)
+    } finally {
+      setIsSyncingGiftCatalog(false)
     }
   }
 
@@ -926,9 +970,11 @@ function DashboardApp() {
         />
 
         <LiveOpsSection
+          isSyncingGiftCatalog={isSyncingGiftCatalog}
           isSavingState={isSavingState}
           onConnectTikTok={connectTikTok}
           onDisconnectTikTok={disconnectTikTok}
+          onSyncTikTokGiftCatalog={syncTikTokGiftCatalog}
           serverError={serverError}
           serverStatus={serverStatus}
           setTiktokUsernameDraft={setTiktokUsernameDraft}
@@ -1000,6 +1046,7 @@ function DashboardApp() {
       {showTriggerModal ? (
         <TriggerModal
           actions={appState.actions}
+          giftCatalog={tikTokGiftCatalog}
           onClose={() => setShowTriggerModal(false)}
           onSave={(triggerDraft) => {
             addTrigger(triggerDraft)
@@ -1154,9 +1201,11 @@ function HeroPanel({ overlayUrl, onCreateAction, onCreateTrigger }) {
 }
 
 function LiveOpsSection({
+  isSyncingGiftCatalog,
   isSavingState,
   onConnectTikTok,
   onDisconnectTikTok,
+  onSyncTikTokGiftCatalog,
   serverError,
   serverStatus,
   setTiktokUsernameDraft,
@@ -1201,6 +1250,9 @@ function LiveOpsSection({
             <button className="primary-button" onClick={onConnectTikTok}>
               Conectar live
             </button>
+            <button className="secondary-button" onClick={onSyncTikTokGiftCatalog}>
+              {isSyncingGiftCatalog ? 'Sincronizando gifts...' : 'Sincronizar gifts'}
+            </button>
             <button className="ghost-button" onClick={onDisconnectTikTok}>
               Desconectar
             </button>
@@ -1215,10 +1267,21 @@ function LiveOpsSection({
               <span className="snippet-label">Ultima conexion</span>
               <p>{formatDateTime(serverStatus.tikTok.lastConnectedAt)}</p>
             </div>
+            <div>
+              <span className="snippet-label">Catalogo de gifts</span>
+              <p>{serverStatus.tikTok.giftCatalogCount || 0} regalos</p>
+            </div>
+            <div>
+              <span className="snippet-label">Ultima sincronizacion</span>
+              <p>{formatDateTime(serverStatus.tikTok.giftCatalogSyncedAt)}</p>
+            </div>
           </div>
 
           {serverStatus.tikTok.lastError ? (
             <div className="error-box">{serverStatus.tikTok.lastError}</div>
+          ) : null}
+          {serverStatus.tikTok.giftCatalogLastError ? (
+            <div className="error-box">{serverStatus.tikTok.giftCatalogLastError}</div>
           ) : null}
         </article>
 
@@ -2460,7 +2523,7 @@ function ActionModal({
   )
 }
 
-function TriggerModal({ actions, onClose, onSave }) {
+function TriggerModal({ actions, giftCatalog, onClose, onSave }) {
   const [draft, setDraft] = useState({
     source: 'gift',
     match: DEFAULT_TRIGGER_MATCHES.gift,
@@ -2469,18 +2532,24 @@ function TriggerModal({ actions, onClose, onSave }) {
   })
   const [giftSearch, setGiftSearch] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const hasLiveGiftCatalog = Array.isArray(giftCatalog) && giftCatalog.length > 0
+  const availableGiftCatalog = (hasLiveGiftCatalog ? giftCatalog : CURATED_GIFT_CATALOG).map(
+    (gift, index) => normalizeGiftCatalogForPicker(gift, index),
+  )
   const selectedAction = actions.find((action) => action.id === draft.actionId) || null
   const selectedTriggerMeta =
     VISUAL_TRIGGER_OPTIONS.find((option) => option.id === draft.source) || VISUAL_TRIGGER_OPTIONS[0]
   const giftRuleState = parseGiftTriggerMatch(draft.match)
-  const filteredGiftCatalog = CURATED_GIFT_CATALOG.filter((gift) => {
+  const filteredGiftCatalog = availableGiftCatalog.filter((gift) => {
     const searchText = normalizePickerText(giftSearch)
 
     if (!searchText) {
       return true
     }
 
-    return normalizePickerText(`${gift.name} ${gift.token} ${gift.tags.join(' ')}`).includes(searchText)
+    return normalizePickerText(
+      `${gift.name} ${gift.token} ${(gift.tags || []).join(' ')} ${gift.coins}`,
+    ).includes(searchText)
   })
 
   function handleSourceChange(nextSource) {
@@ -2609,18 +2678,27 @@ function TriggerModal({ actions, onClose, onSave }) {
                       }`}
                       onClick={() => handleGiftSelect(gift)}
                     >
-                      <span
-                        className="gift-picker-thumb"
-                        style={{ '--picker-accent': gift.accent }}
-                      >
-                        {gift.token}
-                      </span>
+                      {gift.imageUrl ? (
+                        <img className="gift-picker-image" src={gift.imageUrl} alt={gift.name} />
+                      ) : (
+                        <span
+                          className="gift-picker-thumb"
+                          style={{ '--picker-accent': gift.accent }}
+                        >
+                          {gift.token}
+                        </span>
+                      )}
                       <strong>{gift.name}</strong>
                       <span>{gift.coins} coin{gift.coins === 1 ? '' : 's'}</span>
                     </button>
                   ))
                 )}
               </div>
+              <p className="support-copy">
+                {hasLiveGiftCatalog
+                  ? 'Catalogo real sincronizado desde TikTok.'
+                  : 'Usando una lista curada temporal hasta que sincronices gifts reales.'}
+              </p>
             </div>
           ) : null}
 
