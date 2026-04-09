@@ -10,6 +10,7 @@ export const OUTPUT_OPTIONS = [
 export const TRIGGER_OPTIONS = [
   { id: 'follow', label: 'Nuevo follow' },
   { id: 'gift', label: 'Gift' },
+  { id: 'emote', label: 'Emote' },
   { id: 'comment', label: 'Comentario' },
   { id: 'share', label: 'Compartido' },
   { id: 'like-burst', label: 'Rafaga de likes' },
@@ -29,9 +30,13 @@ export const DEFAULT_INTEGRATIONS = {
   },
   tiktok: {
     giftCatalog: [],
-    sourceUsername: '',
-    syncedAt: null,
-    lastError: '',
+    giftCatalogSourceUsername: '',
+    giftCatalogSyncedAt: null,
+    giftCatalogLastError: '',
+    emoteCatalog: [],
+    emoteCatalogSourceUsername: '',
+    emoteCatalogSyncedAt: null,
+    emoteCatalogLastError: '',
   },
 }
 
@@ -193,6 +198,30 @@ export function mergeStateWithDefaults(parsedState) {
         giftCatalog: Array.isArray(parsedState?.integrations?.tiktok?.giftCatalog)
           ? parsedState.integrations.tiktok.giftCatalog
           : DEFAULT_INTEGRATIONS.tiktok.giftCatalog,
+        giftCatalogSourceUsername:
+          parsedState?.integrations?.tiktok?.giftCatalogSourceUsername
+          || parsedState?.integrations?.tiktok?.sourceUsername
+          || DEFAULT_INTEGRATIONS.tiktok.giftCatalogSourceUsername,
+        giftCatalogSyncedAt:
+          parsedState?.integrations?.tiktok?.giftCatalogSyncedAt
+          || parsedState?.integrations?.tiktok?.syncedAt
+          || DEFAULT_INTEGRATIONS.tiktok.giftCatalogSyncedAt,
+        giftCatalogLastError:
+          parsedState?.integrations?.tiktok?.giftCatalogLastError
+          || parsedState?.integrations?.tiktok?.lastError
+          || DEFAULT_INTEGRATIONS.tiktok.giftCatalogLastError,
+        emoteCatalog: Array.isArray(parsedState?.integrations?.tiktok?.emoteCatalog)
+          ? parsedState.integrations.tiktok.emoteCatalog
+          : DEFAULT_INTEGRATIONS.tiktok.emoteCatalog,
+        emoteCatalogSourceUsername:
+          parsedState?.integrations?.tiktok?.emoteCatalogSourceUsername
+          || DEFAULT_INTEGRATIONS.tiktok.emoteCatalogSourceUsername,
+        emoteCatalogSyncedAt:
+          parsedState?.integrations?.tiktok?.emoteCatalogSyncedAt
+          || DEFAULT_INTEGRATIONS.tiktok.emoteCatalogSyncedAt,
+        emoteCatalogLastError:
+          parsedState?.integrations?.tiktok?.emoteCatalogLastError
+          || DEFAULT_INTEGRATIONS.tiktok.emoteCatalogLastError,
       },
     },
   }
@@ -353,7 +382,17 @@ function normalizeText(value) {
 }
 
 function isAnyMatchRule(ruleText) {
-  return ['', 'any', 'cualquier', 'cualquier follow', 'cualquier comentario', 'cualquier gift', 'cualquier regalo', 'cualquier share'].includes(ruleText)
+  return [
+    '',
+    'any',
+    'cualquier',
+    'cualquier follow',
+    'cualquier comentario',
+    'cualquier gift',
+    'cualquier regalo',
+    'cualquier share',
+    'cualquier emote',
+  ].includes(ruleText)
 }
 
 function collectEventCandidates(event) {
@@ -363,6 +402,8 @@ function collectEventCandidates(event) {
     event.uniqueId,
     event.comment,
     event.giftName,
+    event.emoteName,
+    event.emoteId,
     event.shareTarget,
     event.displayText,
   ]
@@ -371,13 +412,38 @@ function collectEventCandidates(event) {
     candidates.push(`${event.giftName} x${event.repeatCount || 1}`)
   }
 
+  if (Array.isArray(event.emotes)) {
+    event.emotes.forEach((emote) => {
+      candidates.push(emote?.name, emote?.id)
+    })
+  }
+
   return candidates
     .map((value) => normalizeText(value))
     .filter(Boolean)
 }
 
+function eventCarriesEmotes(event) {
+  return Boolean(
+    event?.type === 'emote'
+      || event?.emoteId
+      || event?.emoteName
+      || (Array.isArray(event?.emotes) && event.emotes.some((emote) => emote?.id || emote?.name)),
+  )
+}
+
 export function matchesTrigger(trigger, event) {
-  if (!trigger || !event || trigger.source !== event.type) {
+  if (!trigger || !event) {
+    return false
+  }
+
+  if (trigger.source !== event.type) {
+    if (!(trigger.source === 'emote' && eventCarriesEmotes(event))) {
+      return false
+    }
+  }
+
+  if (trigger.source === 'emote' && !eventCarriesEmotes(event)) {
     return false
   }
 
@@ -411,6 +477,10 @@ export function createManualIncomingEvent(type, payload = {}) {
     matchText: '',
     comment: payload.comment || '',
     giftName: payload.giftName || '',
+    emoteId: payload.emoteId || '',
+    emoteName: payload.emoteName || '',
+    emoteImageUrl: payload.emoteImageUrl || '',
+    emotes: Array.isArray(payload.emotes) ? payload.emotes : [],
     repeatCount: Number(payload.repeatCount || 1),
     likeCount: Number(payload.likeCount || 0),
     totalLikeCount: Number(payload.totalLikeCount || payload.likeCount || 0),
@@ -433,6 +503,13 @@ export function createManualIncomingEvent(type, payload = {}) {
   if (type === 'comment') {
     event.summary = `${uniqueId}: ${event.comment}`
     event.matchText = event.comment
+    return event
+  }
+
+  if (type === 'emote') {
+    event.summary = `${uniqueId} envio ${event.emoteName || event.emoteId || 'un emote'}`
+    event.matchText = event.emoteName || event.emoteId
+    event.displayText = event.emoteName || event.emoteId
     return event
   }
 

@@ -118,6 +118,10 @@ function extractImageUrl(imageValue) {
     return imageValue
   }
 
+  if (typeof imageValue.imageUrl === 'string' && imageValue.imageUrl) {
+    return imageValue.imageUrl
+  }
+
   if (Array.isArray(imageValue.urlList) && imageValue.urlList[0]) {
     return String(imageValue.urlList[0])
   }
@@ -130,11 +134,43 @@ function extractImageUrl(imageValue) {
     return String(imageValue.urls[0])
   }
 
+  if (Array.isArray(imageValue.url) && imageValue.url[0]) {
+    return String(imageValue.url[0])
+  }
+
   if (imageValue.url) {
     return String(imageValue.url)
   }
 
   return ''
+}
+
+function normalizeEmoteCatalogEntry(emote, sortOrder = 0) {
+  const normalizedId = String(
+    emote?.id || emote?.emoteId || emote?.emote_id || emote?.uuid || sortOrder,
+  ).trim()
+  const normalizedName = String(
+    emote?.name || emote?.label || emote?.title || emote?.displayName || emote?.alias || '',
+  ).trim()
+  const imageUrl =
+    extractImageUrl(emote?.image) ||
+    extractImageUrl(emote?.icon) ||
+    extractImageUrl(emote?.emoteImage) ||
+    emote?.emoteImageUrl ||
+    emote?.imageUrl ||
+    ''
+
+  if (!normalizedId) {
+    return null
+  }
+
+  return {
+    id: normalizedId,
+    name: normalizedName || `Emote ${normalizedId}`,
+    imageUrl: String(imageUrl || '').trim(),
+    source: 'tiktok-live-connector',
+    sortOrder,
+  }
 }
 
 function normalizeGiftCatalogEntry(gift, sortOrder = 0) {
@@ -188,9 +224,10 @@ async function updateTikTokGiftCatalog({
         ...previousIntegration,
         giftCatalog:
           giftCatalog === null ? previousIntegration.giftCatalog || [] : giftCatalog,
-        sourceUsername: sourceUsername || previousIntegration.sourceUsername || '',
-        syncedAt: Date.now(),
-        lastError: String(lastError || '').trim(),
+        giftCatalogSourceUsername:
+          sourceUsername || previousIntegration.giftCatalogSourceUsername || '',
+        giftCatalogSyncedAt: Date.now(),
+        giftCatalogLastError: String(lastError || '').trim(),
       },
     },
   })
@@ -200,6 +237,102 @@ async function updateTikTokGiftCatalog({
   broadcastStatus()
 
   return savedState.integrations.tiktok
+}
+
+async function updateTikTokEmoteCatalog({
+  emoteCatalog = null,
+  lastError = '',
+  sourceUsername = '',
+} = {}) {
+  const previousState = store.getState()
+  const previousIntegration = previousState.integrations?.tiktok || {}
+  const nextState = mergeStateWithDefaults({
+    ...previousState,
+    integrations: {
+      ...previousState.integrations,
+      tiktok: {
+        ...previousIntegration,
+        emoteCatalog:
+          emoteCatalog === null ? previousIntegration.emoteCatalog || [] : emoteCatalog,
+        emoteCatalogSourceUsername:
+          sourceUsername || previousIntegration.emoteCatalogSourceUsername || '',
+        emoteCatalogSyncedAt: Date.now(),
+        emoteCatalogLastError: String(lastError || '').trim(),
+      },
+    },
+  })
+  const savedState = await store.setState(nextState)
+
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcastStatus()
+
+  return savedState.integrations.tiktok
+}
+
+async function observeTikTokEmotes(emotes = [], sourceUsername = '') {
+  const normalizedEmotes = emotes
+    .map((emote, index) => normalizeEmoteCatalogEntry(emote, index))
+    .filter(Boolean)
+
+  if (!normalizedEmotes.length) {
+    return null
+  }
+
+  const previousState = store.getState()
+  const previousIntegration = previousState.integrations?.tiktok || {}
+  const previousCatalog = Array.isArray(previousIntegration.emoteCatalog)
+    ? previousIntegration.emoteCatalog
+    : []
+  const catalogById = new Map(previousCatalog.map((emote) => [String(emote.id), emote]))
+  let didChange = false
+
+  normalizedEmotes.forEach((emote, index) => {
+    const previousEntry = catalogById.get(emote.id)
+    const placeholderName = `Emote ${emote.id}`
+    const nextName =
+      emote.name && emote.name !== placeholderName
+        ? emote.name
+        : previousEntry?.name || emote.name || placeholderName
+    const nextEntry = previousEntry
+      ? {
+          ...previousEntry,
+          name: nextName,
+          imageUrl: previousEntry.imageUrl || emote.imageUrl,
+          sortOrder: Number.isFinite(Number(previousEntry.sortOrder))
+            ? previousEntry.sortOrder
+            : previousCatalog.length + index,
+        }
+      : {
+          ...emote,
+          sortOrder: previousCatalog.length + index,
+        }
+
+    if (
+      !previousEntry
+      || previousEntry.name !== nextEntry.name
+      || previousEntry.imageUrl !== nextEntry.imageUrl
+    ) {
+      didChange = true
+    }
+
+    catalogById.set(emote.id, nextEntry)
+  })
+
+  if (!didChange && sourceUsername === previousIntegration.emoteCatalogSourceUsername) {
+    return previousCatalog
+  }
+
+  const nextCatalog = Array.from(catalogById.values()).sort(
+    (left, right) => Number(left.sortOrder || 0) - Number(right.sortOrder || 0),
+  )
+
+  await updateTikTokEmoteCatalog({
+    emoteCatalog: nextCatalog,
+    lastError: '',
+    sourceUsername: sourceUsername || previousIntegration.emoteCatalogSourceUsername || '',
+  })
+
+  return nextCatalog
 }
 
 async function syncTikTokGiftCatalog(username, connection = null) {
@@ -388,9 +521,15 @@ function buildStatus() {
       giftCatalogCount: Array.isArray(tikTokIntegration.giftCatalog)
         ? tikTokIntegration.giftCatalog.length
         : 0,
-      giftCatalogSyncedAt: tikTokIntegration.syncedAt || null,
-      giftCatalogLastError: tikTokIntegration.lastError || '',
-      giftCatalogSourceUsername: tikTokIntegration.sourceUsername || '',
+      giftCatalogSyncedAt: tikTokIntegration.giftCatalogSyncedAt || null,
+      giftCatalogLastError: tikTokIntegration.giftCatalogLastError || '',
+      giftCatalogSourceUsername: tikTokIntegration.giftCatalogSourceUsername || '',
+      emoteCatalogCount: Array.isArray(tikTokIntegration.emoteCatalog)
+        ? tikTokIntegration.emoteCatalog.length
+        : 0,
+      emoteCatalogSyncedAt: tikTokIntegration.emoteCatalogSyncedAt || null,
+      emoteCatalogLastError: tikTokIntegration.emoteCatalogLastError || '',
+      emoteCatalogSourceUsername: tikTokIntegration.emoteCatalogSourceUsername || '',
     },
     bridges: {
       dashboardClients: socketHubs.app.size,
@@ -447,8 +586,21 @@ function normalizeUserName(data) {
   )
 }
 
+function extractTikTokEmotes(data) {
+  const rawEmotes = Array.isArray(data?.emotes)
+    ? data.emotes
+    : Array.isArray(data?.emoteList)
+      ? data.emoteList
+      : []
+
+  return rawEmotes
+    .map((emote, index) => normalizeEmoteCatalogEntry(emote, index))
+    .filter(Boolean)
+}
+
 function normalizeTikTokEvent(type, data) {
   const uniqueId = normalizeUserName(data)
+  const normalizedEmotes = extractTikTokEmotes(data)
   const baseEvent = {
     id: createId('incoming'),
     type,
@@ -459,6 +611,10 @@ function normalizeTikTokEvent(type, data) {
     matchText: '',
     comment: '',
     giftName: '',
+    emoteId: '',
+    emoteName: '',
+    emoteImageUrl: '',
+    emotes: normalizedEmotes,
     repeatCount: 1,
     likeCount: 0,
     totalLikeCount: 0,
@@ -470,6 +626,9 @@ function normalizeTikTokEvent(type, data) {
     baseEvent.comment = data?.comment || ''
     baseEvent.summary = `${uniqueId}: ${baseEvent.comment}`
     baseEvent.matchText = baseEvent.comment
+    if (normalizedEmotes.length) {
+      baseEvent.displayText = normalizedEmotes.map((emote) => emote.name).join(', ')
+    }
     return baseEvent
   }
 
@@ -483,6 +642,19 @@ function normalizeTikTokEvent(type, data) {
     baseEvent.summary = `${uniqueId} envio ${baseEvent.giftName} x${baseEvent.repeatCount}`
     baseEvent.matchText = `${baseEvent.giftName} x${baseEvent.repeatCount}`
     baseEvent.displayText = baseEvent.giftName
+    return baseEvent
+  }
+
+  if (type === 'emote') {
+    const primaryEmote =
+      normalizedEmotes[0] || normalizeEmoteCatalogEntry(data, 0) || { id: 'unknown-emote', name: 'Emote' }
+    baseEvent.emoteId = primaryEmote.id
+    baseEvent.emoteName = primaryEmote.name
+    baseEvent.emoteImageUrl = primaryEmote.imageUrl || ''
+    baseEvent.summary = `${uniqueId} envio ${baseEvent.emoteName}`
+    baseEvent.matchText = baseEvent.emoteName
+    baseEvent.displayText = baseEvent.emoteName
+    baseEvent.emotes = [primaryEmote]
     return baseEvent
   }
 
@@ -648,6 +820,23 @@ async function dispatchAction(action, sourceEvent, reason = 'manual') {
 }
 
 async function processIncomingEvent(event, reason = 'tiktok') {
+  const observedEmotes = [
+    ...(Array.isArray(event.emotes) ? event.emotes : []),
+    ...(event.emoteId || event.emoteName || event.emoteImageUrl
+      ? [
+          {
+            id: event.emoteId,
+            name: event.emoteName,
+            imageUrl: event.emoteImageUrl,
+          },
+        ]
+      : []),
+  ].filter((emote) => emote?.id)
+
+  if (observedEmotes.length) {
+    await observeTikTokEmotes(observedEmotes, tikTokStatus.username || store.getState().profile.tiktokUsername || '')
+  }
+
   pushRecent(recentEvents, event)
   setTikTokStatus({ lastEventAt: event.createdAt })
   broadcast('app', { type: 'incoming-event', payload: event })
@@ -718,6 +907,14 @@ function bindTikTokEvents(connection) {
     }
 
     await processIncomingEvent(normalizeTikTokEvent('comment', data))
+  })
+
+  connection.on(WebcastEvent.EMOTE, async (data) => {
+    if (tikTokConnection !== connection) {
+      return
+    }
+
+    await processIncomingEvent(normalizeTikTokEvent('emote', data))
   })
 
   connection.on(WebcastEvent.GIFT, async (data) => {

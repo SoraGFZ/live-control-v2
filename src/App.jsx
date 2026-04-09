@@ -42,6 +42,10 @@ const DEFAULT_SERVER_STATUS = {
     giftCatalogSyncedAt: null,
     giftCatalogLastError: '',
     giftCatalogSourceUsername: '',
+    emoteCatalogCount: 0,
+    emoteCatalogSyncedAt: null,
+    emoteCatalogLastError: '',
+    emoteCatalogSourceUsername: '',
   },
   bridges: {
     dashboardClients: 0,
@@ -57,6 +61,7 @@ const DEFAULT_SERVER_STATUS = {
 
 const VISUAL_TRIGGER_OPTIONS = [
   { id: 'gift', label: 'Gift', note: 'Regalos y combos del live.', token: 'GF' },
+  { id: 'emote', label: 'Emote', note: 'Stickers y emotes del live.', token: 'EM' },
   { id: 'like-burst', label: 'Likes', note: 'Rafagas y metas de likes.', token: 'LK' },
   { id: 'follow', label: 'Follow', note: 'Nuevo seguidor en directo.', token: 'FW' },
   { id: 'comment', label: 'Chat', note: 'Comandos del chat y mensajes.', token: 'CH' },
@@ -65,6 +70,7 @@ const VISUAL_TRIGGER_OPTIONS = [
 
 const DEFAULT_TRIGGER_MATCHES = {
   gift: 'Rose x1',
+  emote: 'Cualquier emote',
   follow: 'Cualquier follow',
   comment: '!chaos',
   share: 'Cualquier share',
@@ -315,6 +321,16 @@ function normalizeGiftCatalogForPicker(gift, index = 0) {
     token: String(gift?.token || createKeywordToken(gift?.name, 'GF')),
     accent: String(gift?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
     tags: Array.isArray(gift?.tags) ? gift.tags : [],
+  }
+}
+
+function normalizeEmoteCatalogForPicker(emote, index = 0) {
+  return {
+    id: String(emote?.id || emote?.emoteId || index),
+    name: String(emote?.name || `Emote ${emote?.id || emote?.emoteId || index + 1}`),
+    imageUrl: String(emote?.imageUrl || emote?.emoteImageUrl || ''),
+    token: String(emote?.token || createKeywordToken(emote?.name || emote?.id, 'EM')),
+    accent: String(emote?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
   }
 }
 
@@ -685,6 +701,9 @@ function DashboardApp() {
   const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
     ? appState.integrations.tiktok.giftCatalog
     : []
+  const tikTokEmoteCatalog = Array.isArray(appState.integrations?.tiktok?.emoteCatalog)
+    ? appState.integrations.tiktok.emoteCatalog
+    : []
   const editingAction =
     appState.actions.find((action) => action.id === editingActionId) || null
   const editingTrigger =
@@ -1051,6 +1070,7 @@ function DashboardApp() {
         />
 
         <LiveOpsSection
+          emoteCatalogCount={tikTokEmoteCatalog.length}
           isSyncingGiftCatalog={isSyncingGiftCatalog}
           isSavingState={isSavingState}
           onConnectTikTok={connectTikTok}
@@ -1062,7 +1082,11 @@ function DashboardApp() {
           tiktokUsernameDraft={tiktokUsernameDraft}
         />
 
-        <SimulationsSection giftCatalog={tikTokGiftCatalog} onSampleEvent={sendSampleEvent} />
+        <SimulationsSection
+          emoteCatalog={tikTokEmoteCatalog}
+          giftCatalog={tikTokGiftCatalog}
+          onSampleEvent={sendSampleEvent}
+        />
 
         <ActionsSection
           actions={appState.actions}
@@ -1074,6 +1098,7 @@ function DashboardApp() {
 
         <TriggersSection
           actions={appState.actions}
+          emoteCatalog={tikTokEmoteCatalog}
           giftCatalog={tikTokGiftCatalog}
           onCreateTrigger={openCreateTriggerModal}
           onEditTrigger={openEditTriggerModal}
@@ -1132,6 +1157,7 @@ function DashboardApp() {
         <TriggerModal
           key={editingTrigger?.id || 'new-trigger'}
           actions={appState.actions}
+          emoteCatalog={tikTokEmoteCatalog}
           giftCatalog={tikTokGiftCatalog}
           initialTrigger={editingTrigger}
           onClose={closeTriggerModal}
@@ -1292,6 +1318,7 @@ function HeroPanel({ overlayUrl, onCreateAction, onCreateTrigger }) {
 }
 
 function LiveOpsSection({
+  emoteCatalogCount,
   isSyncingGiftCatalog,
   isSavingState,
   onConnectTikTok,
@@ -1315,7 +1342,7 @@ function LiveOpsSection({
           <div className="card-top">
             <div>
               <h3>TikTok LIVE</h3>
-              <p>Conecta por username y deja que el backend escuche follows, gifts, comentarios y likes.</p>
+              <p>Conecta por username y deja que el backend escuche follows, gifts, emotes, comentarios y likes.</p>
             </div>
             <span className={`status-chip ${serverStatus.tikTok.connected ? 'ok' : serverStatus.tikTok.connecting ? 'warn' : 'off'}`}>
               {serverStatus.tikTok.connected
@@ -1363,8 +1390,16 @@ function LiveOpsSection({
               <p>{serverStatus.tikTok.giftCatalogCount || 0} regalos</p>
             </div>
             <div>
+              <span className="snippet-label">Emotes vistos</span>
+              <p>{serverStatus.tikTok.emoteCatalogCount || emoteCatalogCount || 0} emotes</p>
+            </div>
+            <div>
               <span className="snippet-label">Ultima sincronizacion</span>
               <p>{formatDateTime(serverStatus.tikTok.giftCatalogSyncedAt)}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Ultimo emote nuevo</span>
+              <p>{formatDateTime(serverStatus.tikTok.emoteCatalogSyncedAt)}</p>
             </div>
           </div>
 
@@ -1373,6 +1408,9 @@ function LiveOpsSection({
           ) : null}
           {serverStatus.tikTok.giftCatalogLastError ? (
             <div className="error-box">{serverStatus.tikTok.giftCatalogLastError}</div>
+          ) : null}
+          {serverStatus.tikTok.emoteCatalogLastError ? (
+            <div className="error-box">{serverStatus.tikTok.emoteCatalogLastError}</div>
           ) : null}
         </article>
 
@@ -1474,16 +1512,21 @@ function MetricRow({ actionCount, bridgePort, readyOutputCount, triggerCount }) 
   )
 }
 
-function SimulationsSection({ giftCatalog, onSampleEvent }) {
+function SimulationsSection({ emoteCatalog, giftCatalog, onSampleEvent }) {
   const availableGiftCatalog = (giftCatalog.length ? giftCatalog : CURATED_GIFT_CATALOG).map(
     (gift, index) => normalizeGiftCatalogForPicker(gift, index),
   )
+  const availableEmoteCatalog = Array.isArray(emoteCatalog)
+    ? emoteCatalog.map((emote, index) => normalizeEmoteCatalogForPicker(emote, index))
+    : []
   const [demoUser, setDemoUser] = useState('demo-live')
   const [likeCount, setLikeCount] = useState('100')
   const [commentText, setCommentText] = useState('!voz')
   const [giftSearch, setGiftSearch] = useState('')
   const [giftRepeatCount, setGiftRepeatCount] = useState('1')
+  const [emoteSearch, setEmoteSearch] = useState('')
   const [selectedGiftId, setSelectedGiftId] = useState(() => availableGiftCatalog[0]?.id || '')
+  const [selectedEmoteId, setSelectedEmoteId] = useState(() => availableEmoteCatalog[0]?.id || '')
   const filteredGiftCatalog = availableGiftCatalog.filter((gift) =>
     normalizePickerText(`${gift.name} ${gift.coins} ${gift.token}`).includes(
       normalizePickerText(giftSearch),
@@ -1494,6 +1537,17 @@ function SimulationsSection({ giftCatalog, onSampleEvent }) {
     || availableGiftCatalog.find((gift) => gift.id === selectedGiftId)
     || filteredGiftCatalog[0]
     || availableGiftCatalog[0]
+    || null
+  const filteredEmoteCatalog = availableEmoteCatalog.filter((emote) =>
+    normalizePickerText(`${emote.name} ${emote.id} ${emote.token}`).includes(
+      normalizePickerText(emoteSearch),
+    ),
+  )
+  const selectedEmote =
+    filteredEmoteCatalog.find((emote) => emote.id === selectedEmoteId)
+    || availableEmoteCatalog.find((emote) => emote.id === selectedEmoteId)
+    || filteredEmoteCatalog[0]
+    || availableEmoteCatalog[0]
     || null
 
   return (
@@ -1625,17 +1679,64 @@ function SimulationsSection({ giftCatalog, onSampleEvent }) {
               Simular gift
             </button>
           </div>
+
+          <div className="sim-gift-controls">
+            <div className="sim-inline-fields">
+              <input
+                className="text-field"
+                value={emoteSearch}
+                onChange={(event) => setEmoteSearch(event.target.value)}
+                placeholder="Buscar emote"
+              />
+              <button
+                className="secondary-button"
+                onClick={() =>
+                  onSampleEvent({
+                    type: 'emote',
+                    userName: demoUser || 'demo-emote',
+                    emoteId: selectedEmote?.id || 'demo-emote',
+                    emoteName: selectedEmote?.name || 'Emote demo',
+                    emoteImageUrl: selectedEmote?.imageUrl || '',
+                  })
+                }
+                disabled={!selectedEmote}
+              >
+                Simular emote
+              </button>
+            </div>
+
+            <select
+              className="text-field"
+              value={selectedEmote?.id || ''}
+              onChange={(event) => setSelectedEmoteId(event.target.value)}
+            >
+              {filteredEmoteCatalog.length === 0 ? (
+                <option value="">Todavia no llegaron emotes</option>
+              ) : (
+                filteredEmoteCatalog.map((emote) => (
+                  <option key={emote.id} value={emote.id}>
+                    {emote.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
         </article>
 
         <article className="surface-card sim-card">
           <div className="card-top">
             <div>
               <h3>Catalogo activo</h3>
-              <p>Lo que ves aqui sale del catalogo real de TikTok cuando ya lo sincronizaste.</p>
+              <p>Gifts y emotes reales que ya vio tu live y quedaron guardados en el panel.</p>
             </div>
-            <span className="bridge-badge">
-              {availableGiftCatalog.length} regalo{availableGiftCatalog.length === 1 ? '' : 's'}
-            </span>
+            <div className="tag-row">
+              <span className="bridge-badge">
+                {availableGiftCatalog.length} regalo{availableGiftCatalog.length === 1 ? '' : 's'}
+              </span>
+              <span className="bridge-badge">
+                {availableEmoteCatalog.length} emote{availableEmoteCatalog.length === 1 ? '' : 's'}
+              </span>
+            </div>
           </div>
 
           {selectedGift ? (
@@ -1658,6 +1759,30 @@ function SimulationsSection({ giftCatalog, onSampleEvent }) {
             <p className="support-copy">Todavia no hay gifts cargados en el panel.</p>
           )}
 
+          {selectedEmote ? (
+            <div className="sim-gift-preview">
+              {selectedEmote.imageUrl ? (
+                <img
+                  src={selectedEmote.imageUrl}
+                  alt={selectedEmote.name}
+                  className="gift-picker-image"
+                />
+              ) : (
+                <span className="gift-picker-thumb" style={{ '--picker-accent': selectedEmote.accent }}>
+                  {selectedEmote.token}
+                </span>
+              )}
+              <div>
+                <strong>{selectedEmote.name}</strong>
+                <p>{selectedEmote.id}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="support-copy">
+              Todavia no vimos emotes en el live. Cuando alguien mande uno, se sumara aca.
+            </p>
+          )}
+
           <div className="sim-note-list">
             <div className="sim-note-item">
               <strong>Follow y share</strong>
@@ -1674,6 +1799,10 @@ function SimulationsSection({ giftCatalog, onSampleEvent }) {
             <div className="sim-note-item">
               <strong>Gift</strong>
               <span>Usa el mismo nombre que luego llega desde TikTok.</span>
+            </div>
+            <div className="sim-note-item">
+              <strong>Emote</strong>
+              <span>Se agrega solo cuando alguien manda un sticker o emote en tu live.</span>
             </div>
           </div>
         </article>
@@ -1796,6 +1925,7 @@ function ActionListTable({ actions, onEditAction, onPreviewAction, onRemoveActio
 
 function TriggersSection({
   actions,
+  emoteCatalog,
   giftCatalog,
   onCreateTrigger,
   onEditTrigger,
@@ -1817,6 +1947,7 @@ function TriggersSection({
 
       <TriggerListTable
         actions={actions}
+        emoteCatalog={emoteCatalog}
         giftCatalog={giftCatalog}
         onEditTrigger={onEditTrigger}
         onRemoveTrigger={onRemoveTrigger}
@@ -1826,11 +1957,14 @@ function TriggersSection({
   )
 }
 
-function TriggerListTable({ actions, giftCatalog, onEditTrigger, onRemoveTrigger, triggers }) {
+function TriggerListTable({ actions, emoteCatalog, giftCatalog, onEditTrigger, onRemoveTrigger, triggers }) {
   const [searchQuery, setSearchQuery] = useState('')
   const normalizedGiftCatalog = (giftCatalog.length ? giftCatalog : CURATED_GIFT_CATALOG).map(
     (gift, index) => normalizeGiftCatalogForPicker(gift, index),
   )
+  const normalizedEmoteCatalog = Array.isArray(emoteCatalog)
+    ? emoteCatalog.map((emote, index) => normalizeEmoteCatalogForPicker(emote, index))
+    : []
   const filteredTriggers = triggers.filter((trigger) => {
     const linkedAction = actions.find((action) => action.id === trigger.actionId)
     return normalizePickerText(
@@ -1839,31 +1973,60 @@ function TriggerListTable({ actions, giftCatalog, onEditTrigger, onRemoveTrigger
   })
 
   function renderTriggerVisual(trigger) {
+    if (trigger.source === 'gift') {
+      const parsedGift = parseGiftTriggerMatch(trigger.match)
+      const linkedGift = normalizedGiftCatalog.find(
+        (gift) => normalizePickerText(gift.name) === normalizePickerText(parsedGift.giftName),
+      )
+
+      if (!linkedGift) {
+        return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
+      }
+
+      return (
+        <span className="gift-inline-pill">
+          {linkedGift.imageUrl ? (
+            <img src={linkedGift.imageUrl} alt={linkedGift.name} className="gift-inline-image" />
+          ) : (
+            <span className="gift-inline-token" style={{ '--picker-accent': linkedGift.accent }}>
+              {linkedGift.token}
+            </span>
+          )}
+          <span>{linkedGift.name}</span>
+        </span>
+      )
+    }
+
+    if (trigger.source === 'emote') {
+      const linkedEmote = normalizedEmoteCatalog.find(
+        (emote) =>
+          normalizePickerText(emote.name) === normalizePickerText(trigger.match)
+          || normalizePickerText(emote.id) === normalizePickerText(trigger.match),
+      )
+
+      if (!linkedEmote) {
+        return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
+      }
+
+      return (
+        <span className="gift-inline-pill">
+          {linkedEmote.imageUrl ? (
+            <img src={linkedEmote.imageUrl} alt={linkedEmote.name} className="gift-inline-image" />
+          ) : (
+            <span className="gift-inline-token" style={{ '--picker-accent': linkedEmote.accent }}>
+              {linkedEmote.token}
+            </span>
+          )}
+          <span>{linkedEmote.name}</span>
+        </span>
+      )
+    }
+
     if (trigger.source !== 'gift') {
       return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
     }
 
-    const parsedGift = parseGiftTriggerMatch(trigger.match)
-    const linkedGift = normalizedGiftCatalog.find(
-      (gift) => normalizePickerText(gift.name) === normalizePickerText(parsedGift.giftName),
-    )
-
-    if (!linkedGift) {
-      return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
-    }
-
-    return (
-      <span className="gift-inline-pill">
-        {linkedGift.imageUrl ? (
-          <img src={linkedGift.imageUrl} alt={linkedGift.name} className="gift-inline-image" />
-        ) : (
-          <span className="gift-inline-token" style={{ '--picker-accent': linkedGift.accent }}>
-            {linkedGift.token}
-          </span>
-        )}
-        <span>{linkedGift.name}</span>
-      </span>
-    )
+    return <span className="trigger-type">{getTriggerLabel(trigger.source)}</span>
   }
 
   return (
@@ -2904,19 +3067,30 @@ function ActionModal({
   )
 }
 
-function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave }) {
+function TriggerModal({ actions, emoteCatalog, giftCatalog, initialTrigger, onClose, onSave }) {
   const [draft, setDraft] = useState(() => createTriggerDraft(initialTrigger, actions))
+  const [emoteSearch, setEmoteSearch] = useState('')
   const [giftSearch, setGiftSearch] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const isEditing = Boolean(initialTrigger?.id)
   const hasLiveGiftCatalog = Array.isArray(giftCatalog) && giftCatalog.length > 0
+  const hasLiveEmoteCatalog = Array.isArray(emoteCatalog) && emoteCatalog.length > 0
   const availableGiftCatalog = (hasLiveGiftCatalog ? giftCatalog : CURATED_GIFT_CATALOG).map(
     (gift, index) => normalizeGiftCatalogForPicker(gift, index),
+  )
+  const availableEmoteCatalog = (hasLiveEmoteCatalog ? emoteCatalog : []).map((emote, index) =>
+    normalizeEmoteCatalogForPicker(emote, index),
   )
   const selectedAction = actions.find((action) => action.id === draft.actionId) || null
   const selectedTriggerMeta =
     VISUAL_TRIGGER_OPTIONS.find((option) => option.id === draft.source) || VISUAL_TRIGGER_OPTIONS[0]
   const giftRuleState = parseGiftTriggerMatch(draft.match)
+  const selectedEmote =
+    availableEmoteCatalog.find(
+      (emote) =>
+        normalizePickerText(emote.name) === normalizePickerText(draft.match)
+        || normalizePickerText(emote.id) === normalizePickerText(draft.match),
+    ) || null
   const filteredGiftCatalog = availableGiftCatalog.filter((gift) => {
     const searchText = normalizePickerText(giftSearch)
 
@@ -2927,6 +3101,15 @@ function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave })
     return normalizePickerText(
       `${gift.name} ${gift.token} ${(gift.tags || []).join(' ')} ${gift.coins}`,
     ).includes(searchText)
+  })
+  const filteredEmoteCatalog = availableEmoteCatalog.filter((emote) => {
+    const searchText = normalizePickerText(emoteSearch)
+
+    if (!searchText) {
+      return true
+    }
+
+    return normalizePickerText(`${emote.name} ${emote.id} ${emote.token}`).includes(searchText)
   })
 
   function handleSourceChange(nextSource) {
@@ -2952,6 +3135,14 @@ function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave })
       ...currentDraft,
       source: 'gift',
       match: buildGiftTriggerMatch(activeGiftName, nextValue),
+    }))
+  }
+
+  function handleEmoteSelect(emote) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      source: 'emote',
+      match: emote.name || emote.id,
     }))
   }
 
@@ -3079,6 +3270,55 @@ function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave })
             </div>
           ) : null}
 
+          {draft.source === 'emote' ? (
+            <div className="field-group">
+              <input
+                className="text-field"
+                placeholder="Busca un emote"
+                value={emoteSearch}
+                onChange={(event) => setEmoteSearch(event.target.value)}
+              />
+              <div className="gift-picker-grid">
+                {filteredEmoteCatalog.length === 0 ? (
+                  <p className="support-copy">
+                    {hasLiveEmoteCatalog
+                      ? 'No encontre emotes con ese filtro.'
+                      : 'Los emotes van a aparecer aqui cuando alguien los mande en tu live.'}
+                  </p>
+                ) : (
+                  filteredEmoteCatalog.map((emote) => (
+                    <button
+                      key={emote.id}
+                      type="button"
+                      className={`gift-picker-card ${
+                        selectedEmote?.id === emote.id ? 'selected' : ''
+                      }`}
+                      onClick={() => handleEmoteSelect(emote)}
+                    >
+                      {emote.imageUrl ? (
+                        <img className="gift-picker-image" src={emote.imageUrl} alt={emote.name} />
+                      ) : (
+                        <span
+                          className="gift-picker-thumb"
+                          style={{ '--picker-accent': emote.accent }}
+                        >
+                          {emote.token}
+                        </span>
+                      )}
+                      <strong>{emote.name}</strong>
+                      <span>{emote.id}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+              <p className="support-copy">
+                {hasLiveEmoteCatalog
+                  ? 'Catalogo de emotes aprendido desde tu live.'
+                  : 'Todavia no vimos emotes en este live. Cuando lleguen, apareceran aqui.'}
+              </p>
+            </div>
+          ) : null}
+
           <label className="field-label" htmlFor="trigger-match">
             Regla final del trigger
           </label>
@@ -3088,6 +3328,8 @@ function TriggerModal({ actions, giftCatalog, initialTrigger, onClose, onSave })
             placeholder={
               draft.source === 'gift'
                 ? 'Ej: Rose x1'
+                : draft.source === 'emote'
+                  ? 'Ej: Emote 123456'
                 : draft.source === 'comment'
                   ? 'Ej: !chaos'
                   : draft.source === 'like-burst'
