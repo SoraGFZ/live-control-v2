@@ -1,0 +1,356 @@
+export const OUTPUT_OPTIONS = [
+  { id: 'overlayAlert', label: 'Overlay alert', note: 'Texto animado para follows, gifts o eventos.' },
+  { id: 'overlayMedia', label: 'Overlay media', note: 'Imagen, GIF o video en una escena del live.' },
+  { id: 'audio', label: 'Audio local', note: 'Jingle, efecto o sonido corto en tu PC.' },
+  { id: 'tts', label: 'TTS', note: 'Lee mensajes en voz alta desde el panel.' },
+  { id: 'minecraft', label: 'Minecraft', note: 'Comando o accion para bridge con RCON/mod.' },
+  { id: 'gta', label: 'GTA V', note: 'Evento para un mod local o bridge websocket.' },
+]
+
+export const TRIGGER_OPTIONS = [
+  { id: 'follow', label: 'Nuevo follow' },
+  { id: 'gift', label: 'Gift' },
+  { id: 'comment', label: 'Comentario' },
+  { id: 'share', label: 'Compartido' },
+  { id: 'like-burst', label: 'Rafaga de likes' },
+]
+
+export const DEFAULT_APP_STATE = {
+  profile: {
+    projectName: 'Live Control Studio',
+    streamerName: 'Tu canal de TikTok',
+    overlaySlug: 'main-stage',
+    publicBaseUrl: '',
+    bridgePort: '5123',
+    overlayDurationMs: '5200',
+    tiktokUsername: '',
+    minecraftHost: '127.0.0.1',
+    minecraftPort: '25575',
+    minecraftPassword: '',
+    dashboardKey: '',
+    overlayKey: '',
+  },
+  actions: [
+    {
+      id: 'action-follow-alert',
+      name: 'Alerta de nuevo follow',
+      description: 'Lanza una alerta corta con audio para nuevos seguidores.',
+      outputs: ['overlayAlert', 'audio'],
+      commandText: '',
+      overlayText: 'Gracias por unirte al live.',
+      mediaUrl: '',
+    },
+    {
+      id: 'action-minecraft-chaos',
+      name: 'Caos en Minecraft',
+      description: 'Invoca una criatura y lo anuncia en el overlay.',
+      outputs: ['minecraft', 'overlayAlert'],
+      commandText: '/summon zombie ~ ~1 ~',
+      overlayText: 'Zombie invocado por el chat.',
+      mediaUrl: '',
+    },
+    {
+      id: 'action-gta-boost',
+      name: 'Evento en GTA V',
+      description: 'Dispara un evento en tu mod local y deja un aviso visual.',
+      outputs: ['gta', 'overlayMedia'],
+      commandText: 'spawn-chaos-car',
+      overlayText: 'El chat acaba de activar caos en GTA.',
+      mediaUrl: '',
+    },
+    {
+      id: 'action-voice-tts',
+      name: 'Mensaje del chat en voz',
+      description: 'Lee un mensaje del chat y lo muestra en overlay.',
+      outputs: ['tts', 'overlayAlert'],
+      commandText: '',
+      overlayText: 'El chat tomo el micro.',
+      mediaUrl: '',
+    },
+  ],
+  triggers: [
+    {
+      id: 'trigger-follow-default',
+      source: 'follow',
+      match: 'Cualquier follow',
+      actionId: 'action-follow-alert',
+      cooldownSeconds: '0',
+    },
+    {
+      id: 'trigger-gift-rose',
+      source: 'gift',
+      match: 'Rose x1',
+      actionId: 'action-minecraft-chaos',
+      cooldownSeconds: '5',
+    },
+    {
+      id: 'trigger-comment-chaos',
+      source: 'comment',
+      match: '!chaos',
+      actionId: 'action-gta-boost',
+      cooldownSeconds: '8',
+    },
+    {
+      id: 'trigger-comment-voice',
+      source: 'comment',
+      match: '!voz',
+      actionId: 'action-voice-tts',
+      cooldownSeconds: '4',
+    },
+  ],
+}
+
+export function createId(prefix) {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID()}`
+  }
+
+  return `${prefix}-${Date.now()}-${Math.round(Math.random() * 100000)}`
+}
+
+export function mergeStateWithDefaults(parsedState) {
+  const mergedActions = Array.isArray(parsedState?.actions)
+    ? [
+        ...parsedState.actions,
+        ...DEFAULT_APP_STATE.actions.filter(
+          (defaultAction) =>
+            !parsedState.actions.some((savedAction) => savedAction.id === defaultAction.id),
+        ),
+      ]
+    : DEFAULT_APP_STATE.actions
+  const mergedTriggers = Array.isArray(parsedState?.triggers)
+    ? [
+        ...parsedState.triggers,
+        ...DEFAULT_APP_STATE.triggers.filter(
+          (defaultTrigger) =>
+            !parsedState.triggers.some((savedTrigger) => savedTrigger.id === defaultTrigger.id),
+        ),
+      ]
+    : DEFAULT_APP_STATE.triggers
+
+  return {
+    ...DEFAULT_APP_STATE,
+    profile: {
+      ...DEFAULT_APP_STATE.profile,
+      ...(parsedState?.profile || {}),
+    },
+    actions: mergedActions,
+    triggers: mergedTriggers,
+  }
+}
+
+export function getOutputMeta(outputId) {
+  return OUTPUT_OPTIONS.find((option) => option.id === outputId)
+}
+
+export function getTriggerLabel(triggerId) {
+  return TRIGGER_OPTIONS.find((option) => option.id === triggerId)?.label || triggerId
+}
+
+export function isOverlayCapable(action) {
+  return action.outputs.some((output) =>
+    ['overlayAlert', 'overlayMedia', 'audio', 'tts'].includes(output),
+  )
+}
+
+export function truncateValue(value) {
+  if (!value || value.length <= 72) {
+    return value || ''
+  }
+
+  return `${value.slice(0, 69)}...`
+}
+
+export function detectMediaKind(mediaUrl) {
+  if (!mediaUrl) {
+    return 'none'
+  }
+
+  const lowerMediaUrl = mediaUrl.toLowerCase()
+
+  if (/\.(mp4|webm|ogg)(\?|#|$)/.test(lowerMediaUrl)) {
+    return 'video'
+  }
+
+  if (/\.(mp3|wav|m4a|aac|flac)(\?|#|$)/.test(lowerMediaUrl)) {
+    return 'audio'
+  }
+
+  if (/\.(gif|png|jpg|jpeg|webp|svg)(\?|#|$)/.test(lowerMediaUrl)) {
+    return 'image'
+  }
+
+  return 'none'
+}
+
+export function sanitizeSlug(value) {
+  const baseValue = String(value || '').trim().toLowerCase()
+  const normalized = baseValue
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-|-$/g, '')
+
+  return normalized || DEFAULT_APP_STATE.profile.overlaySlug
+}
+
+export function normalizeBaseUrl(value) {
+  const rawValue = String(value || '').trim()
+
+  if (!rawValue) {
+    return ''
+  }
+
+  const withProtocol = /^https?:\/\//i.test(rawValue) ? rawValue : `https://${rawValue}`
+
+  try {
+    const parsedUrl = new URL(withProtocol)
+    return `${parsedUrl.protocol}//${parsedUrl.host}`
+  } catch {
+    return rawValue.replace(/\/+$/, '')
+  }
+}
+
+export function buildOverlayUrl(baseUrl, slug, overlayKey = '') {
+  const normalizedSlug = sanitizeSlug(slug)
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+  const pathName = `/overlay/${normalizedSlug}`
+
+  if (!normalizedBaseUrl) {
+    return overlayKey
+      ? `${pathName}?key=${encodeURIComponent(overlayKey)}`
+      : pathName
+  }
+
+  const overlayUrl = new URL(pathName, normalizedBaseUrl)
+
+  if (overlayKey) {
+    overlayUrl.searchParams.set('key', overlayKey)
+  }
+
+  return overlayUrl.toString()
+}
+
+export function buildOverlayEvent(action, profile, sourceEvent = null) {
+  return {
+    id: createId('overlay-event'),
+    actionId: action.id,
+    title: action.name,
+    message: action.overlayText || action.description || 'Evento disparado manualmente desde el panel.',
+    commandText: action.commandText,
+    mediaUrl: action.mediaUrl,
+    outputs: [...action.outputs],
+    sourceLabel: sourceEvent?.sourceLabel || sourceEvent?.uniqueId || profile.streamerName,
+    durationMs: Number(profile.overlayDurationMs || 5200),
+    theme: action.outputs.includes('minecraft')
+      ? 'forest'
+      : action.outputs.includes('gta')
+        ? 'neon'
+        : 'ember',
+    ttsText: action.outputs.includes('tts')
+      ? action.overlayText || action.description || action.name
+      : '',
+    audioUrl: action.outputs.includes('audio') ? action.mediaUrl : '',
+    createdAt: Date.now(),
+  }
+}
+
+function normalizeText(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+}
+
+function isAnyMatchRule(ruleText) {
+  return ['', 'any', 'cualquier', 'cualquier follow', 'cualquier comentario', 'cualquier gift', 'cualquier regalo', 'cualquier share'].includes(ruleText)
+}
+
+function collectEventCandidates(event) {
+  const candidates = [
+    event.summary,
+    event.matchText,
+    event.uniqueId,
+    event.comment,
+    event.giftName,
+    event.shareTarget,
+    event.displayText,
+  ]
+
+  if (event.giftName) {
+    candidates.push(`${event.giftName} x${event.repeatCount || 1}`)
+  }
+
+  return candidates
+    .map((value) => normalizeText(value))
+    .filter(Boolean)
+}
+
+export function matchesTrigger(trigger, event) {
+  if (!trigger || !event || trigger.source !== event.type) {
+    return false
+  }
+
+  const rule = normalizeText(trigger.match)
+
+  if (isAnyMatchRule(rule)) {
+    return true
+  }
+
+  if (event.type === 'like-burst') {
+    const threshold = Number.parseInt(rule.replace(/[^\d]/g, ''), 10)
+
+    if (!Number.isNaN(threshold)) {
+      return Number(event.likeCount || 0) >= threshold || Number(event.totalLikeCount || 0) >= threshold
+    }
+  }
+
+  return collectEventCandidates(event).some((candidate) => candidate === rule || candidate.includes(rule))
+}
+
+export function createManualIncomingEvent(type, payload = {}) {
+  const now = Date.now()
+  const uniqueId = payload.uniqueId || payload.userName || 'manual-trigger'
+  const event = {
+    id: createId('incoming'),
+    type,
+    uniqueId,
+    sourceLabel: uniqueId,
+    createdAt: now,
+    summary: '',
+    matchText: '',
+    comment: payload.comment || '',
+    giftName: payload.giftName || '',
+    repeatCount: Number(payload.repeatCount || 1),
+    likeCount: Number(payload.likeCount || 0),
+    totalLikeCount: Number(payload.totalLikeCount || payload.likeCount || 0),
+    shareTarget: payload.shareTarget || '',
+    displayText: payload.displayText || '',
+  }
+
+  if (type === 'follow') {
+    event.summary = `${uniqueId} empezo a seguir`
+    event.matchText = uniqueId
+    return event
+  }
+
+  if (type === 'gift') {
+    event.summary = `${uniqueId} envio ${event.giftName || 'gift'} x${event.repeatCount}`
+    event.matchText = `${event.giftName || 'gift'} x${event.repeatCount}`
+    return event
+  }
+
+  if (type === 'comment') {
+    event.summary = `${uniqueId}: ${event.comment}`
+    event.matchText = event.comment
+    return event
+  }
+
+  if (type === 'share') {
+    event.summary = `${uniqueId} compartio el live`
+    event.matchText = uniqueId
+    return event
+  }
+
+  event.summary = `${uniqueId} mando ${event.likeCount} likes`
+  event.matchText = String(event.likeCount)
+  return event
+}
