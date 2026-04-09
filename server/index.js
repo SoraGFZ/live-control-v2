@@ -698,12 +698,15 @@ app.get('/api/state', (_request, response) => {
 })
 
 app.put('/api/state', async (request, response) => {
-  const nextState = mergeStateWithDefaults(request.body)
+  const previousState = store.getState()
+  const nextState = mergeStateWithDefaults({
+    ...request.body,
+    integrations: previousState.integrations,
+  })
   nextState.profile.overlaySlug = sanitizeSlug(nextState.profile.overlaySlug)
   nextState.profile.publicBaseUrl = normalizeBaseUrl(nextState.profile.publicBaseUrl)
   nextState.profile.dashboardKey = String(nextState.profile.dashboardKey || '').trim()
   nextState.profile.overlayKey = String(nextState.profile.overlayKey || '').trim()
-  const previousState = store.getState()
   const savedState = await store.setState(nextState)
 
   if (

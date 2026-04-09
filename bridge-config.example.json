@@ -1,5 +1,6 @@
 {
   "serverBaseUrl": "https://TU-APP.up.railway.app",
+  "localDashboardBaseUrl": "http://127.0.0.1:5123",
   "dashboardKey": "",
   "reconnectDelayMs": 2500,
   "minecraft": {

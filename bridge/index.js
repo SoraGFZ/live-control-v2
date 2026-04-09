@@ -18,6 +18,7 @@ const CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG = '.enabledebugsocket'
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: 'https://TU-APP.up.railway.app',
+  localDashboardBaseUrl: 'http://127.0.0.1:5123',
   dashboardKey: '',
   reconnectDelayMs: 2500,
   minecraft: {
@@ -94,6 +95,7 @@ function readConfigFile() {
   return {
     ...parsedConfig,
     serverBaseUrl: normalizedBaseUrl,
+    localDashboardBaseUrl: normalizeBaseUrl(parsedConfig.localDashboardBaseUrl),
     dashboardKey: String(parsedConfig.dashboardKey || '').trim(),
   }
 }
@@ -274,6 +276,30 @@ async function syncChaosModCatalog(serverBaseUrl, dashboardKey, payload) {
     const responseText = await response.text()
     throw new Error(`No pude sincronizar ChaosMod con el panel (${response.status}): ${responseText}`)
   }
+}
+
+function buildChaosModSyncTargets(bridgeConfig) {
+  const targets = []
+  const seenUrls = new Set()
+
+  ;[
+    { label: 'panel publico', baseUrl: bridgeConfig.serverBaseUrl },
+    { label: 'panel local', baseUrl: bridgeConfig.localDashboardBaseUrl },
+  ].forEach((target) => {
+    const normalizedBaseUrl = normalizeBaseUrl(target.baseUrl)
+
+    if (!normalizedBaseUrl || seenUrls.has(normalizedBaseUrl)) {
+      return
+    }
+
+    seenUrls.add(normalizedBaseUrl)
+    targets.push({
+      ...target,
+      baseUrl: normalizedBaseUrl,
+    })
+  })
+
+  return targets
 }
 
 async function prepareChaosModCatalog(chaosModConfig) {
@@ -507,16 +533,25 @@ async function main() {
     console.log(`[chaosmod] ${chaosModCatalogPayload.lastError}`)
   }
 
-  try {
-    await syncChaosModCatalog(bridgeConfig.serverBaseUrl, bridgeConfig.dashboardKey, {
-      catalog: chaosModCatalogPayload.catalog,
-      sourcePath: chaosModCatalogPayload.sourcePath,
-      lastError: chaosModCatalogPayload.lastError,
-    })
-    console.log('[chaosmod] catalogo sincronizado con el panel')
-  } catch (error) {
-    console.error(`[chaosmod] no pude sincronizar el catalogo: ${error.message}`)
+  const syncTargets = buildChaosModSyncTargets(bridgeConfig)
+  const syncPayload = {
+    catalog: chaosModCatalogPayload.catalog,
+    sourcePath: chaosModCatalogPayload.sourcePath,
+    lastError: chaosModCatalogPayload.lastError,
   }
+
+  await Promise.all(
+    syncTargets.map(async (target) => {
+      try {
+        await syncChaosModCatalog(target.baseUrl, bridgeConfig.dashboardKey, syncPayload)
+        console.log(`[chaosmod] catalogo sincronizado con ${target.label}: ${target.baseUrl}`)
+      } catch (error) {
+        console.error(
+          `[chaosmod] no pude sincronizar el catalogo con ${target.label} (${target.baseUrl}): ${error.message}`,
+        )
+      }
+    }),
+  )
 
   async function handleMinecraftMessage(message) {
     if (message.type !== 'minecraft-command') {
@@ -651,6 +686,9 @@ async function main() {
 
   console.log(`[bridge] config cargada desde ${CONFIG_PATH}`)
   console.log(`[bridge] backend publico: ${bridgeConfig.serverBaseUrl}`)
+  if (bridgeConfig.localDashboardBaseUrl) {
+    console.log(`[bridge] panel local: ${bridgeConfig.localDashboardBaseUrl}`)
+  }
   console.log('[bridge] listo para recibir acciones de Minecraft y GTA')
 
   const shutdown = async () => {
