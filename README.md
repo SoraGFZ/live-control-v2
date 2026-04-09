@@ -5,6 +5,7 @@ Panel local para conectar TikTok LIVE, mapear triggers a acciones, mostrar un ov
 ## Lo que ya hace
 
 - Conecta a un live de TikTok por username usando `tiktok-live-connector`.
+- Tambien puede conectarse con `sessionid` + `tt-target-idc` para enriquecer la sesion del live y mejorar acceso a datos autenticados.
 - Guarda configuracion, acciones y triggers en `storage/live-control-state.json`.
 - Expone un overlay web en `/overlay/<slug>`.
 - Dispara alertas de overlay, TTS y audio desde el backend local.
@@ -61,10 +62,11 @@ El `redirect_uri` debe apuntar a:
 1. Ejecuta `npm run dev`.
 2. Abre la URL que te da Vite.
 3. En `Operacion en vivo`, escribe tu username de TikTok y conecta el live.
-4. Abre el link del overlay en otra ventana o usalo como browser source.
-5. Crea o ajusta acciones y triggers.
-6. Si quieres Minecraft real, completa el bloque de RCON en la seccion de overlay.
-7. Si quieres GTA V o un mod propio, conectalo a `ws://127.0.0.1:5123/ws/gta`.
+4. Si necesitas datos autenticados, pega tambien `sessionid` y `tt-target-idc` antes de conectar.
+5. Abre el link del overlay en otra ventana o usalo como browser source.
+6. Crea o ajusta acciones y triggers.
+7. Si quieres Minecraft real, completa el bloque de RCON en la seccion de overlay.
+8. Si quieres GTA V o un mod propio, conectalo a `ws://127.0.0.1:5123/ws/gta`.
 
 ## URL publica para LIVE Studio
 

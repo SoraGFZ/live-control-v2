@@ -143,6 +143,50 @@ function normalizeTikTokUsername(username) {
   return String(username || '').trim().replace(/^@/, '')
 }
 
+function resolveTikTokAuthConfig(config = {}) {
+  const storedProfile = store.getState().profile || {}
+  const hasOwn = (key) => Object.prototype.hasOwnProperty.call(config || {}, key)
+  const sessionId = String(
+    hasOwn('sessionId') ? config.sessionId || '' : storedProfile.tiktokSessionId || '',
+  ).trim()
+  const ttTargetIdc = String(
+    hasOwn('ttTargetIdc') ? config.ttTargetIdc || '' : storedProfile.tiktokTargetIdc || '',
+  ).trim()
+  const authenticateWs = Boolean(
+    hasOwn('authenticateWs') ? config.authenticateWs : storedProfile.tiktokAuthenticateWs,
+  )
+
+  return {
+    sessionId,
+    ttTargetIdc,
+    authenticateWs,
+    hasAuthenticatedSession: Boolean(sessionId && ttTargetIdc),
+  }
+}
+
+function createTikTokConnectionOptions(config = {}, { fetchRoomInfoOnConnect = true } = {}) {
+  const authConfig = resolveTikTokAuthConfig(config)
+  const options = {
+    processInitialData: false,
+    enableExtendedGiftInfo: true,
+    fetchRoomInfoOnConnect,
+  }
+
+  if (authConfig.hasAuthenticatedSession) {
+    options.sessionId = authConfig.sessionId
+    options.ttTargetIdc = authConfig.ttTargetIdc
+
+    if (authConfig.authenticateWs) {
+      options.authenticateWs = true
+    }
+  }
+
+  return {
+    ...authConfig,
+    options,
+  }
+}
+
 function broadcastSystemMessage(level, text) {
   broadcast('app', {
     type: 'system-message',
@@ -847,55 +891,119 @@ async function handleMusicCommentCommand(event, state) {
   return false
 }
 
-function extractImageUrl(imageValue) {
-  if (!imageValue) {
+function normalizeRemoteImageUrl(imageUrl) {
+  const normalizedValue = String(imageUrl || '').trim()
+
+  if (!normalizedValue) {
+    return ''
+  }
+
+  if (normalizedValue.startsWith('//')) {
+    return `https:${normalizedValue}`
+  }
+
+  if (/^http:\/\//i.test(normalizedValue)) {
+    return normalizedValue.replace(/^http:\/\//i, 'https://')
+  }
+
+  if (/^www\./i.test(normalizedValue)) {
+    return `https://${normalizedValue}`
+  }
+
+  return normalizedValue
+}
+
+function extractImageUrl(imageValue, depth = 0) {
+  if (!imageValue || depth > 4) {
     return ''
   }
 
   if (typeof imageValue === 'string') {
-    return imageValue
+    return normalizeRemoteImageUrl(imageValue)
   }
 
-  if (typeof imageValue.imageUrl === 'string' && imageValue.imageUrl) {
-    return imageValue.imageUrl
+  if (Array.isArray(imageValue)) {
+    for (const nestedValue of imageValue) {
+      const nestedUrl = extractImageUrl(nestedValue, depth + 1)
+
+      if (nestedUrl) {
+        return nestedUrl
+      }
+    }
+
+    return ''
   }
 
-  if (Array.isArray(imageValue.urlList) && imageValue.urlList[0]) {
-    return String(imageValue.urlList[0])
+  const directKeys = ['imageUrl', 'url', 'uri', 'src', 'displayUrl', 'downloadUrl', 'webUri']
+
+  for (const key of directKeys) {
+    const directUrl = extractImageUrl(imageValue?.[key], depth + 1)
+
+    if (directUrl) {
+      return directUrl
+    }
   }
 
-  if (Array.isArray(imageValue.url_list) && imageValue.url_list[0]) {
-    return String(imageValue.url_list[0])
+  const listKeys = ['urlList', 'url_list', 'urls']
+
+  for (const key of listKeys) {
+    const listUrl = extractImageUrl(imageValue?.[key], depth + 1)
+
+    if (listUrl) {
+      return listUrl
+    }
   }
 
-  if (Array.isArray(imageValue.urls) && imageValue.urls[0]) {
-    return String(imageValue.urls[0])
-  }
+  const nestedKeys = [
+    'image',
+    'icon',
+    'emoteImage',
+    'emojiIcon',
+    'emote',
+    'emoteDetails',
+    'thumbnail',
+    'cover',
+    'origin',
+    'avatarThumb',
+  ]
 
-  if (Array.isArray(imageValue.url) && imageValue.url[0]) {
-    return String(imageValue.url[0])
-  }
+  for (const key of nestedKeys) {
+    const nestedUrl = extractImageUrl(imageValue?.[key], depth + 1)
 
-  if (imageValue.url) {
-    return String(imageValue.url)
+    if (nestedUrl) {
+      return nestedUrl
+    }
   }
 
   return ''
 }
 
 function normalizeEmoteCatalogEntry(emote, sortOrder = 0) {
+  const sourceEmote = emote?.emote || emote?.emoteDetails || emote || {}
   const normalizedId = String(
-    emote?.id || emote?.emoteId || emote?.emote_id || emote?.uuid || sortOrder,
+    sourceEmote?.id ||
+      sourceEmote?.emoteId ||
+      sourceEmote?.emote_id ||
+      sourceEmote?.uuid ||
+      sortOrder,
   ).trim()
   const normalizedName = String(
-    emote?.name || emote?.label || emote?.title || emote?.displayName || emote?.alias || '',
+    sourceEmote?.name ||
+      sourceEmote?.label ||
+      sourceEmote?.title ||
+      sourceEmote?.displayName ||
+      sourceEmote?.alias ||
+      sourceEmote?.emoteName ||
+      '',
   ).trim()
   const imageUrl =
-    extractImageUrl(emote?.image) ||
-    extractImageUrl(emote?.icon) ||
-    extractImageUrl(emote?.emoteImage) ||
-    emote?.emoteImageUrl ||
-    emote?.imageUrl ||
+    extractImageUrl(sourceEmote?.image) ||
+    extractImageUrl(sourceEmote?.icon) ||
+    extractImageUrl(sourceEmote?.emoteImage) ||
+    extractImageUrl(sourceEmote?.emojiIcon) ||
+    extractImageUrl(sourceEmote) ||
+    sourceEmote?.emoteImageUrl ||
+    sourceEmote?.imageUrl ||
     ''
 
   if (!normalizedId) {
@@ -906,7 +1014,9 @@ function normalizeEmoteCatalogEntry(emote, sortOrder = 0) {
     id: normalizedId,
     name: normalizedName || `Emote ${normalizedId}`,
     imageUrl: String(imageUrl || '').trim(),
-    source: String(emote?.source || 'tiktok-live-connector').trim() || 'tiktok-live-connector',
+    source:
+      String(sourceEmote?.source || emote?.source || 'tiktok-live-connector').trim()
+      || 'tiktok-live-connector',
     sortOrder,
   }
 }
@@ -1149,7 +1259,7 @@ async function removeTikTokEmoteCatalogEntry(emoteId) {
   return store.getState().integrations.tiktok
 }
 
-async function syncTikTokGiftCatalog(username, connection = null) {
+async function syncTikTokGiftCatalog(username, connection = null, authConfig = {}) {
   const cleanUsername = normalizeTikTokUsername(username)
 
   if (!cleanUsername) {
@@ -1159,13 +1269,15 @@ async function syncTikTokGiftCatalog(username, connection = null) {
   let ownedConnection = null
 
   try {
+    const connectionConfig = createTikTokConnectionOptions(
+      authConfig,
+      {
+        fetchRoomInfoOnConnect: false,
+      },
+    )
     const activeConnection =
       connection ||
-      new TikTokLiveConnection(cleanUsername, {
-        processInitialData: false,
-        enableExtendedGiftInfo: true,
-        fetchRoomInfoOnConnect: false,
-      })
+      new TikTokLiveConnection(cleanUsername, connectionConfig.options)
 
     if (!connection) {
       ownedConnection = activeConnection
@@ -1411,6 +1523,8 @@ function buildStatus() {
     profile: state.profile,
     tikTok: {
       ...tikTokStatus,
+      authSessionEnabled: Boolean(state.profile?.tiktokSessionId && state.profile?.tiktokTargetIdc),
+      authenticateWs: Boolean(state.profile?.tiktokAuthenticateWs),
       giftCatalogCount: Array.isArray(tikTokIntegration.giftCatalog)
         ? tikTokIntegration.giftCatalog.length
         : 0,
@@ -1573,10 +1687,14 @@ function extractTikTokEmotes(data) {
     ? data.emotes
     : Array.isArray(data?.emoteList)
       ? data.emoteList
-      : []
+      : data?.emote || data?.emoteDetails || data?.image || data?.emoteImage
+        ? [data]
+        : []
 
   return rawEmotes
-    .map((emote, index) => normalizeEmoteCatalogEntry(emote, index))
+    .map((emote, index) =>
+      normalizeEmoteCatalogEntry(emote?.emote || emote?.emoteDetails || emote, index),
+    )
     .filter(Boolean)
 }
 
@@ -2123,8 +2241,9 @@ async function disconnectTikTok() {
   }
 }
 
-async function connectTikTok(username) {
-  const cleanUsername = normalizeTikTokUsername(username)
+async function connectTikTok(config = {}) {
+  const requestedUsername = typeof config === 'string' ? config : config?.username
+  const cleanUsername = normalizeTikTokUsername(requestedUsername)
 
   if (!cleanUsername) {
     throw new Error('Necesitas un username de TikTok para conectar.')
@@ -2132,8 +2251,12 @@ async function connectTikTok(username) {
 
   await disconnectTikTok()
 
+  const authConfig = resolveTikTokAuthConfig(typeof config === 'string' ? {} : config)
   await store.updateProfile({
     tiktokUsername: cleanUsername,
+    tiktokSessionId: authConfig.sessionId,
+    tiktokTargetIdc: authConfig.ttTargetIdc,
+    tiktokAuthenticateWs: authConfig.authenticateWs,
   })
 
   setTikTokStatus({
@@ -2144,11 +2267,10 @@ async function connectTikTok(username) {
     lastError: '',
   })
 
-  const connection = new TikTokLiveConnection(cleanUsername, {
-    processInitialData: false,
-    enableExtendedGiftInfo: true,
+  const connectionOptions = createTikTokConnectionOptions(typeof config === 'string' ? {} : config, {
     fetchRoomInfoOnConnect: true,
   })
+  const connection = new TikTokLiveConnection(cleanUsername, connectionOptions.options)
 
   bindTikTokEvents(connection)
 
@@ -2467,7 +2589,7 @@ app.post('/api/music/history/clear', async (_request, response) => {
 
 app.post('/api/tiktok/connect', async (request, response) => {
   try {
-    const result = await connectTikTok(request.body?.username)
+    const result = await connectTikTok(request.body || {})
     response.json(result.status)
   } catch (error) {
     response.status(400).json({ error: error.message })
@@ -2489,6 +2611,7 @@ app.post('/api/tiktok/gifts/sync', async (request, response) => {
     const giftCatalog = await syncTikTokGiftCatalog(
       cleanUsername,
       canReuseConnection ? tikTokConnection : null,
+      request.body || {},
     )
 
     response.json({

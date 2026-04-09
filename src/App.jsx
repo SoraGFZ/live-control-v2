@@ -40,6 +40,8 @@ const DEFAULT_SERVER_STATUS = {
     lastError: '',
     lastConnectedAt: null,
     lastEventAt: null,
+    authSessionEnabled: false,
+    authenticateWs: false,
     giftCatalogCount: 0,
     giftCatalogSyncedAt: null,
     giftCatalogLastError: '',
@@ -323,6 +325,8 @@ function sanitizeStateForCache(state) {
       ...state.profile,
       dashboardKey: '',
       overlayKey: '',
+      tiktokSessionId: '',
+      tiktokTargetIdc: '',
     },
   }
 }
@@ -560,12 +564,34 @@ function buildManualEmoteId(value) {
   return normalizedValue ? `manual-${normalizedValue}` : `manual-${Date.now()}`
 }
 
+function normalizeRemoteAssetUrl(value) {
+  const normalizedValue = String(value || '').trim()
+
+  if (!normalizedValue) {
+    return ''
+  }
+
+  if (normalizedValue.startsWith('//')) {
+    return `https:${normalizedValue}`
+  }
+
+  if (/^http:\/\//i.test(normalizedValue)) {
+    return normalizedValue.replace(/^http:\/\//i, 'https://')
+  }
+
+  if (/^www\./i.test(normalizedValue)) {
+    return `https://${normalizedValue}`
+  }
+
+  return normalizedValue
+}
+
 function normalizeGiftCatalogForPicker(gift, index = 0) {
   return {
     id: String(gift?.id || gift?.name || index),
     name: String(gift?.name || `Gift ${index + 1}`),
     coins: Number(gift?.coins || 0),
-    imageUrl: String(gift?.imageUrl || gift?.animatedImageUrl || ''),
+    imageUrl: normalizeRemoteAssetUrl(gift?.imageUrl || gift?.animatedImageUrl || ''),
     token: String(gift?.token || createKeywordToken(gift?.name, 'GF')),
     accent: String(gift?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
     tags: Array.isArray(gift?.tags) ? gift.tags : [],
@@ -576,7 +602,7 @@ function normalizeEmoteCatalogForPicker(emote, index = 0) {
   return {
     id: String(emote?.id || emote?.emoteId || index),
     name: String(emote?.name || `Emote ${emote?.id || emote?.emoteId || index + 1}`),
-    imageUrl: String(emote?.imageUrl || emote?.emoteImageUrl || ''),
+    imageUrl: normalizeRemoteAssetUrl(emote?.imageUrl || emote?.emoteImageUrl || ''),
     token: String(emote?.token || createKeywordToken(emote?.name || emote?.id, 'EM')),
     accent: String(emote?.accent || GIFT_CARD_ACCENTS[index % GIFT_CARD_ACCENTS.length]),
     source: String(emote?.source || 'manual'),
@@ -1627,6 +1653,9 @@ function DashboardApp() {
           method: 'POST',
           body: JSON.stringify({
             username: normalizedUsername,
+            sessionId: String(appState.profile.tiktokSessionId || '').trim(),
+            ttTargetIdc: String(appState.profile.tiktokTargetIdc || '').trim(),
+            authenticateWs: Boolean(appState.profile.tiktokAuthenticateWs),
           }),
         },
         dashboardAccessKey,
@@ -1671,6 +1700,9 @@ function DashboardApp() {
           method: 'POST',
           body: JSON.stringify({
             username: tiktokUsernameDraft.trim().replace(/^@/, ''),
+            sessionId: String(appState.profile.tiktokSessionId || '').trim(),
+            ttTargetIdc: String(appState.profile.tiktokTargetIdc || '').trim(),
+            authenticateWs: Boolean(appState.profile.tiktokAuthenticateWs),
           }),
         },
         dashboardAccessKey,
@@ -1733,10 +1765,12 @@ function DashboardApp() {
           onConnectTikTok={connectTikTok}
           onDisconnectTikTok={disconnectTikTok}
           onSyncTikTokGiftCatalog={syncTikTokGiftCatalog}
+          profile={appState.profile}
           serverError={serverError}
           serverStatus={serverStatus}
           setTiktokUsernameDraft={setTiktokUsernameDraft}
           tiktokUsernameDraft={tiktokUsernameDraft}
+          updateProfileField={updateProfileField}
         />
 
         <GamesSection
@@ -2048,10 +2082,12 @@ function LiveOpsSection({
   onConnectTikTok,
   onDisconnectTikTok,
   onSyncTikTokGiftCatalog,
+  profile,
   serverError,
   serverStatus,
   setTiktokUsernameDraft,
   tiktokUsernameDraft,
+  updateProfileField,
 }) {
   return (
     <section className="panel-section" id="live-ops">
@@ -2087,6 +2123,41 @@ function LiveOpsSection({
             value={tiktokUsernameDraft}
             onChange={(event) => setTiktokUsernameDraft(event.target.value)}
           />
+
+          <label className="field-label" htmlFor="tiktok-session-id">
+            sessionid de TikTok
+          </label>
+          <input
+            id="tiktok-session-id"
+            type="password"
+            className="text-field"
+            placeholder="Opcional. Mejora acceso a datos autenticados."
+            value={profile.tiktokSessionId || ''}
+            onChange={(event) => updateProfileField('tiktokSessionId', event.target.value)}
+          />
+
+          <label className="field-label" htmlFor="tiktok-target-idc">
+            tt-target-idc
+          </label>
+          <input
+            id="tiktok-target-idc"
+            className="text-field"
+            placeholder="Opcional. Debe venir junto con sessionid."
+            value={profile.tiktokTargetIdc || ''}
+            onChange={(event) => updateProfileField('tiktokTargetIdc', event.target.value)}
+          />
+
+          <label className="option-card">
+            <input
+              type="checkbox"
+              checked={Boolean(profile.tiktokAuthenticateWs)}
+              onChange={(event) => updateProfileField('tiktokAuthenticateWs', event.target.checked)}
+            />
+            <div>
+              <strong>Autenticar websocket con la sesion</strong>
+              <span>Puede ayudar con emotes, roles y datos extra del live. Activalo solo si vas a usar tus cookies.</span>
+            </div>
+          </label>
 
           <div className="card-actions">
             <button className="primary-button" onClick={onConnectTikTok}>
@@ -2125,7 +2196,19 @@ function LiveOpsSection({
               <span className="snippet-label">Ultimo emote nuevo</span>
               <p>{formatDateTime(serverStatus.tikTok.emoteCatalogSyncedAt)}</p>
             </div>
+            <div>
+              <span className="snippet-label">Sesion autenticada</span>
+              <p>{serverStatus.tikTok.authSessionEnabled ? 'Lista' : 'No configurada'}</p>
+            </div>
+            <div>
+              <span className="snippet-label">WebSocket auth</span>
+              <p>{serverStatus.tikTok.authenticateWs ? 'Activado' : 'Normal'}</p>
+            </div>
           </div>
+
+          <p className="support-copy">
+            Si pegas `sessionid` y `tt-target-idc`, el conector intenta entrar con tu sesion de TikTok y suele devolver mas contexto del live. Ambos valores son sensibles.
+          </p>
 
           {serverStatus.tikTok.lastError ? (
             <div className="error-box">{serverStatus.tikTok.lastError}</div>
