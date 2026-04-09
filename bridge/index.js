@@ -21,11 +21,56 @@ const CHAOSMOD_SHORTCUT_TRIGGER_PATH = path.join(
 )
 const CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG = '.enabledebugsocket'
 const CHAOSMOD_SHORTCUT_POOL = [
-  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 9)),
-  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 8)),
-  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 9) + (1 << 8)),
-  ...Array.from({ length: 12 }, (_, index) => 0x70 + index + (1 << 10) + (1 << 9) + (1 << 8)),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x78 + index,
+    isCtrlPressed: true,
+    isShiftPressed: true,
+    isAltPressed: false,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x78 + index,
+    isCtrlPressed: true,
+    isShiftPressed: false,
+    isAltPressed: true,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x78 + index,
+    isCtrlPressed: false,
+    isShiftPressed: true,
+    isAltPressed: true,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x78 + index,
+    isCtrlPressed: true,
+    isShiftPressed: true,
+    isAltPressed: true,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x74 + index,
+    isCtrlPressed: true,
+    isShiftPressed: true,
+    isAltPressed: false,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x74 + index,
+    isCtrlPressed: true,
+    isShiftPressed: false,
+    isAltPressed: true,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x74 + index,
+    isCtrlPressed: false,
+    isShiftPressed: true,
+    isAltPressed: true,
+  })),
+  ...Array.from({ length: 4 }, (_, index) => ({
+    keyCode: 0x74 + index,
+    isCtrlPressed: true,
+    isShiftPressed: true,
+    isAltPressed: true,
+  })),
 ]
+const GTA_RESERVED_SHORTCUT_KEYCODES = new Set([0x70, 0x71, 0x72, 0x73])
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: 'https://TU-APP.up.railway.app',
@@ -51,6 +96,13 @@ const DEFAULT_CONFIG = {
     modPath: 'C:\\Program Files\\Epic Games\\GTAV\\chaosmod',
     autoEnableEffectMenu: true,
     autoEnableDebugSocket: true,
+    preferLocalHttp: true,
+    localHttpHost: '127.0.0.1',
+    localHttpPort: 8082,
+    localHttpPath: '/trigger_effect',
+    localHttpSender: 'StreamToEarn',
+    localHttpTokenHeader: 'Superdupertoken',
+    localHttpToken: 'glory to ukraine',
     preferDirectSocket: true,
     allowMenuFallback: false,
     assumeTopSelectionOnStartup: true,
@@ -323,22 +375,8 @@ function serializeChaosModEffectsConfig(parsedEntries) {
     .join('\n')}\n`
 }
 
-function decodeChaosModShortcutKeycode(shortcutKeycode) {
-  const numericShortcut = Number(shortcutKeycode || 0)
-
-  return {
-    numericShortcut,
-    keyCode: numericShortcut & 0xff,
-    isCtrlPressed: Boolean(numericShortcut & (1 << 10)),
-    isShiftPressed: Boolean(numericShortcut & (1 << 9)),
-    isAltPressed: Boolean(numericShortcut & (1 << 8)),
-  }
-}
-
-function formatChaosModShortcutLabel(shortcutKeycode) {
-  const decodedShortcut = decodeChaosModShortcutKeycode(shortcutKeycode)
-
-  if (!decodedShortcut.numericShortcut || !decodedShortcut.keyCode) {
+function formatChaosModShortcutLabel(shortcut) {
+  if (!shortcut?.keyCode) {
     return 'sin atajo'
   }
 
@@ -370,19 +408,19 @@ function formatChaosModShortcutLabel(shortcutKeycode) {
   }
   const parts = []
 
-  if (decodedShortcut.isCtrlPressed) {
+  if (shortcut.isCtrlPressed) {
     parts.push('Ctrl')
   }
 
-  if (decodedShortcut.isShiftPressed) {
+  if (shortcut.isShiftPressed) {
     parts.push('Shift')
   }
 
-  if (decodedShortcut.isAltPressed) {
+  if (shortcut.isAltPressed) {
     parts.push('Alt')
   }
 
-  parts.push(keyLabelMap[decodedShortcut.keyCode] || `VK ${decodedShortcut.keyCode}`)
+  parts.push(keyLabelMap[shortcut.keyCode] || `VK ${shortcut.keyCode}`)
   return parts.join(' + ')
 }
 
@@ -592,7 +630,10 @@ function runPowerShellChaosModActivator({
 
 function runPowerShellChaosModShortcutTrigger({
   processName,
-  shortcutKeycode,
+  keyCode,
+  isCtrlPressed,
+  isShiftPressed,
+  isAltPressed,
   reloadConfig,
   reloadDelayMs,
   postReloadDelayMs,
@@ -609,8 +650,14 @@ function runPowerShellChaosModShortcutTrigger({
         CHAOSMOD_SHORTCUT_TRIGGER_PATH,
         '-ProcessName',
         processName,
-        '-ShortcutKeycode',
-        String(shortcutKeycode),
+        '-KeyCode',
+        String(keyCode),
+        '-CtrlPressed',
+        isCtrlPressed ? '1' : '0',
+        '-ShiftPressed',
+        isShiftPressed ? '1' : '0',
+        '-AltPressed',
+        isAltPressed ? '1' : '0',
         '-ReloadConfig',
         reloadConfig ? '1' : '0',
         '-ReloadDelayMs',
@@ -722,6 +769,65 @@ function createChaosModDebugSocketClient(chaosModConfig) {
   }
 }
 
+function buildChaosModLocalHttpUrl(chaosModConfig) {
+  const host = String(chaosModConfig.localHttpHost || '127.0.0.1').trim() || '127.0.0.1'
+  const port = Number(chaosModConfig.localHttpPort || 8082)
+  const requestPath = String(chaosModConfig.localHttpPath || '/trigger_effect').trim() || '/trigger_effect'
+  const normalizedPath = requestPath.startsWith('/') ? requestPath : `/${requestPath}`
+
+  return `http://${host}:${port}${normalizedPath}`
+}
+
+function createChaosModLocalHttpClient(chaosModConfig) {
+  const endpointUrl = buildChaosModLocalHttpUrl(chaosModConfig)
+  const tokenHeader = String(chaosModConfig.localHttpTokenHeader || 'Superdupertoken').trim()
+  const tokenValue = String(chaosModConfig.localHttpToken || '').trim()
+  const sender = String(chaosModConfig.localHttpSender || 'StreamToEarn').trim() || 'StreamToEarn'
+  const state = {
+    lastError: '',
+  }
+
+  return {
+    async triggerEffect(effectId) {
+      const response = await fetch(endpointUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tokenHeader && tokenValue ? { [tokenHeader]: tokenValue } : {}),
+        },
+        body: JSON.stringify({
+          effect_id: effectId,
+          sender,
+        }),
+      })
+
+      state.lastError = ''
+
+      if (!response.ok) {
+        const responseText = await response.text().catch(() => '')
+        throw new Error(
+          `ChaosMod local HTTP respondio ${response.status}${responseText ? `: ${responseText}` : ''}`,
+        )
+      }
+
+      const responseText = await response.text().catch(() => '')
+      return {
+        endpointUrl,
+        responseText,
+      }
+    },
+    getEndpointUrl() {
+      return endpointUrl
+    },
+    getLastError() {
+      return state.lastError
+    },
+    setLastError(errorMessage) {
+      state.lastError = String(errorMessage || '')
+    },
+  }
+}
+
 async function main() {
   const bridgeConfig = readConfigFile()
   const minecraftServer = bridgeConfig.minecraft.enabled
@@ -739,6 +845,10 @@ async function main() {
   const chaosModDebugSocket =
     bridgeConfig.chaosmod.enabled && bridgeConfig.chaosmod.preferDirectSocket
       ? createChaosModDebugSocketClient(bridgeConfig.chaosmod)
+      : null
+  const chaosModLocalHttp =
+    bridgeConfig.chaosmod.enabled && bridgeConfig.chaosmod.preferLocalHttp
+      ? createChaosModLocalHttpClient(bridgeConfig.chaosmod)
       : null
 
   const chaosModCatalogPayload = await prepareChaosModCatalog(bridgeConfig.chaosmod)
@@ -830,20 +940,37 @@ async function main() {
       throw new Error(`No encontre ${effectId} dentro de effects.ini para asignar el atajo.`)
     }
 
-    const currentShortcut = Number(targetEntry.configValues[7] || 0)
-    const currentShortcutInUseByOtherEffect = effectEntries.some(
-      (entry) => entry.id !== effectId && Number(entry.configValues[7] || 0) === currentShortcut,
-    )
-    const currentShortcutUsesPlainExtendedFunctionKey =
-      currentShortcut >= 0x7c && currentShortcut <= 0x87
+    const currentShortcut = {
+      keyCode: Number(targetEntry.configValues[7] || 0),
+      isCtrlPressed: String(targetEntry.configValues[3] || '0') === '1',
+      isShiftPressed: String(targetEntry.configValues[4] || '0') === '1',
+      isAltPressed: String(targetEntry.configValues[5] || '0') === '1',
+    }
+    const currentShortcutSignature = JSON.stringify(currentShortcut)
+    const currentShortcutInUseByOtherEffect = effectEntries.some((entry) => {
+      if (entry.id === effectId) {
+        return false
+      }
+
+      return (
+        JSON.stringify({
+          keyCode: Number(entry.configValues[7] || 0),
+          isCtrlPressed: String(entry.configValues[3] || '0') === '1',
+          isShiftPressed: String(entry.configValues[4] || '0') === '1',
+          isAltPressed: String(entry.configValues[5] || '0') === '1',
+        }) === currentShortcutSignature
+      )
+    })
 
     if (
-      currentShortcut > 0 &&
+      currentShortcut.keyCode > 0 &&
       !currentShortcutInUseByOtherEffect &&
-      !currentShortcutUsesPlainExtendedFunctionKey
+      currentShortcut.keyCode >= 0x70 &&
+      currentShortcut.keyCode <= 0x7b &&
+      !GTA_RESERVED_SHORTCUT_KEYCODES.has(currentShortcut.keyCode)
     ) {
       return {
-        shortcutKeycode: currentShortcut,
+        ...currentShortcut,
         shortcutLabel: formatChaosModShortcutLabel(currentShortcut),
         changed: false,
       }
@@ -852,10 +979,24 @@ async function main() {
     const usedShortcuts = new Set(
       effectEntries
         .filter((entry) => entry.id !== effectId)
-        .map((entry) => Number(entry.configValues[7] || 0))
-        .filter((shortcut) => shortcut > 0),
+        .map((entry) =>
+          JSON.stringify({
+            keyCode: Number(entry.configValues[7] || 0),
+            isCtrlPressed: String(entry.configValues[3] || '0') === '1',
+            isShiftPressed: String(entry.configValues[4] || '0') === '1',
+            isAltPressed: String(entry.configValues[5] || '0') === '1',
+          }),
+        )
+        .filter((shortcutSignature) => shortcutSignature !== JSON.stringify({
+          keyCode: 0,
+          isCtrlPressed: false,
+          isShiftPressed: false,
+          isAltPressed: false,
+        })),
     )
-    const nextShortcut = CHAOSMOD_SHORTCUT_POOL.find((shortcut) => !usedShortcuts.has(shortcut))
+    const nextShortcut = CHAOSMOD_SHORTCUT_POOL.find(
+      (shortcut) => !usedShortcuts.has(JSON.stringify(shortcut)),
+    )
 
     if (!nextShortcut) {
       throw new Error(
@@ -863,7 +1004,10 @@ async function main() {
       )
     }
 
-    targetEntry.configValues[7] = String(nextShortcut)
+    targetEntry.configValues[3] = nextShortcut.isCtrlPressed ? '1' : '0'
+    targetEntry.configValues[4] = nextShortcut.isShiftPressed ? '1' : '0'
+    targetEntry.configValues[5] = nextShortcut.isAltPressed ? '1' : '0'
+    targetEntry.configValues[7] = String(nextShortcut.keyCode)
     writeFileSync(
       chaosModState.effectsFilePath,
       serializeChaosModEffectsConfig(parsedEntries),
@@ -871,7 +1015,7 @@ async function main() {
     )
 
     return {
-      shortcutKeycode: nextShortcut,
+      ...nextShortcut,
       shortcutLabel: formatChaosModShortcutLabel(nextShortcut),
       changed: true,
     }
@@ -886,6 +1030,19 @@ async function main() {
       throw new Error('No llego gtaChaosEffectId en el evento de GTA.')
     }
 
+    if (chaosModLocalHttp) {
+      try {
+        const triggerResult = await chaosModLocalHttp.triggerEffect(messagePayload.gtaChaosEffectId)
+        console.log(
+          `[chaosmod] efecto disparado por HTTP local (${triggerResult.endpointUrl}): ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}${triggerResult.responseText ? ` -> ${triggerResult.responseText}` : ''}`,
+        )
+        return
+      } catch (error) {
+        chaosModLocalHttp.setLastError(error.message)
+        console.error(`[chaosmod] HTTP local no disponible: ${error.message}`)
+      }
+    }
+
     if (chaosModDebugSocket?.triggerEffect(messagePayload.gtaChaosEffectId)) {
       console.log(
         `[chaosmod] efecto disparado por debug socket: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}`,
@@ -898,7 +1055,10 @@ async function main() {
 
       await runPowerShellChaosModShortcutTrigger({
         processName: bridgeConfig.chaosmod.gtaProcessName,
-        shortcutKeycode: shortcutAssignment.shortcutKeycode,
+        keyCode: shortcutAssignment.keyCode,
+        isCtrlPressed: shortcutAssignment.isCtrlPressed,
+        isShiftPressed: shortcutAssignment.isShiftPressed,
+        isAltPressed: shortcutAssignment.isAltPressed,
         reloadConfig: shortcutAssignment.changed,
         reloadDelayMs: Number(bridgeConfig.chaosmod.shortcutReloadDelayMs || 850),
         postReloadDelayMs: Number(bridgeConfig.chaosmod.shortcutPostReloadDelayMs || 1400),
@@ -913,8 +1073,9 @@ async function main() {
 
     if (bridgeConfig.chaosmod.preferDirectSocket && !bridgeConfig.chaosmod.allowMenuFallback) {
       const lastSocketError = chaosModDebugSocket?.getLastError()
+      const lastHttpError = chaosModLocalHttp?.getLastError()
       throw new Error(
-        `El debug socket de ChaosMod no esta disponible y el fallback por atajo esta desactivado.${lastSocketError ? ` Ultimo error: ${lastSocketError}` : ''}`,
+        `No encontre un canal directo de ChaosMod disponible.${lastHttpError ? ` HTTP local: ${lastHttpError}.` : ''}${lastSocketError ? ` Debug socket: ${lastSocketError}.` : ''} El fallback por atajo esta desactivado.`,
       )
     }
 

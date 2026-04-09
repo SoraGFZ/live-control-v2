@@ -1,6 +1,9 @@
 param(
   [string]$ProcessName = "GTA5",
-  [int]$ShortcutKeycode = 0,
+  [int]$KeyCode = 0,
+  [int]$CtrlPressed = 0,
+  [int]$ShiftPressed = 0,
+  [int]$AltPressed = 0,
   [int]$ReloadConfig = 0,
   [int]$ReloadDelayMs = 850,
   [int]$PostReloadDelayMs = 1400,
@@ -9,8 +12,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if ($ShortcutKeycode -le 0) {
-  throw "ShortcutKeycode invalido."
+if ($KeyCode -le 0) {
+  throw "KeyCode invalido."
 }
 
 $wshell = New-Object -ComObject WScript.Shell
@@ -20,28 +23,18 @@ if (-not $wshell.AppActivate($process.Id)) {
   throw "No pude enfocar el proceso $ProcessName."
 }
 
-function Decode-Shortcut([int]$Keycode) {
-  return @{
-    KeyCode = ($Keycode -band 0xFF)
-    Ctrl = [bool]($Keycode -band (1 -shl 10))
-    Shift = [bool]($Keycode -band (1 -shl 9))
-    Alt = [bool]($Keycode -band (1 -shl 8))
-  }
-}
-
-$decodedShortcut = Decode-Shortcut $ShortcutKeycode
-function Get-SendKeysShortcut([hashtable]$Shortcut) {
+function Get-SendKeysShortcut([int]$ResolvedKeyCode, [int]$UseCtrl, [int]$UseShift, [int]$UseAlt) {
   $modifierPrefix = ''
 
-  if ($Shortcut.Ctrl) {
+  if ($UseCtrl -ne 0) {
     $modifierPrefix += '^'
   }
 
-  if ($Shortcut.Shift) {
+  if ($UseShift -ne 0) {
     $modifierPrefix += '+'
   }
 
-  if ($Shortcut.Alt) {
+  if ($UseAlt -ne 0) {
     $modifierPrefix += '%'
   }
 
@@ -60,11 +53,11 @@ function Get-SendKeysShortcut([hashtable]$Shortcut) {
     0x7B = '{F12}'
   }
 
-  if (-not $functionKeys.ContainsKey($Shortcut.KeyCode)) {
-    throw "El atajo $($Shortcut.KeyCode) no tiene representacion SendKeys soportada."
+  if (-not $functionKeys.ContainsKey($ResolvedKeyCode)) {
+    throw "El atajo $ResolvedKeyCode no tiene representacion SendKeys soportada."
   }
 
-  return "$modifierPrefix$($functionKeys[$Shortcut.KeyCode])"
+  return "$modifierPrefix$($functionKeys[$ResolvedKeyCode])"
 }
 
 Start-Sleep -Milliseconds 200
@@ -76,5 +69,5 @@ if ($ReloadConfig -ne 0) {
   Start-Sleep -Milliseconds $PostReloadDelayMs
 }
 
-$wshell.SendKeys((Get-SendKeysShortcut $decodedShortcut))
+$wshell.SendKeys((Get-SendKeysShortcut $KeyCode $CtrlPressed $ShiftPressed $AltPressed))
 Start-Sleep -Milliseconds $KeyDelayMs
