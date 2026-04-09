@@ -118,16 +118,26 @@ const GAME_SPOTLIGHT = {
   minecraft: {
     title: 'Minecraft',
     eyebrow: 'Sandbox survival',
-    coverUrl: '/minecraft-cover.svg',
+    coverUrl: '/game-covers/minecraft.jpg',
     accent: '#7fd26b',
     summary: 'Comandos por RCON o mod local para convertir gifts y chat en gameplay.',
+    shortTitle: 'Minecraft',
+    versionLabel: 'Bridge listo',
+    modeLabel: 'RCON / Mod local',
+    availabilityLabel: 'Disponible ahora',
+    primaryCta: 'Abrir acciones de Minecraft',
   },
   gta: {
     title: 'GTA V',
     eyebrow: 'Chaos y eventos',
-    coverUrl: '/gta-v-cover.svg',
+    coverUrl: '/game-covers/gta-v-caratula-fan.jpg',
     accent: '#ff8a5b',
     summary: 'Bridge local con ChaosMod y acciones hechas para el directo.',
+    shortTitle: 'GTA 5',
+    versionLabel: 'Chaos bridge',
+    modeLabel: 'ChaosMod',
+    availabilityLabel: 'Disponible ahora',
+    primaryCta: 'Abrir acciones de GTA V',
   },
 }
 
@@ -1219,6 +1229,7 @@ function DashboardApp() {
           chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
           onJump={scrollToSection}
           serverStatus={serverStatus}
+          triggers={appState.triggers}
         />
 
         <EmoteLibrarySection
@@ -1674,21 +1685,76 @@ function MetricRow({ actionCount, bridgePort, readyOutputCount, triggerCount }) 
   )
 }
 
-function GamesSection({ actions, chaosModCatalog, chaosModSourcePath, onJump, serverStatus }) {
+function GamesSection({
+  actions,
+  chaosModCatalog,
+  chaosModSourcePath,
+  onJump,
+  serverStatus,
+  triggers,
+}) {
   const minecraftActions = actions.filter((action) => action.outputs.includes('minecraft'))
   const gtaActions = actions.filter((action) => action.outputs.includes('gta'))
+  const minecraftTriggerCount = triggers.filter((trigger) =>
+    minecraftActions.some((action) => action.id === trigger.actionId),
+  ).length
+  const gtaTriggerCount = triggers.filter((trigger) =>
+    gtaActions.some((action) => action.id === trigger.actionId),
+  ).length
   const localMinecraftSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.minecraftPort}`
   const localGtaSocket = `ws://127.0.0.1:${LOCAL_BRIDGE_DEFAULTS.gtaPort}`
 
   const gameCards = [
     {
+      id: 'gta',
+      eyebrow: GAME_SPOTLIGHT.gta.eyebrow,
+      title: GAME_SPOTLIGHT.gta.title,
+      shortTitle: GAME_SPOTLIGHT.gta.shortTitle,
+      coverUrl: GAME_SPOTLIGHT.gta.coverUrl,
+      coverAlt: 'Portada de GTA V',
+      accent: GAME_SPOTLIGHT.gta.accent,
+      summary: GAME_SPOTLIGHT.gta.summary,
+      versionLabel: GAME_SPOTLIGHT.gta.versionLabel,
+      modeLabel: GAME_SPOTLIGHT.gta.modeLabel,
+      availabilityLabel: GAME_SPOTLIGHT.gta.availabilityLabel,
+      primaryCta: GAME_SPOTLIGHT.gta.primaryCta,
+      statusLabel: serverStatus.bridges.gtaClients > 0 ? 'Bridge enlazado' : 'Esperando bridge',
+      statusTone: serverStatus.bridges.gtaClients > 0 ? 'ok' : 'off',
+      actionsCount: gtaActions.length,
+      triggerCount: gtaTriggerCount,
+      stats: [
+        { label: 'Acciones listas', value: String(gtaActions.length) },
+        { label: 'Triggers activos', value: String(gtaTriggerCount) },
+        { label: 'ChaosMod', value: `${chaosModCatalog.length} efectos` },
+      ],
+      heroSummary:
+        'Tu flujo de GTA ya esta pensado para ChaosMod y bridge local, asi que aqui lo importante es ver rapido si el juego esta listo y saltar a sus acciones.',
+      instructions: [
+        'Deja el bridge corriendo con `npm run bridge:start`.',
+        'Abre GTA V y deja ChaosMod cargado antes de probar eventos.',
+      ],
+      recommendation: chaosModSourcePath
+        ? `ChaosMod detectado en ${chaosModSourcePath}.`
+        : 'Si instalas ChaosMod, el bridge sube el catalogo automaticamente para elegir efectos desde el panel.',
+      checklist: ['Bridge local activo', 'ChaosMod listo', 'Socket local'],
+      endpointLabel: 'Socket local',
+      endpointValue: localGtaSocket,
+      extraNote:
+        'Desde aqui centralizamos GTA V y luego podremos sumar variantes o mods distintos sin tocar el resto del panel.',
+    },
+    {
       id: 'minecraft',
       eyebrow: GAME_SPOTLIGHT.minecraft.eyebrow,
       title: GAME_SPOTLIGHT.minecraft.title,
+      shortTitle: GAME_SPOTLIGHT.minecraft.shortTitle,
       coverUrl: GAME_SPOTLIGHT.minecraft.coverUrl,
-      coverAlt: 'Portada estilizada de Minecraft',
+      coverAlt: 'Portada de Minecraft',
       accent: GAME_SPOTLIGHT.minecraft.accent,
       summary: GAME_SPOTLIGHT.minecraft.summary,
+      versionLabel: GAME_SPOTLIGHT.minecraft.versionLabel,
+      modeLabel: GAME_SPOTLIGHT.minecraft.modeLabel,
+      availabilityLabel: GAME_SPOTLIGHT.minecraft.availabilityLabel,
+      primaryCta: GAME_SPOTLIGHT.minecraft.primaryCta,
       statusLabel: serverStatus.bridges.minecraftRconConnected
         ? 'RCON enlazado'
         : serverStatus.bridges.minecraftClients > 0
@@ -1698,114 +1764,144 @@ function GamesSection({ actions, chaosModCatalog, chaosModSourcePath, onJump, se
         serverStatus.bridges.minecraftRconConnected || serverStatus.bridges.minecraftClients > 0
           ? 'ok'
           : 'off',
+      actionsCount: minecraftActions.length,
+      triggerCount: minecraftTriggerCount,
       stats: [
         { label: 'Acciones listas', value: String(minecraftActions.length) },
-        { label: 'Mods conectados', value: String(serverStatus.bridges.minecraftClients) },
+        { label: 'Triggers activos', value: String(minecraftTriggerCount) },
         {
           label: 'RCON',
           value: serverStatus.bridges.minecraftRconConnected ? 'Activo' : 'Pendiente',
         },
       ],
-      chips: [
-        `${minecraftActions.length} accion${minecraftActions.length === 1 ? '' : 'es'}`,
-        'RCON opcional',
-        'Bridge local',
+      heroSummary:
+        'Minecraft queda listo tanto para RCON como para mod local, asi que el foco es que puedas lanzar caos, summons o presets sin navegar entre secciones.',
+      instructions: [
+        'Si usas RCON, revisa host, puerto y password en tu bridge local.',
+        'Si usas mod propio, escucha el socket local del bridge y mapea los eventos que quieras.',
       ],
+      recommendation: serverStatus.bridges.minecraftRconError
+        ? `RCON reporto: ${serverStatus.bridges.minecraftRconError}`
+        : 'Puedes combinar comandos directos con overlay sin depender de un mod adicional.',
+      checklist: ['Bridge local activo', 'RCON opcional', 'Socket local'],
       endpointLabel: 'Socket local',
       endpointValue: localMinecraftSocket,
-      extraNote: serverStatus.bridges.minecraftRconError
-        ? `RCON: ${serverStatus.bridges.minecraftRconError}`
-        : 'Puedes usar comandos directos o escuchar el socket desde tu mod.',
-    },
-    {
-      id: 'gta',
-      eyebrow: GAME_SPOTLIGHT.gta.eyebrow,
-      title: GAME_SPOTLIGHT.gta.title,
-      coverUrl: GAME_SPOTLIGHT.gta.coverUrl,
-      coverAlt: 'Portada estilizada de GTA V',
-      accent: GAME_SPOTLIGHT.gta.accent,
-      summary: GAME_SPOTLIGHT.gta.summary,
-      statusLabel: serverStatus.bridges.gtaClients > 0 ? 'Bridge enlazado' : 'Esperando bridge',
-      statusTone: serverStatus.bridges.gtaClients > 0 ? 'ok' : 'off',
-      stats: [
-        { label: 'Acciones listas', value: String(gtaActions.length) },
-        { label: 'Clientes GTA', value: String(serverStatus.bridges.gtaClients) },
-        { label: 'ChaosMod', value: `${chaosModCatalog.length} efectos` },
-      ],
-      chips: [
-        `${gtaActions.length} accion${gtaActions.length === 1 ? '' : 'es'}`,
-        'ChaosMod',
-        'Bridge local',
-      ],
-      endpointLabel: 'Socket local',
-      endpointValue: localGtaSocket,
-      extraNote: chaosModSourcePath
-        ? `ChaosMod detectado en ${chaosModSourcePath}`
-        : 'Cuando el bridge detecta ChaosMod, sube el catalogo y habilita la seleccion visual de efectos.',
+      extraNote:
+        'La idea es que Minecraft termine siendo un modulo completo con presets por mobs, clima, items y minijuegos.',
     },
   ]
+
+  const [selectedGameId, setSelectedGameId] = useState(() => gameCards[0]?.id || 'gta')
+  const selectedGame = gameCards.find((game) => game.id === selectedGameId) || gameCards[0]
 
   return (
     <section className="panel-section" id="games">
       <SectionHeader
         eyebrow="Juegos"
-        title="Biblioteca de juegos"
-        description="Aqui concentramos cada juego, su bridge y lo que ya tienes listo para el directo. La idea es ir sumando nuevos titulos sin mezclar todo con acciones sueltas."
+        title="Catalogo de juegos"
+        description="La idea aqui es que cada juego viva como un modulo propio. Hoy ya tienes GTA V y Minecraft, y mas adelante sumamos el resto sin romper el flujo."
       />
 
-      <div className="game-grid">
+      <div className="game-launcher-grid">
         {gameCards.map((game) => (
-          <article key={game.id} className="surface-card game-card">
-            <img className="game-cover" src={game.coverUrl} alt={game.coverAlt} />
+          <button
+            key={game.id}
+            type="button"
+            className={`game-launcher-card ${selectedGame.id === game.id ? 'selected' : ''}`}
+            style={{ '--game-accent': game.accent }}
+            onClick={() => setSelectedGameId(game.id)}
+          >
+            <img className="game-launcher-cover" src={game.coverUrl} alt={game.coverAlt} />
+            <div className="game-launcher-overlay" />
+            <div className="game-launcher-content">
+              <span className="game-launcher-title">{game.shortTitle}</span>
+              <span className="game-launcher-pill">{game.versionLabel}</span>
+            </div>
+          </button>
+        ))}
+      </div>
 
-            <div className="game-card-body">
-              <div className="card-top">
-                <div className="row-title-wrap">
-                  <span className="bridge-badge game-kicker" style={{ '--game-accent': game.accent }}>
-                    {game.eyebrow}
+      <article className="surface-card game-detail-shell">
+        <div className="game-detail-header">
+          <span className="eyebrow" style={{ color: selectedGame.accent }}>
+            {selectedGame.title}
+          </span>
+          <h3>{selectedGame.summary}</h3>
+          <p>{selectedGame.heroSummary}</p>
+        </div>
+
+        <div className="game-detail-hero">
+          <aside className="game-detail-aside">
+            <img className="game-detail-poster" src={selectedGame.coverUrl} alt={selectedGame.coverAlt} />
+            <strong>{selectedGame.title}</strong>
+            <span className="game-detail-subtitle">{selectedGame.modeLabel}</span>
+            <div className="game-detail-meta">
+              <span className="bridge-badge game-kicker" style={{ '--game-accent': selectedGame.accent }}>
+                {selectedGame.availabilityLabel}
+              </span>
+              <span className={`status-chip ${selectedGame.statusTone}`}>{selectedGame.statusLabel}</span>
+            </div>
+          </aside>
+
+          <div
+            className="game-detail-banner"
+            style={{ '--game-banner-image': `url(${selectedGame.coverUrl})`, '--game-accent': selectedGame.accent }}
+          >
+            <div className="game-detail-banner-inner">
+              <div className="tag-row">
+                {selectedGame.checklist.map((chip) => (
+                  <span key={`${selectedGame.id}-${chip}`} className="tag">
+                    {chip}
                   </span>
-                  <h3>{game.title}</h3>
-                  <p>{game.summary}</p>
-                </div>
-                <span className={`status-chip ${game.statusTone}`}>{game.statusLabel}</span>
+                ))}
               </div>
 
               <div className="game-stat-grid">
-                {game.stats.map((stat) => (
-                  <div key={`${game.id}-${stat.label}`} className="game-stat-card">
+                {selectedGame.stats.map((stat) => (
+                  <div key={`${selectedGame.id}-${stat.label}`} className="game-stat-card">
                     <span className="snippet-label">{stat.label}</span>
                     <strong>{stat.value}</strong>
                   </div>
                 ))}
               </div>
 
-              <div className="tag-row">
-                {game.chips.map((chip) => (
-                  <span key={`${game.id}-${chip}`} className="tag">
-                    {chip}
-                  </span>
-                ))}
-              </div>
-
-              <div className="snippet-block">
-                <span className="snippet-label">{game.endpointLabel}</span>
-                <code>{game.endpointValue}</code>
-              </div>
-
-              <p className="support-copy">{game.extraNote}</p>
-
               <div className="card-actions">
-                <button className="secondary-button" onClick={() => onJump('actions')}>
-                  Ver acciones
+                <button className="primary-button" onClick={() => onJump('actions')}>
+                  {selectedGame.primaryCta}
+                </button>
+                <button className="secondary-button" onClick={() => onJump('triggers')}>
+                  Ver triggers
                 </button>
                 <button className="ghost-button" onClick={() => onJump('bridges')}>
                   Ver bridge tecnico
                 </button>
               </div>
             </div>
-          </article>
-        ))}
-      </div>
+          </div>
+        </div>
+
+        <div className="game-detail-columns">
+          <div className="game-callout game-callout-info">
+            <strong>Flujo recomendado</strong>
+            {selectedGame.instructions.map((instruction) => (
+              <p key={`${selectedGame.id}-${instruction}`}>{instruction}</p>
+            ))}
+          </div>
+
+          <div className="game-callout game-callout-warn">
+            <strong>Recomendacion</strong>
+            <p>{selectedGame.recommendation}</p>
+          </div>
+        </div>
+
+        <div className="game-detail-footer">
+          <div className="snippet-block">
+            <span className="snippet-label">{selectedGame.endpointLabel}</span>
+            <code>{selectedGame.endpointValue}</code>
+          </div>
+          <p className="support-copy">{selectedGame.extraNote}</p>
+        </div>
+      </article>
     </section>
   )
 }
