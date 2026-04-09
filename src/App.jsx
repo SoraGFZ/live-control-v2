@@ -163,6 +163,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'create_box',
     name: 'Crear arena',
     commandText: '/bedrock create',
+    imageUrl: '/event-art/minecraft/llenarCubo.png',
     category: 'setup',
     note: 'Crea la Bedrock Box con el tamano configurado en el plugin.',
   },
@@ -170,6 +171,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'fill_row',
     name: 'Llenar 1 fila',
     commandText: '/bedrock fill 1',
+    imageUrl: '/event-art/minecraft/aumentarFilas.png',
     category: 'fill',
     note: 'Rellena una fila de bloques dentro de la arena.',
   },
@@ -177,6 +179,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'fill_three_rows',
     name: 'Llenar 3 filas',
     commandText: '/bedrock fill 3',
+    imageUrl: '/event-art/minecraft/llenarCubo.png',
     category: 'fill',
     note: 'Acelera el reto agregando tres filas de golpe.',
   },
@@ -184,6 +187,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'fill_block',
     name: 'Agregar 1 bloque',
     commandText: '/bedrock fillblock 1',
+    imageUrl: '/event-art/minecraft/aumentarBloques.png',
     category: 'fill',
     note: 'Suma un bloque extra sin llenar una fila completa.',
   },
@@ -191,6 +195,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'drop_tnt',
     name: 'TNT directa',
     commandText: '/bedrock tnt',
+    imageUrl: '/event-art/minecraft/tnt.png',
     category: 'chaos',
     note: 'Lanza una TNT sobre la arena.',
   },
@@ -198,6 +203,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'random_tnt',
     name: 'TNT random',
     commandText: '/bedrock randomtnt',
+    imageUrl: '/event-art/minecraft/tntSky.png',
     category: 'chaos',
     note: 'Genera una TNT con fuerza aleatoria.',
   },
@@ -205,6 +211,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'super_tnt',
     name: 'Super TNT',
     commandText: '/bedrock supertnt 3 4',
+    imageUrl: '/event-art/minecraft/tntRain.png',
     category: 'chaos',
     note: 'Dispara varias TNT con fuerza media para momentos potentes.',
   },
@@ -212,6 +219,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'glass_prison',
     name: 'Glass prison',
     commandText: '/bedrock glass_prison 10',
+    imageUrl: '/event-art/minecraft/prision.png',
     category: 'defense',
     note: 'Encierra al jugador en una prision de cristal por 10 segundos.',
   },
@@ -240,6 +248,7 @@ const BEDROCK_BOX_PRESETS = [
     id: 'clear_box',
     name: 'Limpiar arena',
     commandText: '/bedrock clear',
+    imageUrl: '/event-art/minecraft/liberar.png',
     category: 'utility',
     note: 'Vacía el contenido de la Bedrock Box.',
   },
@@ -2275,7 +2284,11 @@ function GamesSection({
                         style={{ '--picker-accent': meta.accent }}
                       >
                         <div className="picker-card-head">
-                          <span className="gift-picker-thumb">{meta.token}</span>
+                          {preset.imageUrl ? (
+                            <img className="gift-picker-image" src={preset.imageUrl} alt={preset.name} />
+                          ) : (
+                            <span className="gift-picker-thumb">{meta.token}</span>
+                          )}
                           <span className="tag">{preset.category}</span>
                         </div>
                         <strong>{preset.name}</strong>
@@ -4288,12 +4301,16 @@ function ActionModal({
                             }))
                           }
                         >
-                          <span
-                            className="command-picker-thumb"
-                            style={{ '--picker-accent': presetVisual.accent }}
-                          >
-                            {presetVisual.token}
-                          </span>
+                          {preset.imageUrl ? (
+                            <img className="gift-picker-image" src={preset.imageUrl} alt={preset.name} />
+                          ) : (
+                            <span
+                              className="command-picker-thumb"
+                              style={{ '--picker-accent': presetVisual.accent }}
+                            >
+                              {presetVisual.token}
+                            </span>
+                          )}
                           <strong>{preset.name}</strong>
                           <span>{preset.note}</span>
                         </button>
