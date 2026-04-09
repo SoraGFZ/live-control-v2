@@ -40,6 +40,18 @@ export const DEFAULT_INTEGRATIONS = {
   },
 }
 
+export const DEFAULT_WIDGETS = {
+  smartBar: {
+    title: 'Marcador del live',
+    winGoal: '5',
+    currentWins: 0,
+    showWins: true,
+    showCoins: true,
+    showFollows: true,
+    showLiveDuration: true,
+  },
+}
+
 export const DEFAULT_APP_STATE = {
   updatedAt: 0,
   profile: {
@@ -136,6 +148,7 @@ export const DEFAULT_APP_STATE = {
       cooldownSeconds: '4',
     },
   ],
+  widgets: DEFAULT_WIDGETS,
   integrations: DEFAULT_INTEGRATIONS,
 }
 
@@ -182,6 +195,14 @@ export function mergeStateWithDefaults(parsedState) {
       ...action,
     })),
     triggers: mergedTriggers,
+    widgets: {
+      ...DEFAULT_WIDGETS,
+      ...(parsedState?.widgets || {}),
+      smartBar: {
+        ...DEFAULT_WIDGETS.smartBar,
+        ...(parsedState?.widgets?.smartBar || {}),
+      },
+    },
     integrations: {
       ...DEFAULT_INTEGRATIONS,
       ...(parsedState?.integrations || {}),
@@ -316,6 +337,26 @@ export function buildOverlayUrl(baseUrl, slug, overlayKey = '') {
   }
 
   return overlayUrl.toString()
+}
+
+export function buildSmartBarUrl(baseUrl, slug, overlayKey = '') {
+  const normalizedSlug = sanitizeSlug(slug)
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl)
+  const pathName = `/overlay/${normalizedSlug}/smart-bar`
+
+  if (!normalizedBaseUrl) {
+    return overlayKey
+      ? `${pathName}?key=${encodeURIComponent(overlayKey)}`
+      : pathName
+  }
+
+  const smartBarUrl = new URL(pathName, normalizedBaseUrl)
+
+  if (overlayKey) {
+    smartBarUrl.searchParams.set('key', overlayKey)
+  }
+
+  return smartBarUrl.toString()
 }
 
 export function buildWebSocketUrl(baseUrl, pathname, accessKey = '') {
@@ -477,6 +518,7 @@ export function createManualIncomingEvent(type, payload = {}) {
     matchText: '',
     comment: payload.comment || '',
     giftName: payload.giftName || '',
+    giftCoins: Number(payload.giftCoins || 0),
     emoteId: payload.emoteId || '',
     emoteName: payload.emoteName || '',
     emoteImageUrl: payload.emoteImageUrl || '',

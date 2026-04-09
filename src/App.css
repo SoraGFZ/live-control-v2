@@ -956,6 +956,34 @@
   line-height: 1.5;
 }
 
+.smartbar-counter,
+.smartbar-stage,
+.smartbar-header,
+.smartbar-metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.smartbar-counter {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: stretch;
+}
+
+.smartbar-counter-value {
+  display: grid;
+  place-items: center;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.smartbar-counter-value strong {
+  font-size: 1.8rem;
+  letter-spacing: -0.05em;
+  color: #fff5dd;
+}
+
 .error-box {
   padding: 12px 14px;
   border-radius: 14px;
@@ -1145,6 +1173,69 @@
   background: transparent;
 }
 
+.smartbar-screen {
+  display: grid;
+  align-items: start;
+}
+
+.smartbar-stage {
+  min-height: 100vh;
+  padding: 28px;
+  align-content: start;
+}
+
+.smartbar-card {
+  width: min(1180px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 18px 22px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(135deg, rgba(255, 112, 46, 0.2), rgba(10, 18, 26, 0.86) 32%, rgba(11, 18, 24, 0.96)),
+    rgba(8, 12, 18, 0.82);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.smartbar-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.smartbar-title {
+  font-size: 1rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f6ebd7;
+}
+
+.smartbar-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.smartbar-metric {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(5, 10, 16, 0.38);
+}
+
+.smartbar-metric-label {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: #9debe1;
+}
+
+.smartbar-metric strong {
+  font-size: clamp(1.5rem, 3vw, 2.6rem);
+  letter-spacing: -0.05em;
+  color: #fff7e6;
+}
+
 .overlay-stage {
   min-height: 100vh;
   display: grid;
@@ -1300,6 +1391,11 @@
   }
 
   .picker-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .smartbar-counter,
+  .smartbar-header {
     grid-template-columns: 1fr;
   }
 

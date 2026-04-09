@@ -101,6 +101,13 @@ let minecraftRconStatus = {
   lastError: '',
   lastCommandAt: null,
 }
+let smartBarRuntime = {
+  sessionStartedAt: null,
+  lastSessionDurationMs: 0,
+  followCount: 0,
+  receivedCoins: 0,
+  giftsReceived: 0,
+}
 const recentEvents = []
 const recentDispatches = []
 let mediaLibraryCount = (await listMediaItems()).length
@@ -485,6 +492,35 @@ function getPublicProfile() {
   }
 }
 
+function getPublicWidgets() {
+  return store.getState().widgets || {}
+}
+
+function buildSmartBarStatus() {
+  const liveDurationMs = smartBarRuntime.sessionStartedAt
+    ? tikTokStatus.connected
+      ? Date.now() - smartBarRuntime.sessionStartedAt
+      : smartBarRuntime.lastSessionDurationMs || 0
+    : smartBarRuntime.lastSessionDurationMs || 0
+
+  return {
+    connected: tikTokStatus.connected,
+    sessionStartedAt: smartBarRuntime.sessionStartedAt,
+    liveDurationMs,
+    followCount: smartBarRuntime.followCount,
+    receivedCoins: smartBarRuntime.receivedCoins,
+    giftsReceived: smartBarRuntime.giftsReceived,
+  }
+}
+
+function getPublicOverlayPayload() {
+  return {
+    profile: getPublicProfile(),
+    widgets: getPublicWidgets(),
+    smartBar: buildSmartBarStatus(),
+  }
+}
+
 function readAccessKey(request, requestUrl = null) {
   const requestKey =
     requestUrl?.searchParams.get('key') ||
@@ -618,6 +654,7 @@ function buildStatus() {
     mediaLibrary: {
       count: mediaLibraryCount,
     },
+    smartBar: buildSmartBarStatus(),
     recentEvents,
     recentDispatches,
   }
@@ -628,9 +665,7 @@ function broadcastStatus() {
   broadcast('app', { type: 'status', payload: statusPayload })
   broadcast('overlay', {
     type: 'overlay-state',
-    payload: {
-      profile: getPublicProfile(),
-    },
+    payload: getPublicOverlayPayload(),
   })
 }
 
@@ -687,6 +722,7 @@ function normalizeTikTokEvent(type, data) {
     matchText: '',
     comment: '',
     giftName: '',
+    giftCoins: 0,
     emoteId: '',
     emoteName: '',
     emoteImageUrl: '',
@@ -715,6 +751,15 @@ function normalizeTikTokEvent(type, data) {
       data?.describe ||
       `Gift ${data?.giftId || 'unknown'}`
     baseEvent.repeatCount = Number(data?.repeatCount || 1)
+    baseEvent.giftCoins = Number(
+      data?.diamondCount ||
+        data?.diamond_count ||
+        data?.gift?.diamond_count ||
+        data?.gift?.diamondCount ||
+        data?.extendedGiftInfo?.diamond_count ||
+        data?.extendedGiftInfo?.diamondCount ||
+        0,
+    )
     baseEvent.summary = `${uniqueId} envio ${baseEvent.giftName} x${baseEvent.repeatCount}`
     baseEvent.matchText = `${baseEvent.giftName} x${baseEvent.repeatCount}`
     baseEvent.displayText = baseEvent.giftName
@@ -916,8 +961,28 @@ async function processIncomingEvent(event, reason = 'tiktok') {
   pushRecent(recentEvents, event)
   setTikTokStatus({ lastEventAt: event.createdAt })
   broadcast('app', { type: 'incoming-event', payload: event })
-
   const state = store.getState()
+
+  if (event.type === 'follow') {
+    smartBarRuntime = {
+      ...smartBarRuntime,
+      followCount: smartBarRuntime.followCount + 1,
+    }
+  }
+
+  if (event.type === 'gift') {
+    const repeatCount = Number(event.repeatCount || 1)
+    const fallbackGiftCoins =
+      state.integrations?.tiktok?.giftCatalog?.find((gift) => gift.name === event.giftName)?.coins || 0
+    const giftCoins = Number(event.giftCoins || fallbackGiftCoins || 0)
+
+    smartBarRuntime = {
+      ...smartBarRuntime,
+      giftsReceived: smartBarRuntime.giftsReceived + repeatCount,
+      receivedCoins: smartBarRuntime.receivedCoins + giftCoins * repeatCount,
+    }
+  }
+
   const matchedTriggers = state.triggers.filter((trigger) => matchesTrigger(trigger, event))
 
   for (const trigger of matchedTriggers) {
@@ -1047,6 +1112,13 @@ async function disconnectTikTok() {
     connecting: false,
     roomId: '',
   })
+
+  smartBarRuntime = {
+    ...smartBarRuntime,
+    lastSessionDurationMs: smartBarRuntime.sessionStartedAt
+      ? Date.now() - smartBarRuntime.sessionStartedAt
+      : smartBarRuntime.lastSessionDurationMs,
+  }
 }
 
 async function connectTikTok(username) {
@@ -1081,6 +1153,13 @@ async function connectTikTok(username) {
   try {
     const connectState = await connection.connect()
     tikTokConnection = connection
+    smartBarRuntime = {
+      sessionStartedAt: Date.now(),
+      lastSessionDurationMs: 0,
+      followCount: 0,
+      receivedCoins: 0,
+      giftsReceived: 0,
+    }
 
     setTikTokStatus({
       connected: true,
@@ -1142,9 +1221,7 @@ async function connectTikTok(username) {
 }
 
 app.get('/api/overlay/:slug', requireOverlayAccess, (_request, response) => {
-  response.json({
-    profile: getPublicProfile(),
-  })
+  response.json(getPublicOverlayPayload())
 })
 
 app.use('/api', requireDashboardAccess)
@@ -1187,7 +1264,7 @@ app.put('/api/state', async (request, response) => {
   }
 
   broadcast('app', { type: 'state', payload: savedState })
-  broadcast('overlay', { type: 'overlay-state', payload: { profile: getPublicProfile() } })
+  broadcast('overlay', { type: 'overlay-state', payload: getPublicOverlayPayload() })
   broadcastStatus()
 
   response.json(savedState)
@@ -1347,9 +1424,7 @@ webSocketServers.overlay.on('connection', (socket) => {
   socketHubs.overlay.add(socket)
   safeJsonSend(socket, {
     type: 'overlay-state',
-    payload: {
-      profile: getPublicProfile(),
-    },
+    payload: getPublicOverlayPayload(),
   })
 
   socket.on('close', () => {

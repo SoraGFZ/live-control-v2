@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import {
   buildOverlayUrl,
+  buildSmartBarUrl,
   buildWebSocketUrl,
   createId,
   DEFAULT_APP_STATE,
@@ -46,6 +47,14 @@ const DEFAULT_SERVER_STATUS = {
     emoteCatalogSyncedAt: null,
     emoteCatalogLastError: '',
     emoteCatalogSourceUsername: '',
+  },
+  smartBar: {
+    connected: false,
+    sessionStartedAt: null,
+    liveDurationMs: 0,
+    followCount: 0,
+    receivedCoins: 0,
+    giftsReceived: 0,
   },
   bridges: {
     dashboardClients: 0,
@@ -146,7 +155,11 @@ function getCurrentRoute() {
     return { kind: 'dashboard', slug: 'main-stage' }
   }
 
-  const [first, second] = window.location.pathname.split('/').filter(Boolean)
+  const [first, second, third] = window.location.pathname.split('/').filter(Boolean)
+
+  if (first === 'overlay' && third === 'smart-bar') {
+    return { kind: 'smart-bar', slug: second || 'main-stage' }
+  }
 
   if (first === 'overlay') {
     return { kind: 'overlay', slug: second || 'main-stage' }
@@ -266,6 +279,15 @@ function formatDateTime(value) {
   }
 
   return new Date(value).toLocaleString()
+}
+
+function formatDurationClock(durationMs) {
+  const totalSeconds = Math.max(0, Math.floor(Number(durationMs || 0) / 1000))
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':')
 }
 
 function createActionDraft(action = null) {
@@ -459,6 +481,7 @@ function createDashboardStatePayload(state) {
     },
     actions: state.actions,
     triggers: state.triggers,
+    widgets: state.widgets,
   }
 }
 
@@ -467,6 +490,10 @@ function App() {
 
   if (route.kind === 'overlay') {
     return <OverlayScreen slug={route.slug} />
+  }
+
+  if (route.kind === 'smart-bar') {
+    return <SmartBarScreen slug={route.slug} />
   }
 
   return <DashboardApp />
@@ -756,6 +783,10 @@ function DashboardApp() {
   const publicOverlayUrl = appState.profile.publicBaseUrl
     ? buildOverlayUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
+  const localSmartBarUrl = buildSmartBarUrl(localBaseUrl, overlaySlug, appState.profile.overlayKey)
+  const publicSmartBarUrl = appState.profile.publicBaseUrl
+    ? buildSmartBarUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
+    : ''
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
   const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
@@ -787,6 +818,40 @@ function DashboardApp() {
               : value,
       },
     }))
+  }
+
+  function updateSmartBarField(field, value) {
+    updateDashboardState((currentState) => ({
+      ...currentState,
+      widgets: {
+        ...currentState.widgets,
+        smartBar: {
+          ...currentState.widgets?.smartBar,
+          [field]: value,
+        },
+      },
+    }))
+  }
+
+  function adjustSmartBarWins(delta) {
+    updateDashboardState((currentState) => {
+      const currentWins = Number(currentState.widgets?.smartBar?.currentWins || 0)
+
+      return {
+        ...currentState,
+        widgets: {
+          ...currentState.widgets,
+          smartBar: {
+            ...currentState.widgets?.smartBar,
+            currentWins: Math.max(0, currentWins + delta),
+          },
+        },
+      }
+    })
+  }
+
+  function resetSmartBarWins() {
+    updateSmartBarField('currentWins', 0)
   }
 
   function addAction(actionDraft) {
@@ -899,8 +964,25 @@ function DashboardApp() {
     window.setTimeout(() => setLinkFeedback(''), 1800)
   }
 
+  async function copySmartBarUrl() {
+    const targetUrl = publicSmartBarUrl || localSmartBarUrl
+
+    try {
+      await navigator.clipboard.writeText(targetUrl)
+      setLinkFeedback(publicSmartBarUrl ? 'Smart bar publica copiada' : 'Smart bar local copiada')
+    } catch {
+      setLinkFeedback('No se pudo copiar')
+    }
+
+    window.setTimeout(() => setLinkFeedback(''), 1800)
+  }
+
   function openOverlayWindow() {
     window.open(localOverlayUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  function openSmartBarWindow() {
+    window.open(localSmartBarUrl, '_blank', 'noopener,noreferrer')
   }
 
   async function refreshMediaLibrary() {
@@ -1265,17 +1347,26 @@ function DashboardApp() {
 
         <OverlaySection
           linkFeedback={linkFeedback}
+          localSmartBarUrl={localSmartBarUrl}
           mediaLibrary={mediaLibrary}
           mediaLibraryError={mediaLibraryError}
+          onAdjustSmartBarWins={adjustSmartBarWins}
+          onCopySmartBarUrl={copySmartBarUrl}
           onDeleteMedia={removeMediaFile}
           onCopyOverlayUrl={copyOverlayUrl}
           onOpenOverlayWindow={openOverlayWindow}
+          onOpenSmartBarWindow={openSmartBarWindow}
           onRefreshMedia={refreshMediaLibrary}
+          onResetSmartBarWins={resetSmartBarWins}
           onUploadMedia={uploadMediaFile}
           localOverlayUrl={localOverlayUrl}
           publicOverlayUrl={publicOverlayUrl}
+          publicSmartBarUrl={publicSmartBarUrl}
           profile={appState.profile}
           serverPort={serverStatus.server.port}
+          serverStatus={serverStatus}
+          smartBar={appState.widgets?.smartBar || {}}
+          updateSmartBarField={updateSmartBarField}
           updateProfileField={updateProfileField}
           isUploadingMedia={isUploadingMedia}
         />
@@ -2606,16 +2697,25 @@ function TriggerListTable({ actions, emoteCatalog, giftCatalog, onEditTrigger, o
 function OverlaySection({
   linkFeedback,
   localOverlayUrl,
+  localSmartBarUrl,
   mediaLibrary,
   mediaLibraryError,
+  onAdjustSmartBarWins,
+  onCopySmartBarUrl,
   onDeleteMedia,
   onCopyOverlayUrl,
   onOpenOverlayWindow,
+  onOpenSmartBarWindow,
   onRefreshMedia,
+  onResetSmartBarWins,
   onUploadMedia,
   publicOverlayUrl,
+  publicSmartBarUrl,
   profile,
   serverPort,
+  serverStatus,
+  smartBar,
+  updateSmartBarField,
   updateProfileField,
   isUploadingMedia,
 }) {
@@ -2736,6 +2836,136 @@ function OverlaySection({
             </button>
           </div>
           {linkFeedback ? <span className="feedback-pill">{linkFeedback}</span> : null}
+        </article>
+
+        <article className="surface-card settings-card">
+          <h3>Smart bar</h3>
+
+          <label className="field-label" htmlFor="smartbar-title">
+            Titulo
+          </label>
+          <input
+            id="smartbar-title"
+            className="text-field"
+            value={smartBar.title || ''}
+            onChange={(event) => updateSmartBarField('title', event.target.value)}
+          />
+
+          <label className="field-label" htmlFor="smartbar-goal">
+            Meta de victorias
+          </label>
+          <input
+            id="smartbar-goal"
+            className="text-field"
+            value={smartBar.winGoal || ''}
+            onChange={(event) => updateSmartBarField('winGoal', event.target.value)}
+          />
+
+          <div className="smartbar-counter">
+            <button className="secondary-button" onClick={() => onAdjustSmartBarWins(-1)}>
+              -
+            </button>
+            <div className="smartbar-counter-value">
+              <span className="snippet-label">Victorias</span>
+              <strong>{Number(smartBar.currentWins || 0)}</strong>
+            </div>
+            <button className="primary-button" onClick={() => onAdjustSmartBarWins(1)}>
+              +
+            </button>
+          </div>
+
+          <div className="card-actions">
+            <button className="ghost-button compact-button" onClick={onResetSmartBarWins}>
+              Reset wins
+            </button>
+          </div>
+
+          <div className="option-grid">
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(smartBar.showWins)}
+                onChange={(event) => updateSmartBarField('showWins', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar wins</strong>
+                <span>Contador manual para retos y metas del directo.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(smartBar.showCoins)}
+                onChange={(event) => updateSmartBarField('showCoins', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar coins</strong>
+                <span>Suma los coins reales que entran por gifts.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(smartBar.showFollows)}
+                onChange={(event) => updateSmartBarField('showFollows', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar follows</strong>
+                <span>Cuenta nuevos follows en la sesion actual.</span>
+              </div>
+            </label>
+
+            <label className="option-card">
+              <input
+                type="checkbox"
+                checked={Boolean(smartBar.showLiveDuration)}
+                onChange={(event) => updateSmartBarField('showLiveDuration', event.target.checked)}
+              />
+              <div>
+                <strong>Mostrar tiempo</strong>
+                <span>Reloj del live desde que conectas TikTok.</span>
+              </div>
+            </label>
+          </div>
+
+          <div className="mini-grid">
+            <div>
+              <span className="snippet-label">Coins recibidos</span>
+              <p>{serverStatus.smartBar.receivedCoins}</p>
+            </div>
+            <div>
+              <span className="snippet-label">Follows nuevos</span>
+              <p>{serverStatus.smartBar.followCount}</p>
+            </div>
+          </div>
+
+          <div className="link-stack">
+            <div>
+              <span className="snippet-label">Smart bar local</span>
+              <code className="overlay-link">{localSmartBarUrl}</code>
+            </div>
+            <div>
+              <span className="snippet-label">Smart bar publica</span>
+              <code className="overlay-link">
+                {publicSmartBarUrl || 'Completa la URL publica base para generar el link real.'}
+              </code>
+            </div>
+          </div>
+
+          <div className="card-actions">
+            <button className="primary-button" onClick={onCopySmartBarUrl}>
+              {publicSmartBarUrl ? 'Copiar smart bar publica' : 'Copiar smart bar local'}
+            </button>
+            <button className="secondary-button" onClick={onOpenSmartBarWindow}>
+              Abrir smart bar local
+            </button>
+          </div>
+
+          <p className="support-copy">
+            Este widget combina victorias manuales con follows, coins y tiempo real del live.
+          </p>
         </article>
 
         <article className="surface-card checklist-card">
@@ -3014,6 +3244,7 @@ function OverlayScreen({ slug }) {
           mergeStateWithDefaults({
             ...currentState,
             profile: overlayProfile.profile,
+            widgets: overlayProfile.widgets,
           }),
         )
         setOverlayError('')
@@ -3046,6 +3277,7 @@ function OverlayScreen({ slug }) {
               mergeStateWithDefaults({
                 ...currentState,
                 profile: payload.payload.profile,
+                widgets: payload.payload.widgets,
               }),
             )
           }
@@ -3131,11 +3363,6 @@ function OverlayScreen({ slug }) {
 
   return (
     <div className="overlay-screen">
-      <div className="overlay-anchor">
-        <span>Overlay</span>
-        <strong>{slug}</strong>
-      </div>
-
       <div className="overlay-stage">
         {overlayError ? (
           <div className="overlay-idle">
@@ -3165,13 +3392,190 @@ function OverlayScreen({ slug }) {
               <video className="overlay-media" src={currentEvent.mediaUrl} autoPlay muted loop />
             ) : null}
           </article>
-        ) : (
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function SmartBarScreen({ slug }) {
+  const [appState, setAppState] = useState(() => readStoredState())
+  const [smartBarStatus, setSmartBarStatus] = useState(DEFAULT_SERVER_STATUS.smartBar)
+  const [overlayError, setOverlayError] = useState('')
+  const [now, setNow] = useState(() => Date.now())
+  const overlayAccessKey = readOverlayAccessKeyFromUrl()
+
+  useEffect(() => {
+    document.documentElement.dataset.route = 'overlay'
+    document.body.dataset.route = 'overlay'
+
+    let socket
+    let reconnectTimeoutId
+    let isStopped = false
+    let canConnectSocket = false
+
+    async function loadOverlayState() {
+      try {
+        const overlayPayload = await requestJson(
+          `/api/overlay/${encodeURIComponent(slug)}${
+            overlayAccessKey ? `?key=${encodeURIComponent(overlayAccessKey)}` : ''
+          }`,
+        )
+
+        setAppState((currentState) =>
+          mergeStateWithDefaults({
+            ...currentState,
+            profile: overlayPayload.profile,
+            widgets: overlayPayload.widgets,
+          }),
+        )
+        setSmartBarStatus(overlayPayload.smartBar || DEFAULT_SERVER_STATUS.smartBar)
+        setOverlayError('')
+        canConnectSocket = true
+      } catch (error) {
+        if (error?.status === 401) {
+          setOverlayError('Este widget necesita la clave publica correcta en la URL.')
+          return
+        }
+
+        setOverlayError('No pude cargar el smart bar desde el backend.')
+      }
+    }
+
+    function connectSocket() {
+      socket = new WebSocket(createSocketUrl('/ws/overlay', { key: overlayAccessKey }))
+
+      socket.onmessage = (message) => {
+        try {
+          const payload = JSON.parse(message.data)
+
+          if (payload.type === 'overlay-state') {
+            setAppState((currentState) =>
+              mergeStateWithDefaults({
+                ...currentState,
+                profile: payload.payload.profile,
+                widgets: payload.payload.widgets,
+              }),
+            )
+            setSmartBarStatus(payload.payload.smartBar || DEFAULT_SERVER_STATUS.smartBar)
+          }
+        } catch {
+          return
+        }
+      }
+
+      socket.onclose = () => {
+        if (isStopped) {
+          return
+        }
+
+        reconnectTimeoutId = window.setTimeout(connectSocket, 1500)
+      }
+
+      socket.onerror = () => {
+        socket.close()
+      }
+    }
+
+    async function bootSmartBar() {
+      await loadOverlayState()
+
+      if (!isStopped && canConnectSocket) {
+        connectSocket()
+      }
+    }
+
+    bootSmartBar()
+
+    return () => {
+      isStopped = true
+      window.clearTimeout(reconnectTimeoutId)
+      socket?.close()
+    }
+  }, [overlayAccessKey, slug])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
+  const smartBar = appState.widgets?.smartBar || {}
+  const metrics = []
+
+  if (smartBar.showWins) {
+    metrics.push({
+      id: 'wins',
+      label: 'Wins',
+      value: `${Number(smartBar.currentWins || 0)}/${smartBar.winGoal || '0'}`,
+    })
+  }
+
+  if (smartBar.showCoins) {
+    metrics.push({
+      id: 'coins',
+      label: 'Coins',
+      value: String(smartBarStatus.receivedCoins || 0),
+    })
+  }
+
+  if (smartBar.showFollows) {
+    metrics.push({
+      id: 'follows',
+      label: 'Follows',
+      value: String(smartBarStatus.followCount || 0),
+    })
+  }
+
+  if (smartBar.showLiveDuration) {
+    const liveDurationMs =
+      smartBarStatus.connected && smartBarStatus.sessionStartedAt
+        ? now - smartBarStatus.sessionStartedAt
+        : smartBarStatus.liveDurationMs || 0
+
+    metrics.push({
+      id: 'live-duration',
+      label: 'Tiempo',
+      value: formatDurationClock(liveDurationMs),
+    })
+  }
+
+  if (overlayError) {
+    return (
+      <div className="overlay-screen">
+        <div className="overlay-stage">
           <div className="overlay-idle">
-            <span className="overlay-idle-label">Esperando eventos</span>
+            <span className="overlay-idle-label">Smart bar bloqueado</span>
             <h1>{appState.profile.projectName}</h1>
-            <p>Deja esta ruta abierta y manda alertas desde el panel para revisar capas, timing y estilo del overlay.</p>
+            <p>{overlayError}</p>
           </div>
-        )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="overlay-screen smartbar-screen">
+      <div className="smartbar-stage">
+        <article className="smartbar-card">
+          <div className="smartbar-header">
+            <span className="smartbar-title">{smartBar.title || 'Marcador del live'}</span>
+            <span className={`status-chip ${smartBarStatus.connected ? 'ok' : 'off'}`}>
+              {smartBarStatus.connected ? 'LIVE' : 'Stand by'}
+            </span>
+          </div>
+
+          <div className="smartbar-metrics">
+            {metrics.map((metric) => (
+              <div key={metric.id} className="smartbar-metric">
+                <span className="smartbar-metric-label">{metric.label}</span>
+                <strong>{metric.value}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
       </div>
     </div>
   )
