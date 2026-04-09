@@ -1163,25 +1163,21 @@ function ActionsSection({ actions, onCreateAction, onPreviewAction, onRemoveActi
               </p>
             ) : null}
 
-            {action.mediaUrl ? (
-              <p className="support-copy">
-                <strong>Media:</strong> {truncateValue(action.mediaUrl)}
-              </p>
-            ) : null}
+              {action.mediaUrl ? (
+                <p className="support-copy">
+                  <strong>Media:</strong> {truncateValue(action.mediaUrl)}
+                </p>
+              ) : null}
 
-            <div className="card-actions">
-              {isOverlayCapable(action) ? (
+              <div className="card-actions">
                 <button className="secondary-button" onClick={() => onPreviewAction(action)}>
-                  Enviar al overlay
+                  {isOverlayCapable(action) ? 'Probar accion' : 'Probar bridge'}
                 </button>
-              ) : (
-                <span className="muted-pill">Pendiente de bridge real</span>
-              )}
-              <button className="ghost-button" onClick={() => onRemoveAction(action.id)}>
-                Eliminar
-              </button>
-            </div>
-          </article>
+                <button className="ghost-button" onClick={() => onRemoveAction(action.id)}>
+                  Eliminar
+                </button>
+              </div>
+            </article>
         ))}
       </div>
     </section>
