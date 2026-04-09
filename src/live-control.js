@@ -75,6 +75,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Lanza una alerta corta con audio para nuevos seguidores.',
       outputs: ['overlayAlert', 'audio'],
       commandText: '',
+      minecraftMode: 'generic',
+      minecraftBedrockPresetId: '',
+      minecraftBedrockPresetName: '',
       gtaMode: 'generic',
       gtaChaosEffectId: '',
       gtaChaosEffectName: '',
@@ -87,6 +90,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Invoca una criatura y lo anuncia en el overlay.',
       outputs: ['minecraft', 'overlayAlert'],
       commandText: '/summon zombie ~ ~1 ~',
+      minecraftMode: 'generic',
+      minecraftBedrockPresetId: '',
+      minecraftBedrockPresetName: '',
       gtaMode: 'generic',
       gtaChaosEffectId: '',
       gtaChaosEffectName: '',
@@ -99,6 +105,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Dispara un evento en tu mod local y deja un aviso visual.',
       outputs: ['gta', 'overlayMedia'],
       commandText: 'spawn-chaos-car',
+      minecraftMode: 'generic',
+      minecraftBedrockPresetId: '',
+      minecraftBedrockPresetName: '',
       gtaMode: 'generic',
       gtaChaosEffectId: '',
       gtaChaosEffectName: '',
@@ -111,6 +120,9 @@ export const DEFAULT_APP_STATE = {
       description: 'Lee un mensaje del chat y lo muestra en overlay.',
       outputs: ['tts', 'overlayAlert'],
       commandText: '',
+      minecraftMode: 'generic',
+      minecraftBedrockPresetId: '',
+      minecraftBedrockPresetName: '',
       gtaMode: 'generic',
       gtaChaosEffectId: '',
       gtaChaosEffectName: '',
@@ -189,6 +201,9 @@ export function mergeStateWithDefaults(parsedState) {
       ...(parsedState?.profile || {}),
     },
     actions: mergedActions.map((action) => ({
+      minecraftMode: 'generic',
+      minecraftBedrockPresetId: '',
+      minecraftBedrockPresetName: '',
       gtaMode: 'generic',
       gtaChaosEffectId: '',
       gtaChaosEffectName: '',
@@ -379,6 +394,14 @@ export function buildWebSocketUrl(baseUrl, pathname, accessKey = '') {
 export function getActionCommandSummary(action) {
   if (!action) {
     return ''
+  }
+
+  if (action.minecraftMode === 'bedrock-box' && action.minecraftBedrockPresetName) {
+    return `Bedrock Box: ${action.minecraftBedrockPresetName}`
+  }
+
+  if (action.minecraftMode === 'bedrock-box' && action.minecraftBedrockPresetId) {
+    return `Bedrock Box: ${action.minecraftBedrockPresetId}`
   }
 
   if (action.gtaMode === 'chaosmod' && action.gtaChaosEffectName) {

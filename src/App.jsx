@@ -150,6 +150,101 @@ const GAME_SPOTLIGHT = {
   },
 }
 
+const BEDROCK_BOX_CATEGORY_ACCENTS = {
+  setup: '#7fd26b',
+  fill: '#55e3d6',
+  chaos: '#ff8a5b',
+  defense: '#c28cff',
+  utility: '#f3b348',
+}
+
+const BEDROCK_BOX_PRESETS = [
+  {
+    id: 'create_box',
+    name: 'Crear arena',
+    commandText: '/bedrock create',
+    category: 'setup',
+    note: 'Crea la Bedrock Box con el tamano configurado en el plugin.',
+  },
+  {
+    id: 'fill_row',
+    name: 'Llenar 1 fila',
+    commandText: '/bedrock fill 1',
+    category: 'fill',
+    note: 'Rellena una fila de bloques dentro de la arena.',
+  },
+  {
+    id: 'fill_three_rows',
+    name: 'Llenar 3 filas',
+    commandText: '/bedrock fill 3',
+    category: 'fill',
+    note: 'Acelera el reto agregando tres filas de golpe.',
+  },
+  {
+    id: 'fill_block',
+    name: 'Agregar 1 bloque',
+    commandText: '/bedrock fillblock 1',
+    category: 'fill',
+    note: 'Suma un bloque extra sin llenar una fila completa.',
+  },
+  {
+    id: 'drop_tnt',
+    name: 'TNT directa',
+    commandText: '/bedrock tnt',
+    category: 'chaos',
+    note: 'Lanza una TNT sobre la arena.',
+  },
+  {
+    id: 'random_tnt',
+    name: 'TNT random',
+    commandText: '/bedrock randomtnt',
+    category: 'chaos',
+    note: 'Genera una TNT con fuerza aleatoria.',
+  },
+  {
+    id: 'super_tnt',
+    name: 'Super TNT',
+    commandText: '/bedrock supertnt 3 4',
+    category: 'chaos',
+    note: 'Dispara varias TNT con fuerza media para momentos potentes.',
+  },
+  {
+    id: 'glass_prison',
+    name: 'Glass prison',
+    commandText: '/bedrock glass_prison 10',
+    category: 'defense',
+    note: 'Encierra al jugador en una prision de cristal por 10 segundos.',
+  },
+  {
+    id: 'set_timer',
+    name: 'Timer a 15 seg',
+    commandText: '/bedrock timer 15',
+    category: 'setup',
+    note: 'Ajusta el contador interno del plugin a 15 segundos.',
+  },
+  {
+    id: 'teleport_top',
+    name: 'Teleport al top',
+    commandText: '/bedrock tp',
+    category: 'utility',
+    note: 'Lleva al jugador a la parte alta de la arena.',
+  },
+  {
+    id: 'switch_glass',
+    name: 'Modo glass',
+    commandText: '/bedrock glass',
+    category: 'utility',
+    note: 'Convierte paredes y piso en cristal.',
+  },
+  {
+    id: 'clear_box',
+    name: 'Limpiar arena',
+    commandText: '/bedrock clear',
+    category: 'utility',
+    note: 'Vacía el contenido de la Bedrock Box.',
+  },
+]
+
 function getCurrentRoute() {
   if (typeof window === 'undefined') {
     return { kind: 'dashboard', slug: 'main-stage' }
@@ -337,6 +432,9 @@ function createActionDraft(action = null) {
     description: action?.description || '',
     outputs: action?.outputs?.length ? action.outputs : ['overlayAlert'],
     commandText: action?.commandText || '',
+    minecraftMode: action?.minecraftMode || 'generic',
+    minecraftBedrockPresetId: action?.minecraftBedrockPresetId || '',
+    minecraftBedrockPresetName: action?.minecraftBedrockPresetName || '',
     gtaMode: action?.gtaMode || 'generic',
     gtaChaosEffectId: action?.gtaChaosEffectId || '',
     gtaChaosEffectName: action?.gtaChaosEffectName || '',
@@ -469,6 +567,24 @@ function getChaosModCardMeta(effect) {
             : normalizedCategory === 'meta'
               ? 'MT'
               : createKeywordToken(effect?.name, 'FX'),
+  }
+}
+
+function getBedrockBoxCardMeta(preset) {
+  const normalizedCategory = normalizePickerText(preset?.category || 'utility')
+
+  return {
+    accent: BEDROCK_BOX_CATEGORY_ACCENTS[normalizedCategory] || '#55e3d6',
+    token:
+      normalizedCategory === 'chaos'
+        ? 'TN'
+        : normalizedCategory === 'fill'
+          ? 'FL'
+          : normalizedCategory === 'setup'
+            ? 'BX'
+            : normalizedCategory === 'defense'
+              ? 'GP'
+              : createKeywordToken(preset?.name, 'BB'),
   }
 }
 
@@ -3671,15 +3787,36 @@ function ActionModal({
 }) {
   const [draft, setDraft] = useState(() => createActionDraft(initialAction))
   const [errorMessage, setErrorMessage] = useState('')
-  const [commandSearch, setCommandSearch] = useState('')
-  const [commandCategory, setCommandCategory] = useState('all')
+  const [gtaCommandSearch, setGtaCommandSearch] = useState('')
+  const [gtaCommandCategory, setGtaCommandCategory] = useState('all')
+  const [minecraftCommandSearch, setMinecraftCommandSearch] = useState('')
+  const [minecraftCommandCategory, setMinecraftCommandCategory] = useState('all')
   const isEditing = Boolean(initialAction?.id)
   const selectedMediaItem =
     mediaLibrary.find((item) => item.url === draft.mediaUrl || item.fileName === draft.mediaUrl) || null
+  const selectedBedrockBoxPreset =
+    BEDROCK_BOX_PRESETS.find((item) => item.id === draft.minecraftBedrockPresetId) || null
   const selectedChaosModEffect =
     chaosModCatalog.find((item) => item.id === draft.gtaChaosEffectId) || null
+  const usesMinecraftOutput = draft.outputs.includes('minecraft')
   const usesGtaOutput = draft.outputs.includes('gta')
+  const usesBedrockBox = usesMinecraftOutput && draft.minecraftMode === 'bedrock-box'
   const usesChaosMod = usesGtaOutput && draft.gtaMode === 'chaosmod'
+  const availableBedrockBoxCategories = [
+    'all',
+    ...Array.from(new Set(BEDROCK_BOX_PRESETS.map((item) => item.category || '').filter(Boolean))).sort(
+      (left, right) => left.localeCompare(right),
+    ),
+  ]
+  const visibleBedrockBoxPresets = BEDROCK_BOX_PRESETS.filter((preset) => {
+    const matchesSearch = !normalizePickerText(minecraftCommandSearch)
+      || normalizePickerText(`${preset.name} ${preset.category} ${preset.commandText}`).includes(
+        normalizePickerText(minecraftCommandSearch),
+      )
+    const matchesCategory = minecraftCommandCategory === 'all' || preset.category === minecraftCommandCategory
+
+    return matchesSearch && matchesCategory
+  })
   const availableChaosModCategories = [
     'all',
     ...Array.from(
@@ -3691,12 +3828,12 @@ function ActionModal({
     ).sort((left, right) => left.localeCompare(right)),
   ]
   const visibleChaosModEffects = chaosModCatalog.filter((effect) => {
-    const matchesSearch = !normalizePickerText(commandSearch)
+    const matchesSearch = !normalizePickerText(gtaCommandSearch)
       || normalizePickerText(`${effect.name} ${effect.categoryLabel} ${effect.category}`).includes(
-        normalizePickerText(commandSearch),
+        normalizePickerText(gtaCommandSearch),
       )
     const effectCategory = effect.categoryLabel || effect.category || ''
-    const matchesCategory = commandCategory === 'all' || effectCategory === commandCategory
+    const matchesCategory = gtaCommandCategory === 'all' || effectCategory === gtaCommandCategory
 
     return matchesSearch && matchesCategory
   })
@@ -3704,8 +3841,10 @@ function ActionModal({
   useEffect(() => {
     setDraft(createActionDraft(initialAction))
     setErrorMessage('')
-    setCommandSearch('')
-    setCommandCategory('all')
+    setGtaCommandSearch('')
+    setGtaCommandCategory('all')
+    setMinecraftCommandSearch('')
+    setMinecraftCommandCategory('all')
   }, [initialAction])
 
   function toggleOutput(outputId) {
@@ -3739,11 +3878,18 @@ function ActionModal({
       return
     }
 
+    if (usesBedrockBox && !draft.minecraftBedrockPresetId.trim()) {
+      setErrorMessage('Elige un preset de Bedrock Box para esta accion.')
+      return
+    }
+
     onSave({
       ...draft,
       name: draft.name.trim(),
       description: draft.description.trim(),
       commandText: draft.commandText.trim(),
+      minecraftBedrockPresetId: draft.minecraftBedrockPresetId.trim(),
+      minecraftBedrockPresetName: draft.minecraftBedrockPresetName.trim(),
       gtaChaosEffectId: draft.gtaChaosEffectId.trim(),
       gtaChaosEffectName: draft.gtaChaosEffectName.trim(),
       overlayText: draft.overlayText.trim(),
@@ -3807,7 +3953,11 @@ function ActionModal({
           </div>
 
           <label className="field-label" htmlFor="action-command">
-            {usesChaosMod ? 'Payload opcional / nota' : 'Comando o payload'}
+            {usesChaosMod
+              ? 'Payload opcional / nota'
+              : usesBedrockBox
+                ? 'Comando de Bedrock Box'
+                : 'Comando o payload'}
           </label>
           <input
             id="action-command"
@@ -3815,11 +3965,141 @@ function ActionModal({
             placeholder={
               usesChaosMod
                 ? 'Opcional. Lo puedes usar como nota o payload adicional.'
-                : 'Ej: /summon creeper ~ ~1 ~'
+                : usesBedrockBox
+                  ? 'El preset completa este comando automaticamente, pero puedes ajustarlo.'
+                  : 'Ej: /summon creeper ~ ~1 ~'
             }
             value={draft.commandText}
             onChange={(event) => setDraft({ ...draft, commandText: event.target.value })}
           />
+
+          {usesMinecraftOutput ? (
+            <>
+              <label className="field-label" htmlFor="action-minecraft-mode">
+                Integracion Minecraft
+              </label>
+              <select
+                id="action-minecraft-mode"
+                className="text-field"
+                value={draft.minecraftMode}
+                onChange={(event) =>
+                  setDraft((currentDraft) => ({
+                    ...currentDraft,
+                    minecraftMode: event.target.value,
+                    minecraftBedrockPresetId:
+                      event.target.value === 'bedrock-box'
+                        ? currentDraft.minecraftBedrockPresetId
+                        : '',
+                    minecraftBedrockPresetName:
+                      event.target.value === 'bedrock-box'
+                        ? currentDraft.minecraftBedrockPresetName
+                        : '',
+                  }))
+                }
+              >
+                <option value="generic">RCON / bridge generico</option>
+                <option value="bedrock-box">Bedrock Box</option>
+              </select>
+
+              {draft.minecraftMode === 'bedrock-box' ? (
+                <>
+                  <label className="field-label" htmlFor="action-bedrock-box-preset">
+                    Preset de Bedrock Box
+                  </label>
+                  <div className="picker-toolbar">
+                    <input
+                      className="text-field"
+                      placeholder="Busca por nombre, categoria o comando"
+                      value={minecraftCommandSearch}
+                      onChange={(event) => setMinecraftCommandSearch(event.target.value)}
+                    />
+                    <select
+                      className="text-field picker-filter"
+                      value={minecraftCommandCategory}
+                      onChange={(event) => setMinecraftCommandCategory(event.target.value)}
+                    >
+                      <option value="all">Todas las categorias</option>
+                      {availableBedrockBoxCategories
+                        .filter((category) => category !== 'all')
+                        .map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div className="command-gallery-grid">
+                    {visibleBedrockBoxPresets.map((preset) => {
+                      const presetVisual = getBedrockBoxCardMeta(preset)
+
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          className={`command-picker-card ${
+                            draft.minecraftBedrockPresetId === preset.id ? 'selected' : ''
+                          }`}
+                          onClick={() =>
+                            setDraft((currentDraft) => ({
+                              ...currentDraft,
+                              minecraftBedrockPresetId: preset.id,
+                              minecraftBedrockPresetName: preset.name,
+                              commandText: preset.commandText,
+                            }))
+                          }
+                        >
+                          <span
+                            className="command-picker-thumb"
+                            style={{ '--picker-accent': presetVisual.accent }}
+                          >
+                            {presetVisual.token}
+                          </span>
+                          <strong>{preset.name}</strong>
+                          <span>{preset.note}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <select
+                    id="action-bedrock-box-preset"
+                    className="text-field picker-native-select"
+                    value={draft.minecraftBedrockPresetId}
+                    onChange={(event) => {
+                      const nextPreset =
+                        BEDROCK_BOX_PRESETS.find((item) => item.id === event.target.value) || null
+
+                      setDraft((currentDraft) => ({
+                        ...currentDraft,
+                        minecraftBedrockPresetId: event.target.value,
+                        minecraftBedrockPresetName: nextPreset?.name || '',
+                        commandText: nextPreset?.commandText || currentDraft.commandText,
+                      }))
+                    }}
+                  >
+                    <option value="">Selecciona un preset</option>
+                    {BEDROCK_BOX_PRESETS.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name} · {preset.category}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedBedrockBoxPreset ? (
+                    <p className="support-copy">
+                      <strong>Seleccionado:</strong> {selectedBedrockBoxPreset.name}. Comando:
+                      {' '}
+                      <code>{selectedBedrockBoxPreset.commandText}</code>
+                    </p>
+                  ) : (
+                    <p className="support-copy">
+                      Estos presets salen de los comandos reales del plugin `s2e-bedrock-box` para
+                      que no tengas que memorizar sintaxis ni escribirlos a mano en cada accion.
+                    </p>
+                  )}
+                </>
+              ) : null}
+            </>
+          ) : null}
 
           {usesGtaOutput ? (
             <>
@@ -3850,13 +4130,13 @@ function ActionModal({
                     <input
                       className="text-field"
                       placeholder="Busca por nombre o categoria"
-                      value={commandSearch}
-                      onChange={(event) => setCommandSearch(event.target.value)}
+                      value={gtaCommandSearch}
+                      onChange={(event) => setGtaCommandSearch(event.target.value)}
                     />
                     <select
                       className="text-field picker-filter"
-                      value={commandCategory}
-                      onChange={(event) => setCommandCategory(event.target.value)}
+                      value={gtaCommandCategory}
+                      onChange={(event) => setGtaCommandCategory(event.target.value)}
                     >
                       <option value="all">Todas las categorias</option>
                       {availableChaosModCategories
