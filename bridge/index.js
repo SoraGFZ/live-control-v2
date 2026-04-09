@@ -14,6 +14,7 @@ const runtimeProcess = globalThis.process
 const projectRoot = runtimeProcess.cwd()
 const CONFIG_PATH = path.join(projectRoot, 'bridge-config.json')
 const CHAOSMOD_ACTIVATOR_PATH = path.join(projectRoot, 'bridge', 'activate-chaosmod-effect.ps1')
+const CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG = '.enabledebugsocket'
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: 'https://TU-APP.up.railway.app',
@@ -37,8 +38,13 @@ const DEFAULT_CONFIG = {
     enabled: true,
     modPath: 'C:\\Program Files\\Epic Games\\GTAV\\chaosmod',
     autoEnableEffectMenu: true,
+    autoEnableDebugSocket: true,
+    preferDirectSocket: true,
+    allowMenuFallback: false,
     assumeTopSelectionOnStartup: true,
     gtaProcessName: 'GTA5',
+    debugSocketPort: 31819,
+    debugSocketReconnectDelayMs: 3000,
     menuOpenDelayMs: 220,
     keyDelayMs: 35,
   },
@@ -230,6 +236,16 @@ function updateIniValue(filePath, key, value) {
   writeFileSync(filePath, `${iniContent.trimEnd()}\n${normalizedLine}\n`, 'utf8')
 }
 
+function ensureFeatureFlagFile(directoryPath, featureFlagName) {
+  const featureFlagPath = path.join(directoryPath, featureFlagName)
+
+  if (!existsSync(featureFlagPath)) {
+    writeFileSync(featureFlagPath, '', 'utf8')
+  }
+
+  return featureFlagPath
+}
+
 async function fetchChaosModEffectsSource() {
   const response = await fetch(CHAOSMOD_EFFECTS_SOURCE_URL, {
     headers: {
@@ -283,6 +299,10 @@ async function prepareChaosModCatalog(chaosModConfig) {
 
   if (chaosModConfig.autoEnableEffectMenu && existsSync(configFilePath)) {
     updateIniValue(configFilePath, 'EnableDebugMenu', 1)
+  }
+
+  if (chaosModConfig.autoEnableDebugSocket) {
+    ensureFeatureFlagFile(normalizedModPath, CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG)
   }
 
   const effectsIniText = readFileSync(effectsFilePath, 'utf8')
@@ -376,6 +396,87 @@ function runPowerShellChaosModActivator({
   })
 }
 
+function createChaosModDebugSocketClient(chaosModConfig) {
+  const socketUrl = `ws://127.0.0.1:${Number(chaosModConfig.debugSocketPort || 31819)}`
+  let socket = null
+  let reconnectTimeoutId = null
+  let isStopped = false
+  let hasLoggedFallback = false
+  const state = {
+    connected: false,
+    lastError: '',
+  }
+
+  function scheduleReconnect() {
+    if (isStopped) {
+      return
+    }
+
+    reconnectTimeoutId = setTimeout(connect, Number(chaosModConfig.debugSocketReconnectDelayMs || 3000))
+  }
+
+  function connect() {
+    socket = new WebSocket(socketUrl)
+
+    socket.on('open', () => {
+      state.connected = true
+      state.lastError = ''
+      hasLoggedFallback = false
+      console.log(`[chaosmod] debug socket conectado en ${socketUrl}`)
+    })
+
+    socket.on('close', () => {
+      state.connected = false
+
+      if (!hasLoggedFallback) {
+        const fallbackMessage = chaosModConfig.allowMenuFallback
+          ? '[chaosmod] debug socket no disponible; usare el menu visual como fallback hasta que recargues el mod.'
+          : '[chaosmod] debug socket no disponible; las acciones de ChaosMod quedaran pausadas hasta que recargues el mod o reinicies GTA.'
+        console.log(fallbackMessage)
+        hasLoggedFallback = true
+      }
+
+      scheduleReconnect()
+    })
+
+    socket.on('error', (error) => {
+      state.lastError = error.message
+      state.connected = false
+      socket.close()
+    })
+  }
+
+  connect()
+
+  return {
+    triggerEffect(effectId) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            command: 'trigger_effect',
+            effect_id: effectId,
+          }),
+        )
+        return true
+      }
+
+      state.connected = false
+      return false
+    },
+    isConnected() {
+      return state.connected
+    },
+    getLastError() {
+      return state.lastError
+    },
+    stop() {
+      isStopped = true
+      clearTimeout(reconnectTimeoutId)
+      socket?.close()
+    },
+  }
+}
+
 async function main() {
   const bridgeConfig = readConfigFile()
   const minecraftServer = bridgeConfig.minecraft.enabled
@@ -389,6 +490,10 @@ async function main() {
     sourcePath: '',
     selectedIndex: bridgeConfig.chaosmod.assumeTopSelectionOnStartup ? 0 : null,
   }
+  const chaosModDebugSocket =
+    bridgeConfig.chaosmod.enabled && bridgeConfig.chaosmod.preferDirectSocket
+      ? createChaosModDebugSocketClient(bridgeConfig.chaosmod)
+      : null
 
   const chaosModCatalogPayload = await prepareChaosModCatalog(bridgeConfig.chaosmod)
   chaosModState.catalog = chaosModCatalogPayload.catalog
@@ -448,6 +553,20 @@ async function main() {
 
     if (!messagePayload.gtaChaosEffectId) {
       throw new Error('No llego gtaChaosEffectId en el evento de GTA.')
+    }
+
+    if (chaosModDebugSocket?.triggerEffect(messagePayload.gtaChaosEffectId)) {
+      console.log(
+        `[chaosmod] efecto disparado por debug socket: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}`,
+      )
+      return
+    }
+
+    if (bridgeConfig.chaosmod.preferDirectSocket && !bridgeConfig.chaosmod.allowMenuFallback) {
+      const lastSocketError = chaosModDebugSocket?.getLastError()
+      throw new Error(
+        `El debug socket de ChaosMod no esta disponible. Recarga el mod o reinicia GTA para habilitar el disparo directo.${lastSocketError ? ` Ultimo error: ${lastSocketError}` : ''}`,
+      )
     }
 
     const targetIndex = chaosModState.catalog.findIndex(
@@ -537,6 +656,7 @@ async function main() {
   const shutdown = async () => {
     stopMinecraft()
     stopGta()
+    chaosModDebugSocket?.stop()
     minecraftServer?.server.close()
     gtaServer?.server.close()
 

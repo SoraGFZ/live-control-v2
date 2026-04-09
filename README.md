@@ -110,15 +110,16 @@ Si tienes ChaosMod instalado en `C:\Program Files\Epic Games\GTAV\chaosmod`, el 
 ### Lo que hace
 
 - Sincroniza el catalogo de efectos con el panel.
-- Habilita `EnableDebugMenu=1` en `config.ini` para poder usar el menu interno del mod.
-- Cuando una accion GTA usa modo `ChaosMod`, el bridge enfoca `GTA5`, abre el menu del mod (`CTRL + ,`), navega hasta el efecto y lo dispara.
+- Intenta habilitar el debug socket creando `chaosmod/.enabledebugsocket`.
+- Prioriza el disparo directo por socket hacia ChaosMod para evitar animaciones visibles y errores de seleccion.
+- Puede usar el menu interno del mod como fallback solo si activas `allowMenuFallback`.
 
 ### Importante
 
-- La primera vez conviene recargar el mod o reiniciar el juego para que ChaosMod tome `EnableDebugMenu=1`.
-- El bridge asume que el selector del menu de ChaosMod arranca arriba al principio de la sesion.
-- Si abres ese menu manualmente y lo dejas en otra posicion, el bridge puede desincronizarse.
-- Si eso pasa, recarga el mod y vuelve a abrir `npm run bridge:start`.
+- La primera vez conviene recargar el mod o reiniciar el juego para que ChaosMod detecte `.enabledebugsocket`.
+- Si el debug socket no abre, el bridge ahora falla de forma segura por defecto en vez de navegar el menu visual y disparar otro efecto.
+- Si aun asi quieres el comportamiento viejo, puedes poner `"allowMenuFallback": true` en `bridge-config.json`.
+- Solo en ese modo fallback, el bridge usa `EnableDebugMenu=1`, asume que el selector arranca arriba y puede desincronizarse si mueves el menu a mano.
 
 ## Proteccion basica
 

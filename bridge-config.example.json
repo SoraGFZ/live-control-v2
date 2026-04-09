@@ -20,8 +20,13 @@
     "enabled": true,
     "modPath": "C:\\Program Files\\Epic Games\\GTAV\\chaosmod",
     "autoEnableEffectMenu": true,
+    "autoEnableDebugSocket": true,
+    "preferDirectSocket": true,
+    "allowMenuFallback": false,
     "assumeTopSelectionOnStartup": true,
     "gtaProcessName": "GTA5",
+    "debugSocketPort": 31819,
+    "debugSocketReconnectDelayMs": 3000,
     "menuOpenDelayMs": 220,
     "keyDelayMs": 35
   }
