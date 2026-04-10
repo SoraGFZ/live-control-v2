@@ -434,6 +434,94 @@
   gap: 18px;
 }
 
+.onboarding-card {
+  display: grid;
+  gap: 18px;
+}
+
+.onboarding-card-collapsed {
+  gap: 10px;
+}
+
+.onboarding-head {
+  align-items: flex-start;
+}
+
+.onboarding-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.onboarding-progress {
+  display: grid;
+  gap: 10px;
+}
+
+.onboarding-progress-track {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.onboarding-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #72dbc8, #ffb35c);
+  box-shadow: 0 0 18px rgba(114, 219, 200, 0.28);
+}
+
+.onboarding-step-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.onboarding-step {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.onboarding-step.complete {
+  border-color: rgba(126, 230, 190, 0.3);
+  background: rgba(126, 230, 190, 0.08);
+}
+
+.onboarding-step.optional {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.onboarding-step-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.onboarding-step-meta {
+  display: grid;
+  gap: 8px;
+}
+
+.onboarding-step h4 {
+  margin: 0;
+  font-size: 1.04rem;
+}
+
+.onboarding-step p {
+  margin: 0;
+  color: #b6c1c6;
+  line-height: 1.5;
+}
+
 .game-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -2151,6 +2239,7 @@
   .hero-panel,
   .metric-grid,
   .overview-support-grid,
+  .onboarding-step-list,
   .pipeline-grid,
   .card-grid,
   .workspace-launcher-grid,
@@ -2178,6 +2267,7 @@
   .music-grid,
   .event-modal-grid,
   .diagnostic-grid,
+  .onboarding-head,
   .workspace-header-main,
   .workspace-header-top,
   .workspace-header-actions,
@@ -2216,7 +2306,8 @@
   .section-header,
   .card-top,
   .modal-head,
-  .overlay-card-head {
+  .overlay-card-head,
+  .onboarding-step-head {
     flex-direction: column;
     align-items: start;
   }

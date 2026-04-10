@@ -96,6 +96,7 @@ export const DEFAULT_APP_STATE = {
     minecraftChatMirrorTarget: '@a',
     minecraftChatMirrorPrefix: '[TikTok]',
     minecraftChatMirrorSkipCommands: true,
+    showOnboardingGuide: true,
     dashboardKey: '',
     overlayKey: '',
   },

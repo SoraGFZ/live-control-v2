@@ -2212,11 +2212,16 @@ function DashboardApp() {
       bridgePort={serverStatus.server.port}
       isDesktopApp={desktopContext.isDesktopApp}
       isImportingBackup={isImportingBackup}
+      onConnectSpotify={connectSpotifyMusic}
+      onConnectTikTokQuick={quickConnectTikTokFromHeader}
       onCreateAction={openCreateActionModal}
       onCreateTrigger={openCreateTriggerModal}
       onExportBackup={exportConfigurationBackup}
       onImportBackup={openBackupImportPicker}
+      onJumpToSection={scrollToSection}
+      onToggleOnboardingGuide={(nextValue) => updateProfileField('showOnboardingGuide', nextValue)}
       overlayUrl={preferredOverlayUrl}
+      profile={appState.profile}
       readyOutputCount={readyOutputs.size}
       serverError={serverError}
       serverStatus={serverStatus}
@@ -3546,11 +3551,16 @@ function OverviewSection({
   bridgePort,
   isDesktopApp,
   isImportingBackup,
+  onConnectSpotify,
+  onConnectTikTokQuick,
   onCreateAction,
   onCreateTrigger,
   onExportBackup,
   onImportBackup,
+  onJumpToSection,
+  onToggleOnboardingGuide,
   overlayUrl,
+  profile,
   readyOutputCount,
   serverError,
   serverStatus,
@@ -3613,6 +3623,93 @@ function OverviewSection({
       detail: isDesktopApp ? 'Beta empaquetada lista para pruebas cerradas' : 'Panel web / navegador',
     },
   ]
+  const exportedBackupRecently = /backup exportado/i.test(String(backupFeedback || ''))
+  const setupChecklist = [
+    {
+      id: 'public-overlay',
+      label: 'Configura el overlay publico',
+      complete: Boolean(serverStatus.overlayMirror?.configured),
+      detail: serverStatus.overlayMirror?.configured
+        ? serverStatus.overlayMirror?.targetBaseUrl || 'Overlay publico listo para LIVE Studio.'
+        : 'Completa la URL publica base y usa el main-stage en LIVE Studio.',
+      actionLabel: 'Ir a Overlay',
+      onAction: () => onJumpToSection('overlay'),
+    },
+    {
+      id: 'tiktok-live',
+      label: 'Conecta tu LIVE de TikTok',
+      complete: Boolean(serverStatus.tikTok.connected),
+      detail: serverStatus.tikTok.connected
+        ? `Live enlazado${serverStatus.tikTok.roomId ? ` · Room ${serverStatus.tikTok.roomId}` : ''}`
+        : 'Conecta el username del live para recibir follows, gifts, emotes y comentarios.',
+      actionLabel: serverStatus.tikTok.connected ? 'Ir a TikTok' : 'Conectar live',
+      onAction: () => (serverStatus.tikTok.connected ? onJumpToSection('live-ops') : onConnectTikTokQuick()),
+    },
+    {
+      id: 'first-action',
+      label: 'Crea tu primera accion',
+      complete: actionCount > 0,
+      detail: actionCount > 0
+        ? `${actionCount} accion(es) lista(s) para reutilizar en el directo.`
+        : 'Define que debe pasar cuando se active un regalo, comentario o evento del live.',
+      actionLabel: actionCount > 0 ? 'Ver acciones' : 'Nueva accion',
+      onAction: () => (actionCount > 0 ? onJumpToSection('actions') : onCreateAction()),
+    },
+    {
+      id: 'first-event',
+      label: 'Conecta un evento real',
+      complete: triggerCount > 0,
+      detail: triggerCount > 0
+        ? `${triggerCount} evento(s) listo(s) para disparar acciones.`
+        : 'Crea al menos un evento de follow, gift, comentario o emote para completar el flujo.',
+      actionLabel: triggerCount > 0 ? 'Ver eventos' : 'Nuevo evento',
+      onAction: () => (triggerCount > 0 ? onJumpToSection('actions') : onCreateTrigger()),
+    },
+    {
+      id: 'spotify',
+      label: 'Activa Song Request',
+      optional: true,
+      complete: Boolean(serverStatus.music.connected),
+      detail: serverStatus.music.connected
+        ? serverStatus.music.accountLabel || 'Spotify ya esta conectado para la cola de canciones.'
+        : serverStatus.music.configured
+          ? 'Spotify esta configurado. Puedes conectarlo cuando quieras.'
+          : 'Opcional: termina la configuracion de Spotify para usar !play, !skip y !quitar.',
+      actionLabel: serverStatus.music.connected
+        ? 'Ir a Musica'
+        : serverStatus.music.configured
+          ? 'Conectar Spotify'
+          : 'Abrir Musica',
+      onAction: () => (
+        serverStatus.music.connected
+          ? onJumpToSection('music')
+          : serverStatus.music.configured
+            ? onConnectSpotify()
+            : onJumpToSection('music')
+      ),
+    },
+    {
+      id: 'backup',
+      label: 'Guarda un backup antes de compartir la beta',
+      optional: true,
+      complete: exportedBackupRecently,
+      detail: exportedBackupRecently
+        ? 'Ya exportaste un backup reciente de esta sesion.'
+        : 'Recomendado: exporta tu configuracion para no perder acciones, eventos y widgets al probar otra build.',
+      actionLabel: 'Exportar backup',
+      onAction: onExportBackup,
+    },
+  ]
+  const requiredSetupSteps = setupChecklist.filter((step) => !step.optional)
+  const completedRequiredSteps = requiredSetupSteps.filter((step) => step.complete).length
+  const setupProgressRatio = requiredSetupSteps.length > 0
+    ? completedRequiredSteps / requiredSetupSteps.length
+    : 1
+  const showOnboardingGuide = profile?.showOnboardingGuide !== false
+  const overlayPreviewUrl =
+    serverStatus.overlayMirror?.targetBaseUrl
+      ? `${serverStatus.overlayMirror.targetBaseUrl.replace(/\/+$/, '')}/overlay/main-stage`
+      : overlayUrl
 
   return (
     <div className="workspace-stage-stack">
@@ -3628,6 +3725,96 @@ function OverviewSection({
         readyOutputCount={readyOutputCount}
         triggerCount={triggerCount}
       />
+
+      {showOnboardingGuide ? (
+        <article className="surface-card overview-card onboarding-card">
+          <div className="card-top onboarding-head">
+            <div>
+              <h3>Guia inicial para la beta</h3>
+              <p>Te marca lo minimo que conviene tener listo antes de pasarsela a otro streamer o salir en vivo.</p>
+            </div>
+            <div className="onboarding-head-actions">
+              <span className={`status-chip ${completedRequiredSteps === requiredSetupSteps.length ? 'ok' : 'warn'}`}>
+                {completedRequiredSteps}/{requiredSetupSteps.length} pasos clave
+              </span>
+              <button
+                type="button"
+                className="ghost-button compact-button"
+                onClick={() => onToggleOnboardingGuide(false)}
+              >
+                Ocultar guia
+              </button>
+            </div>
+          </div>
+
+          <div className="onboarding-progress">
+            <div className="onboarding-progress-track">
+              <div
+                className="onboarding-progress-fill"
+                style={{ width: `${Math.max(8, Math.round(setupProgressRatio * 100))}%` }}
+              />
+            </div>
+            <span className="support-copy">
+              {completedRequiredSteps === requiredSetupSteps.length
+                ? 'Ya tienes lo esencial listo para una beta cerrada.'
+                : 'Completa estos pasos y la app ya queda mucho mas preparada para testers reales.'}
+            </span>
+          </div>
+
+          <div className="onboarding-step-list">
+            {setupChecklist.map((step, index) => (
+              <article
+                key={step.id}
+                className={`onboarding-step ${step.complete ? 'complete' : ''} ${step.optional ? 'optional' : ''}`}
+              >
+                <div className="onboarding-step-head">
+                  <div className="onboarding-step-meta">
+                    <span className="step-index">
+                      {step.optional ? 'Opcional' : `Paso ${index + 1}`}
+                    </span>
+                    <h4>{step.label}</h4>
+                  </div>
+                  <span className={`status-chip ${step.complete ? 'ok' : step.optional ? 'warn' : 'off'}`}>
+                    {step.complete ? 'Listo' : step.optional ? 'Pendiente' : 'Falta'}
+                  </span>
+                </div>
+
+                <p>{step.detail}</p>
+
+                <div className="row-actions">
+                  <button type="button" className="secondary-button compact-button" onClick={step.onAction}>
+                    {step.actionLabel}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {overlayPreviewUrl ? (
+            <p className="support-copy">
+              Overlay principal listo para copiar:
+              {' '}
+              <code>{overlayPreviewUrl}</code>
+            </p>
+          ) : null}
+        </article>
+      ) : (
+        <article className="surface-card overview-card onboarding-card onboarding-card-collapsed">
+          <div className="card-top onboarding-head">
+            <div>
+              <h3>Guia inicial oculta</h3>
+              <p>Si sumas un tester nuevo o cambias de PC, puedes volver a mostrar la checklist completa.</p>
+            </div>
+            <button
+              type="button"
+              className="secondary-button compact-button"
+              onClick={() => onToggleOnboardingGuide(true)}
+            >
+              Mostrar guia
+            </button>
+          </div>
+        </article>
+      )}
 
       <div className="overview-support-grid">
         <article className="surface-card overview-card">
