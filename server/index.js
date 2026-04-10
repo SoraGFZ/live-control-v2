@@ -2878,6 +2878,13 @@ app.get('/api/overlay/:slug/latest-event', requireOverlayAccess, (request, respo
   })
 })
 
+app.get('/overlay/:slug', requireOverlayAccess, (request, response) => {
+  response.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate')
+  response.setHeader('Pragma', 'no-cache')
+  response.setHeader('Expires', '0')
+  response.type('html').send(renderStandaloneOverlayHtml(request.params.slug))
+})
+
 app.post('/api/mirror/overlay/state', requireMirrorAccess, async (request, response) => {
   const previousState = store.getState()
   const incomingPayload = request.body?.payload || request.body || {}
@@ -3053,6 +3060,278 @@ async function renderDistIndexHtml() {
   return rawHtml
     .replace(/(\/assets\/[^"'?]+\.(?:js|css))(["'])/g, `$1?v=${staticAssetVersion}$2`)
     .replace(/(\/favicon\.svg)(["'])/g, `$1?v=${staticAssetVersion}$2`)
+}
+
+function renderStandaloneOverlayHtml(slug) {
+  const serializedSlug = JSON.stringify(String(slug || 'main-stage'))
+
+  return `<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Control Overlay</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      body {
+        font-family: "Space Grotesk", sans-serif;
+        color: #fff;
+      }
+
+      #overlay-root {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .overlay-card {
+        position: absolute;
+        left: 50%;
+        bottom: 36px;
+        transform: translateX(-50%);
+        width: min(740px, calc(100vw - 48px));
+        padding: 28px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background:
+          linear-gradient(135deg, rgba(255, 112, 46, 0.28), rgba(11, 18, 24, 0.94) 55%),
+          rgba(8, 12, 16, 0.88);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.36);
+        backdrop-filter: blur(16px);
+      }
+
+      .overlay-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+
+      .overlay-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: #dce8ea;
+      }
+
+      .overlay-card h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+      }
+
+      .overlay-card p {
+        margin: 0;
+        font-size: 1rem;
+        color: #e8eef0;
+      }
+
+      .overlay-media-card {
+        width: min(100%, 360px);
+        margin-top: 18px;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.16);
+        display: block;
+      }
+
+      .overlay-media-clean {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+        object-fit: contain;
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="overlay-root"></div>
+    <script>
+      const overlaySlug = ${serializedSlug};
+      const overlayRoot = document.getElementById('overlay-root');
+      const query = new URLSearchParams(window.location.search);
+      const overlayKey = query.get('key') || '';
+      let latestCursor = Date.now();
+      let latestEventId = '';
+      let hideTimeoutId = null;
+
+      function detectMediaKind(mediaUrl) {
+        const value = String(mediaUrl || '').toLowerCase();
+        if (/\\.(mp4|webm|ogg)(\\?|#|$)/.test(value)) return 'video';
+        if (/\\.(gif|png|jpg|jpeg|webp|svg)(\\?|#|$)/.test(value)) return 'image';
+        return 'none';
+      }
+
+      function buildApiPath(pathname, params = {}) {
+        const search = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && String(value).trim() !== '') {
+            search.set(key, String(value));
+          }
+        });
+        const suffix = search.toString();
+        return suffix ? pathname + '?' + suffix : pathname;
+      }
+
+      function clearOverlay() {
+        window.clearTimeout(hideTimeoutId);
+        hideTimeoutId = null;
+        overlayRoot.innerHTML = '';
+      }
+
+      function scheduleHide(eventPayload, mediaKind) {
+        window.clearTimeout(hideTimeoutId);
+        const baseDuration = Math.max(0, Number(eventPayload?.durationMs || 0)) || 5000;
+        const duration = mediaKind === 'video'
+          ? Math.max(baseDuration, 12000)
+          : mediaKind === 'image'
+            ? Math.max(baseDuration, 6500)
+            : baseDuration;
+        hideTimeoutId = window.setTimeout(clearOverlay, duration);
+      }
+
+      function renderCleanImage(eventPayload) {
+        const image = document.createElement('img');
+        image.className = 'overlay-media-clean';
+        image.alt = eventPayload.title || 'overlay media';
+        image.src = eventPayload.mediaUrl;
+        overlayRoot.innerHTML = '';
+        overlayRoot.appendChild(image);
+        scheduleHide(eventPayload, 'image');
+      }
+
+      function renderCleanVideo(eventPayload) {
+        const video = document.createElement('video');
+        video.className = 'overlay-media-clean';
+        video.src = eventPayload.mediaUrl;
+        video.autoplay = true;
+        video.muted = true;
+        video.defaultMuted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        overlayRoot.innerHTML = '';
+        overlayRoot.appendChild(video);
+
+        const beginPlayback = () => {
+          try {
+            video.currentTime = 0;
+          } catch {}
+          video.play().catch(() => {});
+        };
+
+        video.addEventListener('loadeddata', beginPlayback, { once: true });
+        video.addEventListener('canplay', beginPlayback, { once: true });
+        beginPlayback();
+        scheduleHide(eventPayload, 'video');
+      }
+
+      function renderAlert(eventPayload, mediaKind) {
+        const card = document.createElement('article');
+        card.className = 'overlay-card';
+        card.innerHTML = \`
+          <div class="overlay-card-head">
+            <span class="overlay-label">\${eventPayload.sourceLabel || ''}</span>
+            <span class="overlay-label">Live Control Studio</span>
+          </div>
+          <h1>\${eventPayload.title || ''}</h1>
+          <p>\${eventPayload.message || ''}</p>
+        \`;
+
+        if (mediaKind === 'image') {
+          const image = document.createElement('img');
+          image.className = 'overlay-media-card';
+          image.alt = eventPayload.title || 'overlay media';
+          image.src = eventPayload.mediaUrl;
+          card.appendChild(image);
+        } else if (mediaKind === 'video') {
+          const video = document.createElement('video');
+          video.className = 'overlay-media-card';
+          video.src = eventPayload.mediaUrl;
+          video.autoplay = true;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.preload = 'auto';
+          card.appendChild(video);
+          video.play().catch(() => {});
+        }
+
+        overlayRoot.innerHTML = '';
+        overlayRoot.appendChild(card);
+        scheduleHide(eventPayload, mediaKind);
+      }
+
+      function renderEvent(eventPayload) {
+        if (!eventPayload?.id || eventPayload.id === latestEventId) {
+          return;
+        }
+
+        latestEventId = eventPayload.id;
+        latestCursor = Math.max(latestCursor, Number(eventPayload.createdAt || Date.now()));
+
+        const outputs = Array.isArray(eventPayload.outputs) ? eventPayload.outputs : [];
+        const mediaKind = detectMediaKind(eventPayload.mediaUrl);
+        const shouldRenderCleanMedia =
+          ['image', 'video'].includes(mediaKind)
+          && outputs.includes('overlayMedia')
+          && !outputs.includes('overlayAlert');
+
+        if (shouldRenderCleanMedia) {
+          if (mediaKind === 'image') {
+            renderCleanImage(eventPayload);
+            return;
+          }
+
+          if (mediaKind === 'video') {
+            renderCleanVideo(eventPayload);
+            return;
+          }
+        }
+
+        renderAlert(eventPayload, mediaKind);
+      }
+
+      async function pollLatestEvent() {
+        const requestPath = buildApiPath('/api/overlay/' + encodeURIComponent(overlaySlug) + '/latest-event', {
+          after: latestCursor,
+          key: overlayKey,
+        });
+
+        try {
+          const response = await fetch(requestPath, { cache: 'no-store' });
+          if (!response.ok) throw new Error('poll failed');
+
+          const payload = await response.json();
+
+          if (Number.isFinite(Number(payload?.cursor || 0)) && Number(payload.cursor) > 0) {
+            latestCursor = Math.max(latestCursor, Number(payload.cursor));
+          }
+
+          if (payload?.event) {
+            renderEvent(payload.event);
+          }
+        } catch {
+          // noop
+        } finally {
+          window.setTimeout(pollLatestEvent, 800);
+        }
+      }
+
+      pollLatestEvent();
+    </script>
+  </body>
+</html>`
 }
 
 app.get('/api/music/spotify/callback', async (request, response) => {
