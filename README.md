@@ -42,6 +42,7 @@ El `redirect_uri` debe apuntar a:
 ### Lo que ya hace
 
 - Conectar tu cuenta de Spotify desde la seccion `Musica`.
+- Mantener la sesion de Spotify entre reinicios del backend usando un archivo local del servidor.
 - Configurar los comandos del chat:
   - `!play artista cancion`
   - `!skip`

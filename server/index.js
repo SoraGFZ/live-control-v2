@@ -39,6 +39,7 @@ import {
   refreshSpotifyAccessToken,
   spotifyApiRequest,
 } from './spotify.js'
+import { SpotifySessionStore } from './spotify-session-store.js'
 import { StateStore } from './state-store.js'
 import { getStateFilePath } from './storage-paths.js'
 
@@ -56,6 +57,8 @@ const serverStartedAt = Date.now()
 
 const store = new StateStore()
 await store.load()
+const spotifySessionStore = new SpotifySessionStore()
+const persistedSpotifySession = await spotifySessionStore.load()
 await ensureMediaDirectory()
 
 const app = express()
@@ -137,6 +140,10 @@ let spotifySession = {
   currentPlayback: null,
   lastSyncAt: null,
   lastError: '',
+}
+spotifySession = {
+  ...spotifySession,
+  ...persistedSpotifySession,
 }
 
 function normalizeTikTokUsername(username) {
@@ -304,6 +311,24 @@ function buildMusicStatus(state = store.getState()) {
   }
 }
 
+async function persistSpotifySession() {
+  await spotifySessionStore.setSession({
+    accessToken: spotifySession.accessToken,
+    refreshToken: spotifySession.refreshToken,
+    expiresAt: spotifySession.expiresAt,
+    scope: spotifySession.scope,
+    authState: spotifySession.authState,
+    connectedAt: spotifySession.connectedAt,
+    accountId: spotifySession.accountId,
+    accountLabel: spotifySession.accountLabel,
+    accountProduct: spotifySession.accountProduct,
+    devices: spotifySession.devices,
+    currentPlayback: spotifySession.currentPlayback,
+    lastSyncAt: spotifySession.lastSyncAt,
+    lastError: spotifySession.lastError,
+  })
+}
+
 async function persistMusicState(nextMusic) {
   const currentState = store.getState()
   const nextState = mergeStateWithDefaults({
@@ -391,6 +416,7 @@ async function ensureSpotifyAccessToken() {
     scope: refreshedToken.scope || spotifySession.scope,
     lastError: '',
   }
+  await persistSpotifySession()
 
   return spotifySession.accessToken
 }
@@ -457,6 +483,7 @@ async function syncSpotifyPlaybackState({ queueNextIfNeeded = true } = {}) {
       lastSyncAt: Date.now(),
       lastError: '',
     }
+    await persistSpotifySession()
 
     const originalMusicState = getMusicStateSnapshot()
     let musicState = {
@@ -540,6 +567,7 @@ async function syncSpotifyPlaybackState({ queueNextIfNeeded = true } = {}) {
         ...spotifySession,
         lastError: error.message,
       }
+      void persistSpotifySession()
       broadcastStatus()
       throw error
     })
@@ -2390,6 +2418,7 @@ app.get('/api/music/spotify/callback', async (request, response) => {
       connectedAt: Date.now(),
       lastError: '',
     }
+    await persistSpotifySession()
 
     await syncSpotifyPlaybackState({ queueNextIfNeeded: false })
     broadcastSystemMessage('info', 'Spotify quedo conectado y listo para Song Request.')
@@ -2400,6 +2429,7 @@ app.get('/api/music/spotify/callback', async (request, response) => {
       authState: '',
       lastError: error.message,
     }
+    await persistSpotifySession()
     response.redirect(`${redirectBaseUrl}/?spotify=error#music`)
   }
 })
@@ -2503,6 +2533,7 @@ app.post('/api/music/spotify/connect', async (request, response) => {
     authState: randomBytes(16).toString('hex'),
     lastError: '',
   }
+  await persistSpotifySession()
 
   response.json({
     authorizationUrl: buildSpotifyAuthorizeUrl({
@@ -2516,6 +2547,7 @@ app.post('/api/music/spotify/connect', async (request, response) => {
 
 app.post('/api/music/spotify/disconnect', async (_request, response) => {
   resetSpotifySession()
+  await spotifySessionStore.clear()
   broadcastSystemMessage('info', 'Spotify se desconecto del modulo de musica.')
   broadcastStatus()
   response.json(buildMusicStatus())
@@ -2799,6 +2831,12 @@ const spotifyPollingIntervalId = setInterval(() => {
     // noop
   })
 }, 15000)
+
+if (spotifySession.refreshToken) {
+  void syncSpotifyPlaybackState({ queueNextIfNeeded: false }).catch(() => {
+    // noop
+  })
+}
 
 httpServer.on('upgrade', (request, socket, head) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`)

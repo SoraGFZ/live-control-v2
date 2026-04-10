@@ -17,3 +17,7 @@ export function getMediaDirectoryPath() {
 export function getStateFilePath() {
   return path.join(getStorageDirectory(), 'live-control-state.json')
 }
+
+export function getSpotifySessionFilePath() {
+  return path.join(getStorageDirectory(), 'spotify-session.json')
+}
