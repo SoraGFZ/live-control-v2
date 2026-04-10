@@ -3627,6 +3627,24 @@ httpServer.on('upgrade', (request, socket, head) => {
 app.use('/media', express.static(getMediaDirectory()))
 
 if (existsSync(distIndexFile)) {
+  app.use((request, response, next) => {
+    const requestPath = String(request.path || '')
+    const isHtmlShellRequest =
+      request.method === 'GET'
+      && !requestPath.startsWith('/api')
+      && !requestPath.startsWith('/ws')
+      && !requestPath.startsWith('/media/')
+      && !path.extname(requestPath)
+
+    if (isHtmlShellRequest) {
+      response.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate')
+      response.setHeader('Pragma', 'no-cache')
+      response.setHeader('Expires', '0')
+    }
+
+    next()
+  })
+
   app.use(express.static(distDirectory))
 
   app.get(/^(?!\/api).*/, (_request, response) => {
