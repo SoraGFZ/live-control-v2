@@ -5576,6 +5576,7 @@ function OverlayScreen({ slug }) {
   const [overlayError, setOverlayError] = useState('')
   const [mediaReady, setMediaReady] = useState(false)
   const seenEventIds = useRef(new Set())
+  const latestEventCursorRef = useRef(Date.now())
   const queuedEventsRef = useRef([])
   const isShowingEventRef = useRef(false)
   const audioRef = useRef(null)
@@ -5588,7 +5589,7 @@ function OverlayScreen({ slug }) {
     && currentEvent.outputs?.includes('overlayMedia')
     && !currentEvent.outputs?.includes('overlayAlert')
 
-  function playNextEvent() {
+  const playNextEvent = useCallback(() => {
     if (isShowingEventRef.current) {
       return
     }
@@ -5602,7 +5603,26 @@ function OverlayScreen({ slug }) {
     isShowingEventRef.current = true
     setMediaReady(false)
     setCurrentEvent(nextEvent)
-  }
+  }, [])
+
+  const enqueueEvent = useCallback((eventPayload) => {
+    if (!eventPayload?.id || seenEventIds.current.has(eventPayload.id)) {
+      return
+    }
+
+    seenEventIds.current.add(eventPayload.id)
+
+    const eventCreatedAt = Number(eventPayload.createdAt || 0)
+
+    if (Number.isFinite(eventCreatedAt) && eventCreatedAt > 0) {
+      latestEventCursorRef.current = Math.max(latestEventCursorRef.current, eventCreatedAt)
+    } else {
+      latestEventCursorRef.current = Date.now()
+    }
+
+    queuedEventsRef.current.push(eventPayload)
+    playNextEvent()
+  }, [playNextEvent])
 
   useEffect(() => {
     document.documentElement.dataset.route = 'overlay'
@@ -5612,16 +5632,6 @@ function OverlayScreen({ slug }) {
     let reconnectTimeoutId
     let isStopped = false
     let canConnectSocket = false
-
-    function enqueueEvent(eventPayload) {
-      if (!eventPayload?.id || seenEventIds.current.has(eventPayload.id)) {
-        return
-      }
-
-      seenEventIds.current.add(eventPayload.id)
-      queuedEventsRef.current.push(eventPayload)
-      playNextEvent()
-    }
 
     async function loadProfile() {
       try {
@@ -5708,7 +5718,51 @@ function OverlayScreen({ slug }) {
       window.clearTimeout(reconnectTimeoutId)
       socket?.close()
     }
-  }, [overlayAccessKey, slug])
+  }, [enqueueEvent, overlayAccessKey, slug])
+
+  useEffect(() => {
+    let pollTimeoutId
+    let cancelled = false
+
+    async function pollLatestEvent() {
+      const searchParams = new URLSearchParams()
+      searchParams.set('after', String(latestEventCursorRef.current || Date.now()))
+
+      if (overlayAccessKey) {
+        searchParams.set('key', overlayAccessKey)
+      }
+
+      try {
+        const payload = await requestJson(
+          `/api/overlay/${encodeURIComponent(slug)}/latest-event?${searchParams.toString()}`,
+        )
+
+        if (payload?.event) {
+          enqueueEvent(payload.event)
+        }
+
+        if (Number.isFinite(Number(payload?.cursor || 0)) && Number(payload.cursor) > 0) {
+          latestEventCursorRef.current = Math.max(
+            latestEventCursorRef.current,
+            Number(payload.cursor),
+          )
+        }
+      } catch {
+        return
+      } finally {
+        if (!cancelled) {
+          pollTimeoutId = window.setTimeout(pollLatestEvent, 1200)
+        }
+      }
+    }
+
+    pollTimeoutId = window.setTimeout(pollLatestEvent, 900)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(pollTimeoutId)
+    }
+  }, [enqueueEvent, overlayAccessKey, slug])
 
   useEffect(() => {
     if (!currentEvent) {
@@ -5759,7 +5813,7 @@ function OverlayScreen({ slug }) {
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [currentEvent, mediaKind, mediaReady, shouldRenderCleanMedia])
+  }, [currentEvent, mediaKind, mediaReady, playNextEvent, shouldRenderCleanMedia])
 
   useEffect(() => {
     if (!shouldRenderCleanMedia || mediaKind !== 'video' || !currentEvent) {

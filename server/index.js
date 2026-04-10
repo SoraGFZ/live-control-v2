@@ -121,6 +121,7 @@ let minecraftRconStatus = {
   lastError: '',
   lastCommandAt: null,
 }
+let latestOverlayEvent = null
 let smartBarRuntime = {
   sessionStartedAt: null,
   lastSessionDurationMs: 0,
@@ -376,6 +377,17 @@ function buildMirroredOverlayEvent(eventPayload = {}) {
     durationMs: Math.max(0, Number(eventPayload?.durationMs || 0)) || 5000,
     createdAt: Number(eventPayload?.createdAt || Date.now()),
   }
+}
+
+function rememberLatestOverlayEvent(eventPayload = {}) {
+  const normalizedEvent = buildMirroredOverlayEvent(eventPayload)
+
+  if (!normalizedEvent.id) {
+    return null
+  }
+
+  latestOverlayEvent = normalizedEvent
+  return normalizedEvent
 }
 
 function resolveMirroredMediaReference(mediaUrl) {
@@ -2369,6 +2381,8 @@ async function dispatchAction(action, sourceEvent, reason = 'manual') {
   const overlayEvent = buildOverlayEvent(action, state.profile, sourceEvent)
   const bridgeResults = {}
 
+  rememberLatestOverlayEvent(overlayEvent)
+
   broadcast('overlay', { type: 'overlay-event', payload: overlayEvent })
   broadcast('app', { type: 'overlay-event', payload: overlayEvent })
 
@@ -2846,6 +2860,24 @@ app.get('/api/overlay/:slug', requireOverlayAccess, (_request, response) => {
   response.json(getPublicOverlayPayload())
 })
 
+app.get('/api/overlay/:slug/latest-event', requireOverlayAccess, (request, response) => {
+  const afterCreatedAt = Number(request.query?.after || 0)
+  const normalizedAfterCreatedAt = Number.isFinite(afterCreatedAt) ? afterCreatedAt : 0
+
+  if (!latestOverlayEvent || Number(latestOverlayEvent.createdAt || 0) <= normalizedAfterCreatedAt) {
+    response.json({
+      event: null,
+      cursor: normalizedAfterCreatedAt,
+    })
+    return
+  }
+
+  response.json({
+    event: latestOverlayEvent,
+    cursor: Number(latestOverlayEvent.createdAt || Date.now()),
+  })
+})
+
 app.post('/api/mirror/overlay/state', requireMirrorAccess, async (request, response) => {
   const previousState = store.getState()
   const incomingPayload = request.body?.payload || request.body || {}
@@ -2895,7 +2927,7 @@ app.post('/api/mirror/overlay/state', requireMirrorAccess, async (request, respo
 })
 
 app.post('/api/mirror/overlay/event', requireMirrorAccess, (request, response) => {
-  const incomingEvent = buildMirroredOverlayEvent(request.body?.event || request.body || {})
+  const incomingEvent = rememberLatestOverlayEvent(request.body?.event || request.body || {})
 
   broadcast('overlay', { type: 'overlay-event', payload: incomingEvent })
   broadcast('app', { type: 'overlay-event', payload: incomingEvent })
