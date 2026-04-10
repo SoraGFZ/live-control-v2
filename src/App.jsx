@@ -5579,6 +5579,7 @@ function OverlayScreen({ slug }) {
   const queuedEventsRef = useRef([])
   const isShowingEventRef = useRef(false)
   const audioRef = useRef(null)
+  const videoRef = useRef(null)
   const overlayAccessKey = readOverlayAccessKeyFromUrl()
   const mediaKind = detectMediaKind(currentEvent?.mediaUrl)
   const shouldRenderCleanMedia =
@@ -5760,6 +5761,48 @@ function OverlayScreen({ slug }) {
     }
   }, [currentEvent, mediaKind, mediaReady, shouldRenderCleanMedia])
 
+  useEffect(() => {
+    if (!shouldRenderCleanMedia || mediaKind !== 'video' || !currentEvent) {
+      return undefined
+    }
+
+    const videoElement = videoRef.current
+
+    if (!videoElement) {
+      return undefined
+    }
+
+    let cancelled = false
+
+    async function ensureVideoPlayback() {
+      try {
+        videoElement.muted = true
+        videoElement.defaultMuted = true
+        videoElement.playsInline = true
+        videoElement.currentTime = 0
+        await videoElement.play()
+
+        if (!cancelled) {
+          setMediaReady(true)
+        }
+      } catch {
+        if (!cancelled) {
+          window.setTimeout(() => {
+            if (!cancelled) {
+              void ensureVideoPlayback()
+            }
+          }, 350)
+        }
+      }
+    }
+
+    void ensureVideoPlayback()
+
+    return () => {
+      cancelled = true
+    }
+  }, [currentEvent, mediaKind, shouldRenderCleanMedia])
+
   return (
     <div className="overlay-screen">
       <div className={`overlay-stage ${shouldRenderCleanMedia ? 'clean-media' : ''}`}>
@@ -5782,6 +5825,7 @@ function OverlayScreen({ slug }) {
 
             {mediaKind === 'video' ? (
               <video
+                ref={videoRef}
                 className="overlay-media overlay-media-clean"
                 src={currentEvent.mediaUrl}
                 autoPlay
