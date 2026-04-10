@@ -2376,8 +2376,73 @@ app.get('/api/overlay/:slug', requireOverlayAccess, (_request, response) => {
   response.json(getPublicOverlayPayload())
 })
 
+function renderSpotifyDesktopCallbackPage({ success, message }) {
+  const accentColor = success ? '#7ee6be' : '#ff7a7a'
+  const title = success ? 'Spotify ya quedo conectado.' : 'No pudimos conectar Spotify.'
+
+  return `<!doctype html>
+    <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Live Control Beta</title>
+        <style>
+          :root {
+            color-scheme: dark;
+            font-family: "Segoe UI", system-ui, sans-serif;
+          }
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background:
+              radial-gradient(circle at top, rgba(18, 152, 116, 0.16), transparent 32%),
+              linear-gradient(145deg, #071018 0%, #0b151d 50%, #04080d 100%);
+            color: #f7f8fa;
+          }
+          main {
+            width: min(560px, calc(100vw - 48px));
+            padding: 32px;
+            border-radius: 28px;
+            background: rgba(8, 16, 24, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+          }
+          .eyebrow {
+            margin: 0 0 12px;
+            font-size: 12px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: ${accentColor};
+          }
+          h1 {
+            margin: 0 0 16px;
+            font-size: clamp(28px, 4vw, 40px);
+            line-height: 1.08;
+          }
+          p {
+            margin: 0;
+            line-height: 1.65;
+            color: rgba(247, 248, 250, 0.8);
+          }
+        </style>
+      </head>
+      <body>
+        <main>
+          <p class="eyebrow">Live Control Beta</p>
+          <h1>${title}</h1>
+          <p>${message}</p>
+        </main>
+      </body>
+    </html>`
+}
+
 app.get('/api/music/spotify/callback', async (request, response) => {
+  const desktopDashboardUrl = normalizeBaseUrl(runtimeProcess.env.LIVE_CONTROL_DASHBOARD_URL || '')
+  const isDesktopMode = String(runtimeProcess.env.LIVE_CONTROL_DESKTOP_MODE || '').trim() === '1'
   const redirectBaseUrl =
+    desktopDashboardUrl ||
     normalizeBaseUrl(store.getState().profile.publicBaseUrl) ||
     resolveBaseUrlFromRequest(request) ||
     'http://127.0.0.1:5123'
@@ -2422,6 +2487,20 @@ app.get('/api/music/spotify/callback', async (request, response) => {
 
     await syncSpotifyPlaybackState({ queueNextIfNeeded: false })
     broadcastSystemMessage('info', 'Spotify quedo conectado y listo para Song Request.')
+    if (isDesktopMode) {
+      response
+        .status(200)
+        .type('html')
+        .send(
+          renderSpotifyDesktopCallbackPage({
+            success: true,
+            message:
+              'Puedes volver a la app de escritorio. La sesion ya quedo lista para Song Request.',
+          }),
+        )
+      return
+    }
+
     response.redirect(`${redirectBaseUrl}/?spotify=connected#music`)
   } catch (error) {
     spotifySession = {
@@ -2430,6 +2509,19 @@ app.get('/api/music/spotify/callback', async (request, response) => {
       lastError: error.message,
     }
     await persistSpotifySession()
+    if (isDesktopMode) {
+      response
+        .status(400)
+        .type('html')
+        .send(
+          renderSpotifyDesktopCallbackPage({
+            success: false,
+            message: error.message,
+          }),
+        )
+      return
+    }
+
     response.redirect(`${redirectBaseUrl}/?spotify=error#music`)
   }
 })

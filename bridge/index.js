@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { WebSocket, WebSocketServer } from 'ws'
 import { Rcon } from 'rcon-client'
 import { buildChaosModCatalog, CHAOSMOD_EFFECTS_SOURCE_URL } from '../src/chaosmod.js'
@@ -12,8 +13,12 @@ import {
 } from '../src/live-control.js'
 
 const runtimeProcess = globalThis.process
-const projectRoot = runtimeProcess.cwd()
-const CONFIG_PATH = path.join(projectRoot, 'bridge-config.json')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const projectRoot = path.resolve(__dirname, '..')
+const CONFIG_PATH = String(runtimeProcess.env.LIVE_CONTROL_BRIDGE_CONFIG || '').trim()
+  ? path.resolve(String(runtimeProcess.env.LIVE_CONTROL_BRIDGE_CONFIG || '').trim())
+  : path.join(projectRoot, 'bridge-config.json')
 const CHAOSMOD_ACTIVATOR_PATH = path.join(projectRoot, 'bridge', 'activate-chaosmod-effect.ps1')
 const CHAOSMOD_SHORTCUT_TRIGGER_PATH = path.join(
   projectRoot,

@@ -18,6 +18,9 @@ Panel local para conectar TikTok LIVE, mapear triggers a acciones, mostrar un ov
 - `npm run dev`: levanta backend en `http://127.0.0.1:5123` y frontend Vite.
 - `npm run build`: compila el frontend.
 - `npm run start`: ejecuta solo el backend y sirve `dist/` si ya existe.
+- `npm run desktop:start`: compila el frontend y abre la app desktop con backend + bridge local.
+- `npm run desktop:pack`: genera una carpeta desempaquetada de la beta desktop.
+- `npm run desktop:dist`: genera el instalador de Windows (`NSIS`) para la beta cerrada.
 - `npm run tunnel`: abre un tunel publico con ngrok hacia `http://localhost:5123`.
 - `npm run tunnel:auth -- <TOKEN>`: guarda tu authtoken de ngrok una sola vez.
 - `npm run tunnel:cloudflare`: abre un tunel publico con Cloudflare como alternativa.
@@ -38,6 +41,10 @@ Configura estas variables de entorno en tu backend o en Railway:
 El `redirect_uri` debe apuntar a:
 
 `https://TU-DOMINIO/api/music/spotify/callback`
+
+Si vas a usar la app desktop empaquetada, agrega tambien este redirect en Spotify:
+
+`http://127.0.0.1:5123/api/music/spotify/callback`
 
 ### Lo que ya hace
 
@@ -68,6 +75,34 @@ El `redirect_uri` debe apuntar a:
 6. Crea o ajusta acciones y triggers.
 7. Si quieres Minecraft real, completa el bloque de RCON en la seccion de overlay.
 8. Si quieres GTA V o un mod propio, conectalo a `ws://127.0.0.1:5123/ws/gta`.
+
+## Beta desktop cerrada
+
+La beta desktop levanta tres cosas desde una sola app:
+
+- panel local en `http://127.0.0.1:5123`
+- backend Node
+- bridge local para juegos
+
+### Lo que hace en el primer arranque
+
+- crea una carpeta propia en `AppData`
+- copia tu `storage/` actual si existe, para no perder acciones ni triggers
+- crea un `bridge-config.json` propio para la beta
+- guarda logs en `AppData/.../runtime-logs`
+
+### Comandos utiles
+
+1. `npm run desktop:start`
+   abre la app desktop usando tu codigo actual y sirve para probar la beta sin empaquetar.
+2. `npm run desktop:pack`
+   arma la app en carpeta para revisar que todo abra bien.
+3. `npm run desktop:dist`
+   genera el instalador de Windows.
+
+### Nota sobre Spotify en desktop
+
+En modo desktop, la autorizacion de Spotify se abre en tu navegador y luego vuelve a una pagina de confirmacion local. La sesion queda guardada en la app, asi que despues puedes volver al panel y seguir sin reconectar cada vez.
 
 ## URL publica para LIVE Studio
 
