@@ -90,6 +90,7 @@ La beta desktop levanta tres cosas desde una sola app:
 - copia tu `storage/` actual si existe, para no perder acciones ni triggers
 - crea un `bridge-config.json` propio para la beta
 - guarda logs en `AppData/.../runtime-logs`
+- si ya habias iniciado sesion con TikTok dentro de la app desktop, intenta restaurar esas cookies
 
 ### Comandos utiles
 
@@ -103,6 +104,10 @@ La beta desktop levanta tres cosas desde una sola app:
 ### Nota sobre Spotify en desktop
 
 En modo desktop, la autorizacion de Spotify se abre en tu navegador y luego vuelve a una pagina de confirmacion local. La sesion queda guardada en la app, asi que despues puedes volver al panel y seguir sin reconectar cada vez.
+
+### Nota sobre TikTok en desktop
+
+Dentro de `Operacion en vivo` aparece el boton `Iniciar sesion con TikTok`. Ese flujo abre una ventana interna de TikTok y, cuando detecta `sessionid` + `tt-target-idc`, los guarda en tu perfil local para que no tengas que copiarlos manualmente.
 
 ## URL publica para LIVE Studio
 

@@ -50,6 +50,8 @@ const projectRoot = path.resolve(__dirname, '..')
 const distDirectory = path.join(projectRoot, 'dist')
 const distIndexFile = path.join(distDirectory, 'index.html')
 const serverPort = Number(runtimeProcess.env.PORT || 5123)
+const desktopModeEnabled = String(runtimeProcess.env.LIVE_CONTROL_DESKTOP_MODE || '').trim() === '1'
+const desktopBridgeToken = String(runtimeProcess.env.LIVE_CONTROL_DESKTOP_TOKEN || '').trim()
 const recentLimit = 20
 const musicHistoryLimit = 20
 const cooldownTracker = new Map()
@@ -244,6 +246,24 @@ function getSpotifyRedirectUri(request = null) {
     resolveBaseUrlFromRequest(request)
 
   return configuredBaseUrl ? `${configuredBaseUrl}/api/music/spotify/callback` : ''
+}
+
+function hasDesktopBridgeAccess(request) {
+  if (!desktopModeEnabled || !desktopBridgeToken) {
+    return false
+  }
+
+  const incomingToken = String(request?.headers?.['x-live-control-desktop-token'] || '').trim()
+  return Boolean(incomingToken && incomingToken === desktopBridgeToken)
+}
+
+function requireDesktopBridgeAccess(request, response, next) {
+  if (!hasDesktopBridgeAccess(request)) {
+    response.status(403).json({ error: 'Esta ruta interna solo puede usarla la app desktop.' })
+    return
+  }
+
+  next()
 }
 
 function normalizeSpotifyTrack(track) {
@@ -2599,6 +2619,29 @@ app.put('/api/integrations/chaosmod/catalog', async (request, response) => {
 
 app.get('/api/status', (_request, response) => {
   response.json(buildStatus())
+})
+
+app.post('/api/desktop/tiktok/session', requireDesktopBridgeAccess, async (request, response) => {
+  try {
+    const authConfig = resolveTikTokAuthConfig(request.body || {})
+
+    if (!authConfig.hasAuthenticatedSession) {
+      throw new Error('La sesion de TikTok necesita sessionid y tt-target-idc para quedar guardada.')
+    }
+
+    await store.updateProfile({
+      tiktokSessionId: authConfig.sessionId,
+      tiktokTargetIdc: authConfig.ttTargetIdc,
+      tiktokAuthenticateWs: authConfig.authenticateWs,
+    })
+
+    response.json({
+      ok: true,
+      status: buildStatus(),
+    })
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
 })
 
 app.post('/api/music/spotify/connect', async (request, response) => {

@@ -24,6 +24,20 @@ import {
 const APP_STORAGE_KEY = 'live-control-studio-cache-v4'
 const DASHBOARD_KEY_STORAGE_KEY = 'live-control-dashboard-key-v1'
 
+function getDesktopBridgeApi() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const bridge = window.liveControlDesktop
+
+  if (!bridge || typeof bridge.getContext !== 'function' || typeof bridge.startTikTokLogin !== 'function') {
+    return null
+  }
+
+  return bridge
+}
+
 const DEFAULT_SERVER_STATUS = {
   server: {
     port: 5123,
@@ -816,6 +830,10 @@ function DashboardApp() {
   const [isSavingState, setIsSavingState] = useState(false)
   const [activeWorkspaceSection, setActiveWorkspaceSection] = useState('overview')
   const [tiktokUsernameDraft, setTiktokUsernameDraft] = useState('')
+  const [desktopContext, setDesktopContext] = useState({
+    isDesktopApp: false,
+  })
+  const [isImportingTikTokSession, setIsImportingTikTokSession] = useState(false)
   const lastSyncedSnapshotRef = useRef('')
   const isMountedRef = useRef(true)
 
@@ -931,6 +949,35 @@ function DashboardApp() {
 
     return () => {
       isMountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const desktopBridge = getDesktopBridgeApi()
+
+    if (!desktopBridge) {
+      return undefined
+    }
+
+    let isCancelled = false
+
+    desktopBridge
+      .getContext()
+      .then((context) => {
+        if (!isCancelled) {
+          setDesktopContext({
+            isDesktopApp: Boolean(context?.isDesktopApp),
+          })
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setDesktopContext({ isDesktopApp: false })
+        }
+      })
+
+    return () => {
+      isCancelled = true
     }
   }, [])
 
@@ -1836,6 +1883,28 @@ function DashboardApp() {
     }
   }
 
+  async function importTikTokSessionFromDesktop() {
+    const desktopBridge = getDesktopBridgeApi()
+
+    if (!desktopBridge) {
+      setServerError('El login embebido de TikTok solo esta disponible dentro de la app desktop.')
+      return
+    }
+
+    try {
+      setIsImportingTikTokSession(true)
+      setServerError('')
+      await desktopBridge.startTikTokLogin({
+        authenticateWs: Boolean(appState.profile.tiktokAuthenticateWs),
+      })
+      await loadInitialState(dashboardAccessKey, true)
+    } catch (error) {
+      setServerError(error?.message || 'No pude importar la sesion de TikTok desde la app desktop.')
+    } finally {
+      setIsImportingTikTokSession(false)
+    }
+  }
+
   async function syncTikTokGiftCatalog() {
     try {
       setIsSyncingGiftCatalog(true)
@@ -1904,8 +1973,11 @@ function DashboardApp() {
         isSyncingGiftCatalog={isSyncingGiftCatalog}
         isSavingState={isSavingState}
         onConnectTikTok={connectTikTok}
+        onImportTikTokSessionFromDesktop={importTikTokSessionFromDesktop}
         onDisconnectTikTok={disconnectTikTok}
         onSyncTikTokGiftCatalog={syncTikTokGiftCatalog}
+        isDesktopApp={desktopContext.isDesktopApp}
+        isImportingTikTokSession={isImportingTikTokSession}
         profile={appState.profile}
         serverError={serverError}
         serverStatus={serverStatus}
@@ -2313,9 +2385,12 @@ function HeroPanel({ overlayUrl, onCreateAction, onCreateTrigger }) {
 
 function LiveOpsSection({
   emoteCatalogCount,
+  isDesktopApp,
+  isImportingTikTokSession,
   isSyncingGiftCatalog,
   isSavingState,
   onConnectTikTok,
+  onImportTikTokSessionFromDesktop,
   onDisconnectTikTok,
   onSyncTikTokGiftCatalog,
   profile,
@@ -2399,6 +2474,11 @@ function LiveOpsSection({
             <button className="primary-button" onClick={onConnectTikTok}>
               Conectar live
             </button>
+            {isDesktopApp ? (
+              <button className="secondary-button" onClick={onImportTikTokSessionFromDesktop}>
+                {isImportingTikTokSession ? 'Abriendo login de TikTok...' : 'Iniciar sesion con TikTok'}
+              </button>
+            ) : null}
             <button className="secondary-button" onClick={onSyncTikTokGiftCatalog}>
               {isSyncingGiftCatalog ? 'Sincronizando gifts...' : 'Sincronizar gifts'}
             </button>
@@ -2445,6 +2525,11 @@ function LiveOpsSection({
           <p className="support-copy">
             Si pegas `sessionid` y `tt-target-idc`, el conector intenta entrar con tu sesion de TikTok y suele devolver mas contexto del live. Ambos valores son sensibles.
           </p>
+          {isDesktopApp ? (
+            <p className="support-copy">
+              En la beta desktop puedes usar `Iniciar sesion con TikTok` y la app intentara guardar esas cookies por ti para no copiarlas a mano.
+            </p>
+          ) : null}
 
           {serverStatus.tikTok.lastError ? (
             <div className="error-box">{serverStatus.tikTok.lastError}</div>
