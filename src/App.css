@@ -109,12 +109,28 @@
 }
 
 .nav-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 12px 14px;
   border-radius: 14px;
   text-align: left;
   background: rgba(255, 255, 255, 0.03);
   color: #e3e9ea;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nav-button small {
+  color: #8fa2a9;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.nav-button.active {
+  background: rgba(90, 227, 214, 0.1);
+  color: #f4fffd;
+  border-color: rgba(90, 227, 214, 0.28);
 }
 
 .nav-button:hover,
@@ -143,6 +159,116 @@
   padding: 32px;
   display: grid;
   gap: 28px;
+}
+
+.workspace-header,
+.workspace-header-copy,
+.workspace-header-actions,
+.workspace-launcher,
+.workspace-stage,
+.workspace-stage-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.workspace-header {
+  padding: 26px 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(140deg, rgba(255, 113, 37, 0.14), rgba(12, 18, 26, 0.94) 38%),
+    linear-gradient(180deg, rgba(17, 24, 32, 0.96), rgba(9, 13, 19, 0.98));
+}
+
+.workspace-header-copy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  letter-spacing: -0.06em;
+}
+
+.workspace-header-actions {
+  grid-auto-flow: column;
+  justify-content: end;
+  align-items: center;
+}
+
+.workspace-header-link {
+  display: grid;
+  gap: 10px;
+}
+
+.workspace-launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.workspace-launcher-card {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-height: 170px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(17, 24, 33, 0.94), rgba(10, 14, 20, 0.98));
+  color: #f5f0e8;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.workspace-launcher-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.workspace-launcher-card.selected {
+  border-color: rgba(90, 227, 214, 0.34);
+  box-shadow: 0 0 0 1px rgba(90, 227, 214, 0.22);
+  background:
+    linear-gradient(180deg, rgba(19, 31, 40, 0.98), rgba(10, 16, 23, 1)),
+    rgba(90, 227, 214, 0.08);
+}
+
+.workspace-launcher-card strong {
+  font-size: 1.2rem;
+  letter-spacing: -0.04em;
+}
+
+.workspace-launcher-card p,
+.workspace-launcher-meta {
+  margin: 0;
+  color: #aebbc1;
+  line-height: 1.55;
+}
+
+.workspace-launcher-token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 44px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8df0e6;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.workspace-launcher-meta {
+  font-size: 0.84rem;
+}
+
+.workspace-stage {
+  min-height: 420px;
 }
 
 .hero-panel {
@@ -1658,6 +1784,7 @@
   .metric-grid,
   .pipeline-grid,
   .card-grid,
+  .workspace-launcher-grid,
   .game-grid,
   .game-launcher-grid,
   .source-picker-grid,
@@ -1679,6 +1806,7 @@
   .game-detail-columns,
   .game-mode-grid,
   .music-grid,
+  .workspace-header-actions,
   .music-queue-layout,
   .game-mode-status-grid,
   .game-stat-grid,
@@ -1747,6 +1875,10 @@
 
   .picker-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .workspace-header {
+    padding: 20px;
   }
 
   .smartbar-counter,

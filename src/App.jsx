@@ -283,6 +283,69 @@ const BEDROCK_BOX_PRESETS = [
   },
 ]
 
+const WORKSPACE_SECTIONS = [
+  {
+    id: 'overview',
+    label: 'Inicio',
+    token: 'IN',
+    description: 'Vista general, accesos rapidos y estado del proyecto.',
+  },
+  {
+    id: 'live-ops',
+    label: 'TikTok',
+    token: 'TT',
+    description: 'Conexion del live, gifts, emotes y backend.',
+  },
+  {
+    id: 'games',
+    label: 'Juegos',
+    token: 'JG',
+    description: 'GTA V, Minecraft y futuras integraciones.',
+  },
+  {
+    id: 'music',
+    label: 'Musica',
+    token: 'MU',
+    description: 'Spotify, comandos del chat y cola de canciones.',
+  },
+  {
+    id: 'actions',
+    label: 'Acciones',
+    token: 'AC',
+    description: 'Biblioteca de respuestas reutilizables para el live.',
+  },
+  {
+    id: 'triggers',
+    label: 'Triggers',
+    token: 'TR',
+    description: 'Reglas que conectan eventos con acciones.',
+  },
+  {
+    id: 'overlay',
+    label: 'Overlay',
+    token: 'OV',
+    description: 'Links, smart bar, media local y widgets.',
+  },
+  {
+    id: 'emotes',
+    label: 'Emotes',
+    token: 'EM',
+    description: 'Biblioteca offline y emotes aprendidos desde el live.',
+  },
+  {
+    id: 'simulations',
+    label: 'Pruebas',
+    token: 'TS',
+    description: 'Simulaciones y verificaciones antes de salir en vivo.',
+  },
+  {
+    id: 'bridges',
+    label: 'Bridges',
+    token: 'BR',
+    description: 'Conexiones locales y estado tecnico del proyecto.',
+  },
+]
+
 function getCurrentRoute() {
   if (typeof window === 'undefined') {
     return { kind: 'dashboard', slug: 'main-stage' }
@@ -751,6 +814,7 @@ function DashboardApp() {
   const [serverError, setServerError] = useState('')
   const [isHydrated, setIsHydrated] = useState(false)
   const [isSavingState, setIsSavingState] = useState(false)
+  const [activeWorkspaceSection, setActiveWorkspaceSection] = useState('overview')
   const [tiktokUsernameDraft, setTiktokUsernameDraft] = useState('')
   const lastSyncedSnapshotRef = useRef('')
   const isMountedRef = useRef(true)
@@ -1043,6 +1107,83 @@ function DashboardApp() {
 
   const readyOutputs = new Set()
   appState.actions.forEach((action) => action.outputs.forEach((output) => readyOutputs.add(output)))
+  const workspaceSections = WORKSPACE_SECTIONS.map((section) => {
+    if (section.id === 'overview') {
+      return {
+        ...section,
+        meta: `${appState.actions.length} acciones · ${appState.triggers.length} triggers`,
+      }
+    }
+
+    if (section.id === 'live-ops') {
+      return {
+        ...section,
+        meta: serverStatus.tikTok.connected ? 'Live conectado' : 'Esperando live',
+      }
+    }
+
+    if (section.id === 'games') {
+      const gameActions = appState.actions.filter(
+        (action) => action.outputs.includes('minecraft') || action.outputs.includes('gta'),
+      ).length
+
+      return {
+        ...section,
+        meta: `${gameActions} acciones de juego`,
+      }
+    }
+
+    if (section.id === 'music') {
+      return {
+        ...section,
+        meta: serverStatus.music.connected ? 'Spotify conectado' : 'Spotify opcional',
+      }
+    }
+
+    if (section.id === 'actions') {
+      return {
+        ...section,
+        meta: `${appState.actions.length} guardadas`,
+      }
+    }
+
+    if (section.id === 'triggers') {
+      return {
+        ...section,
+        meta: `${appState.triggers.length} activas`,
+      }
+    }
+
+    if (section.id === 'overlay') {
+      return {
+        ...section,
+        meta: serverStatus.bridges.overlayClients
+          ? `${serverStatus.bridges.overlayClients} overlay activo`
+          : 'Listo para LIVE Studio',
+      }
+    }
+
+    if (section.id === 'emotes') {
+      return {
+        ...section,
+        meta: `${tikTokEmoteCatalog.length} en catalogo`,
+      }
+    }
+
+    if (section.id === 'simulations') {
+      return {
+        ...section,
+        meta: 'Tests del backend',
+      }
+    }
+
+    const totalBridgeClients = serverStatus.bridges.minecraftClients + serverStatus.bridges.gtaClients
+
+    return {
+      ...section,
+      meta: totalBridgeClients ? `${totalBridgeClients} bridge activo` : 'Panel tecnico',
+    }
+  })
 
   function updateProfileField(field, value) {
     updateDashboardState((currentState) => ({
@@ -1196,10 +1337,14 @@ function DashboardApp() {
   }
 
   function scrollToSection(sectionId) {
-    document.getElementById(sectionId)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
+    setActiveWorkspaceSection(sectionId)
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      })
+    }
   }
 
   async function copyOverlayUrl() {
@@ -1740,135 +1885,172 @@ function DashboardApp() {
     )
   }
 
+  let renderedWorkspace = (
+    <OverviewSection
+      actionCount={appState.actions.length}
+      bridgePort={serverStatus.server.port}
+      onCreateAction={openCreateActionModal}
+      onCreateTrigger={openCreateTriggerModal}
+      overlayUrl={preferredOverlayUrl}
+      readyOutputCount={readyOutputs.size}
+      triggerCount={appState.triggers.length}
+    />
+  )
+
+  if (activeWorkspaceSection === 'live-ops') {
+    renderedWorkspace = (
+      <LiveOpsSection
+        emoteCatalogCount={tikTokEmoteCatalog.length}
+        isSyncingGiftCatalog={isSyncingGiftCatalog}
+        isSavingState={isSavingState}
+        onConnectTikTok={connectTikTok}
+        onDisconnectTikTok={disconnectTikTok}
+        onSyncTikTokGiftCatalog={syncTikTokGiftCatalog}
+        profile={appState.profile}
+        serverError={serverError}
+        serverStatus={serverStatus}
+        setTiktokUsernameDraft={setTiktokUsernameDraft}
+        tiktokUsernameDraft={tiktokUsernameDraft}
+        updateProfileField={updateProfileField}
+      />
+    )
+  } else if (activeWorkspaceSection === 'games') {
+    renderedWorkspace = (
+      <GamesSection
+        actions={appState.actions}
+        chaosModCatalog={chaosModCatalog}
+        chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
+        onJump={scrollToSection}
+        onPreviewAction={previewAction}
+        onRunMinecraftPreset={runMinecraftPreset}
+        onTestMinecraftChatMirror={testMinecraftChatMirror}
+        profile={appState.profile}
+        serverStatus={serverStatus}
+        triggers={appState.triggers}
+        updateProfileField={updateProfileField}
+      />
+    )
+  } else if (activeWorkspaceSection === 'music') {
+    renderedWorkspace = (
+      <MusicSection
+        localSongRequestUrl={localSongRequestUrl}
+        music={appState.music}
+        musicStatus={serverStatus.music}
+        onClearHistory={clearMusicHistory}
+        onClearQueue={clearMusicQueue}
+        onConnectSpotify={connectSpotifyMusic}
+        onCopySongRequestUrl={copySongRequestUrl}
+        onDisconnectSpotify={disconnectSpotifyMusic}
+        onOpenSongRequestWindow={openSongRequestWindow}
+        onSkipTrack={skipMusicTrack}
+        onSyncSpotify={syncSpotifyMusic}
+        onTestPlayRequest={testMusicPlayRequest}
+        onRemoveRequest={removeMusicRequest}
+        publicSongRequestUrl={publicSongRequestUrl}
+        updateMusicField={updateMusicField}
+      />
+    )
+  } else if (activeWorkspaceSection === 'emotes') {
+    renderedWorkspace = (
+      <EmoteLibrarySection
+        emoteCatalog={tikTokEmoteCatalog}
+        onCreateEmote={openCreateEmoteModal}
+        onEditEmote={openEditEmoteModal}
+        onRemoveEmote={removeEmoteCatalogEntry}
+      />
+    )
+  } else if (activeWorkspaceSection === 'simulations') {
+    renderedWorkspace = (
+      <SimulationsSection
+        emoteCatalog={tikTokEmoteCatalog}
+        giftCatalog={tikTokGiftCatalog}
+        onSampleEvent={sendSampleEvent}
+      />
+    )
+  } else if (activeWorkspaceSection === 'actions') {
+    renderedWorkspace = (
+      <ActionsSection
+        actions={appState.actions}
+        onCreateAction={openCreateActionModal}
+        onEditAction={openEditActionModal}
+        onPreviewAction={previewAction}
+        onRemoveAction={removeAction}
+      />
+    )
+  } else if (activeWorkspaceSection === 'triggers') {
+    renderedWorkspace = (
+      <TriggersSection
+        actions={appState.actions}
+        emoteCatalog={tikTokEmoteCatalog}
+        giftCatalog={tikTokGiftCatalog}
+        onCreateTrigger={openCreateTriggerModal}
+        onEditTrigger={openEditTriggerModal}
+        onRemoveTrigger={removeTrigger}
+        triggers={appState.triggers}
+      />
+    )
+  } else if (activeWorkspaceSection === 'overlay') {
+    renderedWorkspace = (
+      <OverlaySection
+        linkFeedback={linkFeedback}
+        localSmartBarUrl={localSmartBarUrl}
+        mediaLibrary={mediaLibrary}
+        mediaLibraryError={mediaLibraryError}
+        onAdjustSmartBarWins={adjustSmartBarWins}
+        onCopySmartBarUrl={copySmartBarUrl}
+        onDeleteMedia={removeMediaFile}
+        onCopyOverlayUrl={copyOverlayUrl}
+        onOpenOverlayWindow={openOverlayWindow}
+        onOpenSmartBarWindow={openSmartBarWindow}
+        onRefreshMedia={refreshMediaLibrary}
+        onResetSmartBarWins={resetSmartBarWins}
+        onUploadMedia={uploadMediaFile}
+        localOverlayUrl={localOverlayUrl}
+        publicOverlayUrl={publicOverlayUrl}
+        publicSmartBarUrl={publicSmartBarUrl}
+        profile={appState.profile}
+        serverPort={serverStatus.server.port}
+        serverStatus={serverStatus}
+        smartBar={appState.widgets?.smartBar || {}}
+        updateSmartBarField={updateSmartBarField}
+        updateProfileField={updateProfileField}
+        isUploadingMedia={isUploadingMedia}
+      />
+    )
+  } else if (activeWorkspaceSection === 'bridges') {
+    renderedWorkspace = (
+      <BridgesSection
+        dashboardKey={appState.profile.dashboardKey}
+        remoteBaseUrl={remoteBaseUrl}
+        serverStatus={serverStatus}
+        chaosModCatalog={chaosModCatalog}
+        chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
+      />
+    )
+  }
+
   return (
     <div className="app-shell">
-      <Sidebar onJump={scrollToSection} />
+      <Sidebar activeSection={activeWorkspaceSection} onJump={scrollToSection} />
 
       <main className="main-panel">
-        <HeroPanel
+        <WorkspaceHeader
+          activeSection={activeWorkspaceSection}
+          onCreateAction={openCreateActionModal}
+          onCreateTrigger={openCreateTriggerModal}
+          onSelectSection={scrollToSection}
           overlayUrl={preferredOverlayUrl}
-          onCreateAction={openCreateActionModal}
-          onCreateTrigger={openCreateTriggerModal}
         />
 
-        <MetricRow
-          actionCount={appState.actions.length}
-          bridgePort={serverStatus.server.port}
-          readyOutputCount={readyOutputs.size}
-          triggerCount={appState.triggers.length}
+        <WorkspaceLauncher
+          activeSection={activeWorkspaceSection}
+          onSelectSection={scrollToSection}
+          sections={workspaceSections}
         />
 
-        <LiveOpsSection
-          emoteCatalogCount={tikTokEmoteCatalog.length}
-          isSyncingGiftCatalog={isSyncingGiftCatalog}
-          isSavingState={isSavingState}
-          onConnectTikTok={connectTikTok}
-          onDisconnectTikTok={disconnectTikTok}
-          onSyncTikTokGiftCatalog={syncTikTokGiftCatalog}
-          profile={appState.profile}
-          serverError={serverError}
-          serverStatus={serverStatus}
-          setTiktokUsernameDraft={setTiktokUsernameDraft}
-          tiktokUsernameDraft={tiktokUsernameDraft}
-          updateProfileField={updateProfileField}
-        />
-
-        <GamesSection
-          actions={appState.actions}
-          chaosModCatalog={chaosModCatalog}
-          chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
-          onJump={scrollToSection}
-          onPreviewAction={previewAction}
-          onRunMinecraftPreset={runMinecraftPreset}
-          onTestMinecraftChatMirror={testMinecraftChatMirror}
-          profile={appState.profile}
-          serverStatus={serverStatus}
-          triggers={appState.triggers}
-          updateProfileField={updateProfileField}
-        />
-
-        <MusicSection
-          localSongRequestUrl={localSongRequestUrl}
-          music={appState.music}
-          musicStatus={serverStatus.music}
-          onClearHistory={clearMusicHistory}
-          onClearQueue={clearMusicQueue}
-          onConnectSpotify={connectSpotifyMusic}
-          onCopySongRequestUrl={copySongRequestUrl}
-          onDisconnectSpotify={disconnectSpotifyMusic}
-          onOpenSongRequestWindow={openSongRequestWindow}
-          onSkipTrack={skipMusicTrack}
-          onSyncSpotify={syncSpotifyMusic}
-          onTestPlayRequest={testMusicPlayRequest}
-          onRemoveRequest={removeMusicRequest}
-          publicSongRequestUrl={publicSongRequestUrl}
-          updateMusicField={updateMusicField}
-        />
-
-        <EmoteLibrarySection
-          emoteCatalog={tikTokEmoteCatalog}
-          onCreateEmote={openCreateEmoteModal}
-          onEditEmote={openEditEmoteModal}
-          onRemoveEmote={removeEmoteCatalogEntry}
-        />
-
-        <SimulationsSection
-          emoteCatalog={tikTokEmoteCatalog}
-          giftCatalog={tikTokGiftCatalog}
-          onSampleEvent={sendSampleEvent}
-        />
-
-        <ActionsSection
-          actions={appState.actions}
-          onCreateAction={openCreateActionModal}
-          onEditAction={openEditActionModal}
-          onPreviewAction={previewAction}
-          onRemoveAction={removeAction}
-        />
-
-        <TriggersSection
-          actions={appState.actions}
-          emoteCatalog={tikTokEmoteCatalog}
-          giftCatalog={tikTokGiftCatalog}
-          onCreateTrigger={openCreateTriggerModal}
-          onEditTrigger={openEditTriggerModal}
-          onRemoveTrigger={removeTrigger}
-          triggers={appState.triggers}
-        />
-
-        <OverlaySection
-          linkFeedback={linkFeedback}
-          localSmartBarUrl={localSmartBarUrl}
-          mediaLibrary={mediaLibrary}
-          mediaLibraryError={mediaLibraryError}
-          onAdjustSmartBarWins={adjustSmartBarWins}
-          onCopySmartBarUrl={copySmartBarUrl}
-          onDeleteMedia={removeMediaFile}
-          onCopyOverlayUrl={copyOverlayUrl}
-          onOpenOverlayWindow={openOverlayWindow}
-          onOpenSmartBarWindow={openSmartBarWindow}
-          onRefreshMedia={refreshMediaLibrary}
-          onResetSmartBarWins={resetSmartBarWins}
-          onUploadMedia={uploadMediaFile}
-          localOverlayUrl={localOverlayUrl}
-          publicOverlayUrl={publicOverlayUrl}
-          publicSmartBarUrl={publicSmartBarUrl}
-          profile={appState.profile}
-          serverPort={serverStatus.server.port}
-          serverStatus={serverStatus}
-          smartBar={appState.widgets?.smartBar || {}}
-          updateSmartBarField={updateSmartBarField}
-          updateProfileField={updateProfileField}
-          isUploadingMedia={isUploadingMedia}
-        />
-
-        <BridgesSection
-          dashboardKey={appState.profile.dashboardKey}
-          remoteBaseUrl={remoteBaseUrl}
-          serverStatus={serverStatus}
-          chaosModCatalog={chaosModCatalog}
-          chaosModSourcePath={appState.integrations?.chaosmod?.sourcePath || ''}
-        />
+        <div className="workspace-stage">
+          {renderedWorkspace}
+        </div>
       </main>
 
       {showActionModal ? (
@@ -1982,54 +2164,108 @@ function DashboardAccessGate({
   )
 }
 
-function Sidebar({ onJump }) {
+function Sidebar({ activeSection, onJump }) {
   return (
     <aside className="sidebar">
       <div className="brand-block">
         <span className="brand-kicker">TikTok Live x Games</span>
         <div className="brand-title">Live Control</div>
-        <p className="brand-copy">Configura gifts, comandos y overlay desde un solo panel.</p>
+        <p className="brand-copy">Abre cada modulo solo cuando lo necesites y trabaja mas limpio en vivo.</p>
       </div>
 
       <nav className="sidebar-nav" aria-label="Secciones del panel">
-        <button className="nav-button" onClick={() => onJump('overview')}>
-          Resumen
-        </button>
-        <button className="nav-button" onClick={() => onJump('live-ops')}>
-          Live Ops
-        </button>
-        <button className="nav-button" onClick={() => onJump('games')}>
-          Juegos
-        </button>
-        <button className="nav-button" onClick={() => onJump('music')}>
-          Musica
-        </button>
-        <button className="nav-button" onClick={() => onJump('emotes')}>
-          Emotes
-        </button>
-        <button className="nav-button" onClick={() => onJump('simulations')}>
-          Pruebas
-        </button>
-        <button className="nav-button" onClick={() => onJump('actions')}>
-          Acciones
-        </button>
-        <button className="nav-button" onClick={() => onJump('triggers')}>
-          Triggers
-        </button>
-        <button className="nav-button" onClick={() => onJump('overlay')}>
-          Overlay
-        </button>
-        <button className="nav-button" onClick={() => onJump('bridges')}>
-          Bridges
-        </button>
+        {WORKSPACE_SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            className={`nav-button ${activeSection === section.id ? 'active' : ''}`}
+            onClick={() => onJump(section.id)}
+          >
+            <span>{section.label}</span>
+            <small>{section.token}</small>
+          </button>
+        ))}
       </nav>
 
       <div className="sidebar-card">
         <span className="sidebar-card-label">Estado</span>
-        <strong>Base funcional</strong>
-        <p>Panel, overlay publico, gifts reales y bridge local ya estan conectados.</p>
+        <strong>{WORKSPACE_SECTIONS.find((section) => section.id === activeSection)?.label || 'Inicio'}</strong>
+        <p>{WORKSPACE_SECTIONS.find((section) => section.id === activeSection)?.description || 'Panel principal del proyecto.'}</p>
       </div>
     </aside>
+  )
+}
+
+function WorkspaceHeader({
+  activeSection,
+  onCreateAction,
+  onCreateTrigger,
+  onSelectSection,
+  overlayUrl,
+}) {
+  const currentSection =
+    WORKSPACE_SECTIONS.find((section) => section.id === activeSection) || WORKSPACE_SECTIONS[0]
+
+  return (
+    <section className="workspace-header">
+      <div className="workspace-header-copy">
+        <span className="eyebrow">Workspace</span>
+        <h1>{currentSection.label}</h1>
+        <p>
+          {activeSection === 'overview'
+            ? 'Tu panel ya tiene varias piezas fuertes. Desde aqui eliges que modulo abrir y trabajas en una sola vista.'
+            : currentSection.description}
+        </p>
+      </div>
+
+      <div className="workspace-header-actions">
+        {activeSection !== 'overview' ? (
+          <button className="ghost-button" onClick={() => onSelectSection('overview')}>
+            Volver al inicio
+          </button>
+        ) : null}
+        <button className="secondary-button" onClick={onCreateTrigger}>
+          Nuevo trigger
+        </button>
+        <button className="primary-button" onClick={onCreateAction}>
+          Nueva accion
+        </button>
+      </div>
+
+      <div className="workspace-header-link">
+        <span className="snippet-label">Overlay principal</span>
+        <code className="overlay-link">{overlayUrl}</code>
+      </div>
+    </section>
+  )
+}
+
+function WorkspaceLauncher({ activeSection, onSelectSection, sections }) {
+  return (
+    <section className="workspace-launcher">
+      <div className="section-header">
+        <div>
+          <span className="eyebrow">Modulos</span>
+          <h2>Abre solo lo que vas a usar</h2>
+          <p>La idea es que cada apartado se comporte como una pantalla propia y no como una pagina infinita.</p>
+        </div>
+      </div>
+
+      <div className="workspace-launcher-grid">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            className={`workspace-launcher-card ${activeSection === section.id ? 'selected' : ''}`}
+            onClick={() => onSelectSection(section.id)}
+          >
+            <span className="workspace-launcher-token">{section.token}</span>
+            <strong>{section.label}</strong>
+            <p>{section.description}</p>
+            <span className="workspace-launcher-meta">{section.meta}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -2935,6 +3171,33 @@ function GamesSection({
         ) : null}
       </article>
     </section>
+  )
+}
+
+function OverviewSection({
+  actionCount,
+  bridgePort,
+  onCreateAction,
+  onCreateTrigger,
+  overlayUrl,
+  readyOutputCount,
+  triggerCount,
+}) {
+  return (
+    <div className="workspace-stage-stack">
+      <HeroPanel
+        overlayUrl={overlayUrl}
+        onCreateAction={onCreateAction}
+        onCreateTrigger={onCreateTrigger}
+      />
+
+      <MetricRow
+        actionCount={actionCount}
+        bridgePort={bridgePort}
+        readyOutputCount={readyOutputCount}
+        triggerCount={triggerCount}
+      />
+    </div>
   )
 }
 
