@@ -1,7 +1,7 @@
 import { createServer } from 'node:http'
 import { Buffer } from 'node:buffer'
 import { randomBytes } from 'node:crypto'
-import { existsSync } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import express from 'express'
@@ -147,6 +147,14 @@ spotifySession = {
   ...spotifySession,
   ...persistedSpotifySession,
 }
+let publicOverlayMirrorStatus = {
+  configured: false,
+  targetBaseUrl: '',
+  lastSyncAt: null,
+  lastError: '',
+}
+let publicOverlayMirrorQueue = Promise.resolve()
+const publicMirrorMediaSyncCache = new Map()
 
 function normalizeTikTokUsername(username) {
   return String(username || '').trim().replace(/^@/, '')
@@ -246,6 +254,317 @@ function getSpotifyRedirectUri(request = null) {
     resolveBaseUrlFromRequest(request)
 
   return configuredBaseUrl ? `${configuredBaseUrl}/api/music/spotify/callback` : ''
+}
+
+function getLocalDashboardBaseUrl() {
+  return (
+    normalizeBaseUrl(runtimeProcess.env.LIVE_CONTROL_DASHBOARD_URL || '')
+    || normalizeBaseUrl(`http://127.0.0.1:${serverPort}`)
+  )
+}
+
+function resolvePublicOverlayMirrorTarget(state = store.getState()) {
+  if (!desktopModeEnabled) {
+    return null
+  }
+
+  const targetBaseUrl = normalizeBaseUrl(state.profile?.publicBaseUrl || '')
+  const localBaseUrl = getLocalDashboardBaseUrl()
+
+  if (!targetBaseUrl || (localBaseUrl && targetBaseUrl === localBaseUrl)) {
+    return null
+  }
+
+  return {
+    targetBaseUrl,
+    localBaseUrl,
+    accessKey: String(state.profile?.dashboardKey || state.profile?.overlayKey || '').trim(),
+  }
+}
+
+function updatePublicOverlayMirrorStatus(patch = {}) {
+  publicOverlayMirrorStatus = {
+    ...publicOverlayMirrorStatus,
+    ...patch,
+  }
+}
+
+function buildPublicProfileFromSource(profile = {}) {
+  return {
+    projectName: String(profile?.projectName || store.getState().profile.projectName || '').trim(),
+    streamerName: String(profile?.streamerName || store.getState().profile.streamerName || '').trim(),
+    overlaySlug: sanitizeSlug(profile?.overlaySlug || store.getState().profile.overlaySlug),
+    publicBaseUrl: normalizeBaseUrl(profile?.publicBaseUrl || store.getState().profile.publicBaseUrl),
+    overlayDurationMs: String(
+      profile?.overlayDurationMs || store.getState().profile.overlayDurationMs || '',
+    ).trim(),
+  }
+}
+
+function buildPublicWidgetsFromSource(widgets = {}) {
+  return mergeStateWithDefaults({
+    widgets,
+  }).widgets
+}
+
+function buildSmartBarStatusSnapshot() {
+  const liveDurationMs = smartBarRuntime.sessionStartedAt
+    ? tikTokStatus.connected
+      ? Date.now() - smartBarRuntime.sessionStartedAt
+      : smartBarRuntime.lastSessionDurationMs || 0
+    : smartBarRuntime.lastSessionDurationMs || 0
+
+  return {
+    connected: tikTokStatus.connected,
+    sessionStartedAt: smartBarRuntime.sessionStartedAt,
+    liveDurationMs,
+    followCount: smartBarRuntime.followCount,
+    receivedCoins: smartBarRuntime.receivedCoins,
+    giftsReceived: smartBarRuntime.giftsReceived,
+  }
+}
+
+function buildPublicMusicPayload(state = store.getState()) {
+  return {
+    ...(state.music || getMusicStateSnapshot()),
+    ...buildMusicStatus(state),
+  }
+}
+
+function getStoredOverlayMirrorPayload(state = store.getState()) {
+  if (desktopModeEnabled) {
+    return null
+  }
+
+  const storedMirror = state.integrations?.overlayMirror || {}
+
+  if (!storedMirror.syncedAt) {
+    return null
+  }
+
+  return {
+    profile: buildPublicProfileFromSource(storedMirror.profile || state.profile),
+    widgets: buildPublicWidgetsFromSource(storedMirror.widgets || state.widgets || {}),
+    smartBar: {
+      ...buildSmartBarStatusSnapshot(),
+      ...(storedMirror.smartBar || {}),
+    },
+    music: {
+      ...mergeStateWithDefaults({
+        music: storedMirror.music || state.music || {},
+      }).music,
+      ...(storedMirror.music || {}),
+    },
+    syncedAt: storedMirror.syncedAt,
+    sourceBaseUrl: normalizeBaseUrl(storedMirror.sourceBaseUrl || ''),
+  }
+}
+
+function buildMirroredOverlayEvent(eventPayload = {}) {
+  return {
+    ...eventPayload,
+    id: String(eventPayload?.id || createId('overlay-event')).trim(),
+    title: String(eventPayload?.title || '').trim(),
+    message: String(eventPayload?.message || '').trim(),
+    mediaUrl: String(eventPayload?.mediaUrl || '').trim(),
+    audioUrl: String(eventPayload?.audioUrl || '').trim(),
+    commandText: String(eventPayload?.commandText || '').trim(),
+    durationMs: Math.max(0, Number(eventPayload?.durationMs || 0)) || 5000,
+    createdAt: Number(eventPayload?.createdAt || Date.now()),
+  }
+}
+
+function resolveMirroredMediaReference(mediaUrl) {
+  const rawValue = String(mediaUrl || '').trim()
+
+  if (!rawValue) {
+    return null
+  }
+
+  try {
+    const localBaseUrl = getLocalDashboardBaseUrl()
+    const parsedUrl = rawValue.startsWith('http')
+      ? new URL(rawValue)
+      : new URL(rawValue, localBaseUrl || `http://127.0.0.1:${serverPort}`)
+    const normalizedPath = decodeURIComponent(parsedUrl.pathname || '')
+
+    if (!normalizedPath.startsWith('/media/')) {
+      return null
+    }
+
+    const fileName = path.basename(normalizedPath)
+
+    if (!fileName) {
+      return null
+    }
+
+    return {
+      fileName,
+      mirroredUrl: `/media/${encodeURIComponent(fileName)}`,
+      filePath: path.join(getMediaDirectory(), fileName),
+    }
+  } catch {
+    return null
+  }
+}
+
+async function uploadMirroredMediaAsset(target, mediaUrl) {
+  const mediaReference = resolveMirroredMediaReference(mediaUrl)
+
+  if (!mediaReference) {
+    return String(mediaUrl || '').trim()
+  }
+
+  try {
+    const fileStats = await fs.stat(mediaReference.filePath)
+    const cacheKey = `${target.targetBaseUrl}|${mediaReference.fileName}`
+    const fileSignature = `${fileStats.size}:${fileStats.mtimeMs}`
+
+    if (publicMirrorMediaSyncCache.get(cacheKey) !== fileSignature) {
+      const fileBuffer = await fs.readFile(mediaReference.filePath)
+      const mirrorResponse = await fetch(
+        `${target.targetBaseUrl}/api/mirror/media/${encodeURIComponent(mediaReference.fileName)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            ...(target.accessKey ? { 'X-Live-Control-Key': target.accessKey } : {}),
+          },
+          body: fileBuffer,
+        },
+      )
+
+      if (!mirrorResponse.ok) {
+        throw new Error(`La subida remota devolvio ${mirrorResponse.status}.`)
+      }
+
+      publicMirrorMediaSyncCache.set(cacheKey, fileSignature)
+    }
+
+    return mediaReference.mirroredUrl
+  } catch (error) {
+    updatePublicOverlayMirrorStatus({
+      lastError: `No pude copiar el media ${mediaReference.fileName}: ${error.message}`,
+    })
+    return String(mediaUrl || '').trim()
+  }
+}
+
+async function sendPublicOverlayMirrorState(reason = 'status') {
+  const mirrorTarget = resolvePublicOverlayMirrorTarget()
+
+  if (!mirrorTarget) {
+    updatePublicOverlayMirrorStatus({
+      configured: false,
+      targetBaseUrl: '',
+      lastError: '',
+    })
+    return false
+  }
+
+  updatePublicOverlayMirrorStatus({
+    configured: true,
+    targetBaseUrl: mirrorTarget.targetBaseUrl,
+  })
+
+  const payload = getPublicOverlayPayload()
+  const mirrorResponse = await fetch(`${mirrorTarget.targetBaseUrl}/api/mirror/overlay/state`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(mirrorTarget.accessKey ? { 'X-Live-Control-Key': mirrorTarget.accessKey } : {}),
+    },
+    body: JSON.stringify({
+      reason,
+      sourceBaseUrl: mirrorTarget.localBaseUrl,
+      payload,
+    }),
+  })
+
+  if (!mirrorResponse.ok) {
+    let responseMessage = ''
+
+    try {
+      const responseBody = await mirrorResponse.json()
+      responseMessage = String(responseBody?.error || '').trim()
+    } catch {
+      responseMessage = ''
+    }
+
+    throw new Error(responseMessage || `La sincronizacion remota devolvio ${mirrorResponse.status}.`)
+  }
+
+  updatePublicOverlayMirrorStatus({
+    lastSyncAt: Date.now(),
+    lastError: '',
+  })
+  return true
+}
+
+function queuePublicOverlayMirrorState(reason = 'status') {
+  publicOverlayMirrorQueue = publicOverlayMirrorQueue
+    .catch(() => {})
+    .then(() => sendPublicOverlayMirrorState(reason))
+    .catch((error) => {
+      updatePublicOverlayMirrorStatus({
+        configured: Boolean(resolvePublicOverlayMirrorTarget()),
+        lastError: error.message,
+      })
+      return false
+    })
+
+  return publicOverlayMirrorQueue
+}
+
+async function sendPublicOverlayMirrorEvent(eventPayload) {
+  const mirrorTarget = resolvePublicOverlayMirrorTarget()
+
+  if (!mirrorTarget) {
+    return false
+  }
+
+  const mirroredEvent = buildMirroredOverlayEvent(eventPayload)
+
+  if (mirroredEvent.mediaUrl) {
+    mirroredEvent.mediaUrl = await uploadMirroredMediaAsset(mirrorTarget, mirroredEvent.mediaUrl)
+  }
+
+  if (mirroredEvent.audioUrl) {
+    mirroredEvent.audioUrl = await uploadMirroredMediaAsset(mirrorTarget, mirroredEvent.audioUrl)
+  }
+
+  const mirrorResponse = await fetch(`${mirrorTarget.targetBaseUrl}/api/mirror/overlay/event`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(mirrorTarget.accessKey ? { 'X-Live-Control-Key': mirrorTarget.accessKey } : {}),
+    },
+    body: JSON.stringify({
+      sourceBaseUrl: mirrorTarget.localBaseUrl,
+      event: mirroredEvent,
+    }),
+  })
+
+  if (!mirrorResponse.ok) {
+    let responseMessage = ''
+
+    try {
+      const responseBody = await mirrorResponse.json()
+      responseMessage = String(responseBody?.error || '').trim()
+    } catch {
+      responseMessage = ''
+    }
+
+    throw new Error(responseMessage || `El evento remoto devolvio ${mirrorResponse.status}.`)
+  }
+
+  updatePublicOverlayMirrorStatus({
+    configured: true,
+    targetBaseUrl: mirrorTarget.targetBaseUrl,
+    lastSyncAt: Date.now(),
+    lastError: '',
+  })
+  return true
 }
 
 function hasDesktopBridgeAccess(request) {
@@ -958,6 +1277,11 @@ function normalizeRemoteImageUrl(imageUrl) {
     return `https://${normalizedValue}`
   }
 
+  if (/^webcast-[a-z0-9-]+\//i.test(normalizedValue)) {
+    const edgeBucket = /^webcast-sg\//i.test(normalizedValue) ? 'alisg' : 'maliva'
+    return `https://p16-webcast.tiktokcdn.com/img/${edgeBucket}/${normalizedValue}~tplv-obj.webp`
+  }
+
   return normalizedValue
 }
 
@@ -982,7 +1306,7 @@ function extractImageUrl(imageValue, depth = 0) {
     return ''
   }
 
-  const directKeys = ['imageUrl', 'url', 'uri', 'src', 'displayUrl', 'downloadUrl', 'webUri']
+  const directKeys = ['imageUrl', 'url', 'src', 'displayUrl', 'downloadUrl', 'webUri', 'open_web_url']
 
   for (const key of directKeys) {
     const directUrl = extractImageUrl(imageValue?.[key], depth + 1)
@@ -999,6 +1323,16 @@ function extractImageUrl(imageValue, depth = 0) {
 
     if (listUrl) {
       return listUrl
+    }
+  }
+
+  const fallbackKeys = ['uri']
+
+  for (const key of fallbackKeys) {
+    const fallbackUrl = extractImageUrl(imageValue?.[key], depth + 1)
+
+    if (fallbackUrl) {
+      return fallbackUrl
     }
   }
 
@@ -1231,6 +1565,49 @@ async function observeTikTokEmotes(emotes = [], sourceUsername = '') {
   return nextCatalog
 }
 
+function collectObservedTikTokEmotes(events = []) {
+  return events.flatMap((event) => {
+    const eventEmotes = Array.isArray(event?.emotes) ? event.emotes : []
+    const primaryEmote =
+      event?.emoteId || event?.emoteName || event?.emoteImageUrl
+        ? [
+            {
+              id: event.emoteId,
+              name: event.emoteName,
+              imageUrl: event.emoteImageUrl,
+            },
+          ]
+        : []
+
+    return [...eventEmotes, ...primaryEmote]
+  })
+}
+
+async function syncTikTokEmoteCatalogFromObservedEvents(sourceUsername = '') {
+  const cleanUsername =
+    normalizeTikTokUsername(sourceUsername)
+    || normalizeTikTokUsername(tikTokStatus.username)
+    || normalizeTikTokUsername(store.getState().profile.tiktokUsername)
+
+  const observedEmotes = collectObservedTikTokEmotes(recentEvents)
+  const nextCatalog = await observeTikTokEmotes(observedEmotes, cleanUsername)
+  const integration =
+    nextCatalog === null
+      ? await updateTikTokEmoteCatalog({
+          emoteCatalog: null,
+          lastError: '',
+          sourceUsername: cleanUsername,
+        })
+      : store.getState().integrations?.tiktok || {}
+
+  return {
+    integration,
+    observedCount: observedEmotes.length,
+    catalogCount: Array.isArray(integration?.emoteCatalog) ? integration.emoteCatalog.length : 0,
+    sourceUsername: cleanUsername || integration?.emoteCatalogSourceUsername || '',
+  }
+}
+
 async function upsertTikTokEmoteCatalogEntry(emoteEntry) {
   const previousState = store.getState()
   const previousIntegration = previousState.integrations?.tiktok || {}
@@ -1372,44 +1749,47 @@ function getOverlayAccessKey() {
 }
 
 function getPublicProfile() {
-  const profile = store.getState().profile
+  const mirroredPayload = getStoredOverlayMirrorPayload()
 
-  return {
-    projectName: profile.projectName,
-    streamerName: profile.streamerName,
-    overlaySlug: sanitizeSlug(profile.overlaySlug),
-    publicBaseUrl: normalizeBaseUrl(profile.publicBaseUrl),
-    overlayDurationMs: profile.overlayDurationMs,
+  if (mirroredPayload) {
+    return mirroredPayload.profile
   }
+
+  return buildPublicProfileFromSource(store.getState().profile)
 }
 
 function getPublicWidgets() {
-  return store.getState().widgets || {}
+  const mirroredPayload = getStoredOverlayMirrorPayload()
+
+  if (mirroredPayload) {
+    return mirroredPayload.widgets
+  }
+
+  return buildPublicWidgetsFromSource(store.getState().widgets || {})
 }
 
 function buildSmartBarStatus() {
-  const liveDurationMs = smartBarRuntime.sessionStartedAt
-    ? tikTokStatus.connected
-      ? Date.now() - smartBarRuntime.sessionStartedAt
-      : smartBarRuntime.lastSessionDurationMs || 0
-    : smartBarRuntime.lastSessionDurationMs || 0
+  const mirroredPayload = getStoredOverlayMirrorPayload()
 
-  return {
-    connected: tikTokStatus.connected,
-    sessionStartedAt: smartBarRuntime.sessionStartedAt,
-    liveDurationMs,
-    followCount: smartBarRuntime.followCount,
-    receivedCoins: smartBarRuntime.receivedCoins,
-    giftsReceived: smartBarRuntime.giftsReceived,
+  if (mirroredPayload) {
+    return mirroredPayload.smartBar
   }
+
+  return buildSmartBarStatusSnapshot()
 }
 
 function getPublicOverlayPayload() {
+  const mirroredPayload = getStoredOverlayMirrorPayload()
+
+  if (mirroredPayload) {
+    return mirroredPayload
+  }
+
   return {
     profile: getPublicProfile(),
     widgets: getPublicWidgets(),
     smartBar: buildSmartBarStatus(),
-    music: buildMusicStatus(),
+    music: buildPublicMusicPayload(),
   }
 }
 
@@ -1499,6 +1879,50 @@ function requireDashboardAccess(request, response, next) {
   response.status(401).json({
     error: 'La clave del panel es obligatoria para abrir el dashboard y sus APIs.',
   })
+}
+
+function requireMirrorAccess(request, response, next) {
+  const providedKey = readAccessKey(request)
+  const dashboardKey = getDashboardAccessKey()
+  const overlayKey = getOverlayAccessKey()
+  const hasDashboardKey = Boolean(dashboardKey)
+  const hasOverlayKey = Boolean(overlayKey)
+
+  if (
+    (!hasDashboardKey && !hasOverlayKey)
+    || (hasDashboardKey && dashboardKey === providedKey)
+    || (hasOverlayKey && overlayKey === providedKey)
+  ) {
+    next()
+    return
+  }
+
+  response.status(401).json({
+    error: 'Necesitas la clave del panel o la clave publica del overlay para sincronizar.',
+  })
+}
+
+function resetMinecraftRconConnection(previousState, nextState) {
+  if (
+    previousState.profile.minecraftHost !== nextState.profile.minecraftHost ||
+    previousState.profile.minecraftPort !== nextState.profile.minecraftPort ||
+    previousState.profile.minecraftPassword !== nextState.profile.minecraftPassword
+  ) {
+    if (minecraftRcon) {
+      try {
+        minecraftRcon.end()
+      } catch {
+        // noop
+      }
+
+      minecraftRcon = null
+      minecraftRconSignature = ''
+      setMinecraftRconStatus({
+        connected: false,
+        lastError: '',
+      })
+    }
+  }
 }
 
 function requireOverlayAccess(request, response, next) {
@@ -1597,6 +2021,7 @@ function buildStatus() {
     mediaLibrary: {
       count: mediaLibraryCount,
     },
+    overlayMirror: publicOverlayMirrorStatus,
     music: buildMusicStatus(state),
     smartBar: buildSmartBarStatus(),
     recentEvents,
@@ -1700,6 +2125,10 @@ function broadcastStatus() {
     type: 'overlay-state',
     payload: getPublicOverlayPayload(),
   })
+
+  if (desktopModeEnabled) {
+    void queuePublicOverlayMirrorState('status')
+  }
 }
 
 function setTikTokStatus(patch) {
@@ -1749,10 +2178,17 @@ function extractTikTokEmotes(data) {
 function extractTikTokUserAccessFlags(data) {
   const userData = data?.user || data?.userInfo || data?.event?.user || null
   const subscribeInfo = userData?.subscribeInfo || data?.subscribeInfo
+  const followInfo = userData?.followInfo || data?.followInfo
   const fansClubInfo = userData?.fansClubInfo || data?.fansClubInfo
   const fansLevel = Number(fansClubInfo?.fansLevel || 0)
 
   return {
+    isFollower: Boolean(
+      data?.isFollowerOfAnchor ||
+        userData?.isFollowerOfAnchor ||
+        followInfo?.isFollowing ||
+        Number(followInfo?.followStatus || 0) > 0,
+    ),
     isSubscriber: Boolean(
       data?.isSubscriberOfAnchor ||
         userData?.isSubscriberOfAnchor ||
@@ -1787,6 +2223,7 @@ function normalizeTikTokEvent(type, data) {
     totalLikeCount: 0,
     shareTarget: '',
     displayText: '',
+    isFollower: accessFlags.isFollower,
     isSubscriber: accessFlags.isSubscriber,
     isModerator: accessFlags.isModerator,
     isSuperFan: accessFlags.isSuperFan,
@@ -1930,6 +2367,15 @@ async function dispatchAction(action, sourceEvent, reason = 'manual') {
 
   broadcast('overlay', { type: 'overlay-event', payload: overlayEvent })
   broadcast('app', { type: 'overlay-event', payload: overlayEvent })
+
+  if (desktopModeEnabled) {
+    void sendPublicOverlayMirrorEvent(overlayEvent).catch((error) => {
+      updatePublicOverlayMirrorStatus({
+        configured: Boolean(resolvePublicOverlayMirrorTarget()),
+        lastError: error.message,
+      })
+    })
+  }
 
   if (action.outputs.includes('minecraft')) {
     const minecraftPayload = buildBridgePayload('minecraft', action, sourceEvent)
@@ -2396,6 +2842,100 @@ app.get('/api/overlay/:slug', requireOverlayAccess, (_request, response) => {
   response.json(getPublicOverlayPayload())
 })
 
+app.post('/api/mirror/overlay/state', requireMirrorAccess, async (request, response) => {
+  const previousState = store.getState()
+  const incomingPayload = request.body?.payload || request.body || {}
+
+  if (!incomingPayload || typeof incomingPayload !== 'object') {
+    response.status(400).json({
+      error: 'Necesito un payload valido para reflejar el overlay publico.',
+    })
+    return
+  }
+
+  const nextMirror = {
+    sourceBaseUrl:
+      normalizeBaseUrl(request.body?.sourceBaseUrl || '')
+      || normalizeBaseUrl(previousState.integrations?.overlayMirror?.sourceBaseUrl || ''),
+    syncedAt: Date.now(),
+    profile: buildPublicProfileFromSource(incomingPayload.profile || previousState.profile),
+    widgets: buildPublicWidgetsFromSource(incomingPayload.widgets || previousState.widgets || {}),
+    smartBar: {
+      ...buildSmartBarStatusSnapshot(),
+      ...(incomingPayload.smartBar || {}),
+    },
+    music: {
+      ...mergeStateWithDefaults({
+        music: incomingPayload.music || previousState.music || {},
+      }).music,
+      ...(incomingPayload.music || {}),
+    },
+  }
+
+  const nextState = mergeStateWithDefaults({
+    ...previousState,
+    integrations: {
+      ...previousState.integrations,
+      overlayMirror: nextMirror,
+    },
+  })
+  const savedState = await store.setState(nextState)
+
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcast('overlay', { type: 'overlay-state', payload: getPublicOverlayPayload() })
+
+  response.json({
+    ok: true,
+    syncedAt: nextMirror.syncedAt,
+  })
+})
+
+app.post('/api/mirror/overlay/event', requireMirrorAccess, (request, response) => {
+  const incomingEvent = buildMirroredOverlayEvent(request.body?.event || request.body || {})
+
+  broadcast('overlay', { type: 'overlay-event', payload: incomingEvent })
+  broadcast('app', { type: 'overlay-event', payload: incomingEvent })
+
+  response.json({
+    ok: true,
+    eventId: incomingEvent.id,
+  })
+})
+
+app.put(
+  '/api/mirror/media/:fileName',
+  requireMirrorAccess,
+  express.raw({ type: () => true, limit: '250mb' }),
+  async (request, response) => {
+    const rawFileName = path.basename(decodeURIComponent(request.params.fileName || ''))
+
+    if (!rawFileName) {
+      response.status(400).json({
+        error: 'Necesito un nombre de archivo para subir el media al overlay publico.',
+      })
+      return
+    }
+
+    if (!Buffer.isBuffer(request.body) || request.body.length === 0) {
+      response.status(400).json({
+        error: 'El archivo remoto llego vacio.',
+      })
+      return
+    }
+
+    await ensureMediaDirectory()
+    await fs.writeFile(path.join(getMediaDirectory(), rawFileName), request.body)
+    mediaLibraryCount = (await listMediaItems()).length
+    broadcastStatus()
+
+    response.json({
+      ok: true,
+      fileName: rawFileName,
+      url: `/media/${encodeURIComponent(rawFileName)}`,
+    })
+  },
+)
+
 function renderSpotifyDesktopCallbackPage({ success, message }) {
   const accentColor = success ? '#7ee6be' : '#ff7a7a'
   const title = success ? 'Spotify ya quedo conectado.' : 'No pudimos conectar Spotify.'
@@ -2564,26 +3104,60 @@ app.put('/api/state', async (request, response) => {
   nextState.profile.overlayKey = String(nextState.profile.overlayKey || '').trim()
   const savedState = await store.setState(nextState)
 
-  if (
-    previousState.profile.minecraftHost !== savedState.profile.minecraftHost ||
-    previousState.profile.minecraftPort !== savedState.profile.minecraftPort ||
-    previousState.profile.minecraftPassword !== savedState.profile.minecraftPassword
-  ) {
-    if (minecraftRcon) {
-      try {
-        minecraftRcon.end()
-      } catch {
-        // noop
-      }
+  resetMinecraftRconConnection(previousState, savedState)
 
-      minecraftRcon = null
-      minecraftRconSignature = ''
-      setMinecraftRconStatus({
-        connected: false,
-        lastError: '',
-      })
-    }
-  }
+  broadcast('app', { type: 'state', payload: savedState })
+  broadcast('overlay', { type: 'overlay-state', payload: getPublicOverlayPayload() })
+  broadcastStatus()
+
+  response.json(savedState)
+})
+
+app.post('/api/state/import', async (request, response) => {
+  const previousState = store.getState()
+  const importedPayload = request.body?.state || request.body || {}
+  const importedState = mergeStateWithDefaults(importedPayload)
+  const nextState = mergeStateWithDefaults({
+    ...importedState,
+    profile: {
+      ...importedState.profile,
+      tiktokSessionId: String(importedState.profile?.tiktokSessionId || previousState.profile.tiktokSessionId || '').trim(),
+      tiktokTargetIdc: String(importedState.profile?.tiktokTargetIdc || previousState.profile.tiktokTargetIdc || '').trim(),
+    },
+    integrations: {
+      ...previousState.integrations,
+      ...(importedState.integrations || {}),
+      spotify: {
+        ...previousState.integrations.spotify,
+        ...(importedState.integrations?.spotify || {}),
+        accessToken:
+          importedState.integrations?.spotify?.accessToken
+          || previousState.integrations.spotify.accessToken
+          || '',
+        refreshToken:
+          importedState.integrations?.spotify?.refreshToken
+          || previousState.integrations.spotify.refreshToken
+          || '',
+        expiresAt: Number(
+          importedState.integrations?.spotify?.expiresAt
+          || previousState.integrations.spotify.expiresAt
+          || 0,
+        ),
+        authState:
+          importedState.integrations?.spotify?.authState
+          || previousState.integrations.spotify.authState
+          || '',
+      },
+    },
+  })
+
+  nextState.profile.overlaySlug = sanitizeSlug(nextState.profile.overlaySlug)
+  nextState.profile.publicBaseUrl = normalizeBaseUrl(nextState.profile.publicBaseUrl)
+  nextState.profile.dashboardKey = String(nextState.profile.dashboardKey || '').trim()
+  nextState.profile.overlayKey = String(nextState.profile.overlayKey || '').trim()
+
+  const savedState = await store.setState(nextState)
+  resetMinecraftRconConnection(previousState, savedState)
 
   broadcast('app', { type: 'state', payload: savedState })
   broadcast('overlay', { type: 'overlay-state', payload: getPublicOverlayPayload() })
@@ -2791,6 +3365,30 @@ app.post('/api/tiktok/gifts/sync', async (request, response) => {
   }
 })
 
+app.post('/api/tiktok/emotes/sync', async (request, response) => {
+  try {
+    const requestedUsername =
+      request.body?.username || store.getState().profile.tiktokUsername || tikTokStatus.username
+    const syncResult = await syncTikTokEmoteCatalogFromObservedEvents(requestedUsername)
+    const message =
+      syncResult.observedCount > 0
+        ? `Revise ${syncResult.observedCount} emotes vistos en el live y deje el catalogo al dia.`
+        : 'No encontre emotes nuevos en el historial. Los emotes se agregan cuando TikTok los envia durante el live.'
+
+    broadcastSystemMessage(syncResult.observedCount > 0 ? 'info' : 'warn', message)
+
+    response.json({
+      count: syncResult.catalogCount,
+      observedCount: syncResult.observedCount,
+      sourceUsername: syncResult.sourceUsername,
+      syncedAt: Date.now(),
+      message,
+    })
+  } catch (error) {
+    response.status(400).json({ error: error.message })
+  }
+})
+
 app.post('/api/integrations/tiktok/emotes', async (request, response) => {
   try {
     const integration = await upsertTikTokEmoteCatalogEntry(request.body || {})
@@ -2973,6 +3571,12 @@ if (spotifySession.refreshToken) {
   })
 }
 
+const overlayMirrorIntervalId = desktopModeEnabled
+  ? setInterval(() => {
+      void queuePublicOverlayMirrorState('keepalive')
+    }, 30000)
+  : null
+
 httpServer.on('upgrade', (request, socket, head) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`)
   const pathname = requestUrl.pathname
@@ -3040,11 +3644,19 @@ if (existsSync(distIndexFile)) {
 
 httpServer.listen(serverPort, () => {
   console.log(`Live Control backend activo en http://127.0.0.1:${serverPort}`)
+
+  if (desktopModeEnabled) {
+    void queuePublicOverlayMirrorState('startup')
+  }
 })
 
 async function shutdown() {
   await disconnectTikTok()
   clearInterval(spotifyPollingIntervalId)
+
+  if (overlayMirrorIntervalId) {
+    clearInterval(overlayMirrorIntervalId)
+  }
 
   if (minecraftRcon) {
     try {

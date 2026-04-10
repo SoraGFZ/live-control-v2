@@ -22,6 +22,14 @@ export const LOCAL_BRIDGE_DEFAULTS = {
 }
 
 export const DEFAULT_INTEGRATIONS = {
+  overlayMirror: {
+    sourceBaseUrl: '',
+    syncedAt: null,
+    profile: null,
+    widgets: null,
+    smartBar: null,
+    music: null,
+  },
   chaosmod: {
     catalog: [],
     sourcePath: '',
@@ -187,6 +195,8 @@ export const DEFAULT_APP_STATE = {
       match: 'Cualquier follow',
       actionId: 'action-follow-alert',
       cooldownSeconds: '0',
+      audience: 'any',
+      specificUsers: [],
     },
     {
       id: 'trigger-gift-rose',
@@ -194,6 +204,8 @@ export const DEFAULT_APP_STATE = {
       match: 'Rose x1',
       actionId: 'action-minecraft-chaos',
       cooldownSeconds: '5',
+      audience: 'any',
+      specificUsers: [],
     },
     {
       id: 'trigger-comment-chaos',
@@ -201,6 +213,8 @@ export const DEFAULT_APP_STATE = {
       match: '!chaos',
       actionId: 'action-gta-boost',
       cooldownSeconds: '8',
+      audience: 'any',
+      specificUsers: [],
     },
     {
       id: 'trigger-comment-voice',
@@ -208,6 +222,8 @@ export const DEFAULT_APP_STATE = {
       match: '!voz',
       actionId: 'action-voice-tts',
       cooldownSeconds: '4',
+      audience: 'any',
+      specificUsers: [],
     },
   ],
   widgets: DEFAULT_WIDGETS,
@@ -231,22 +247,10 @@ export function normalizeMinecraftCommand(commandText) {
 export function mergeStateWithDefaults(parsedState) {
   const parsedUpdatedAt = Number(parsedState?.updatedAt || 0)
   const mergedActions = Array.isArray(parsedState?.actions)
-    ? [
-        ...parsedState.actions,
-        ...DEFAULT_APP_STATE.actions.filter(
-          (defaultAction) =>
-            !parsedState.actions.some((savedAction) => savedAction.id === defaultAction.id),
-        ),
-      ]
+    ? parsedState.actions
     : DEFAULT_APP_STATE.actions
   const mergedTriggers = Array.isArray(parsedState?.triggers)
-    ? [
-        ...parsedState.triggers,
-        ...DEFAULT_APP_STATE.triggers.filter(
-          (defaultTrigger) =>
-            !parsedState.triggers.some((savedTrigger) => savedTrigger.id === defaultTrigger.id),
-        ),
-      ]
+    ? parsedState.triggers
     : DEFAULT_APP_STATE.triggers
 
   return {
@@ -275,7 +279,15 @@ export function mergeStateWithDefaults(parsedState) {
       gtaChaosEffectName: '',
       ...action,
     })),
-    triggers: mergedTriggers,
+    triggers: mergedTriggers.map((trigger) => {
+      const normalizedSpecificUsers = Array.isArray(trigger?.specificUsers) ? trigger.specificUsers : []
+
+      return {
+        audience: 'any',
+        specificUsers: normalizedSpecificUsers,
+        ...trigger,
+      }
+    }),
     widgets: {
       ...DEFAULT_WIDGETS,
       ...(parsedState?.widgets || {}),
@@ -287,6 +299,10 @@ export function mergeStateWithDefaults(parsedState) {
     integrations: {
       ...DEFAULT_INTEGRATIONS,
       ...(parsedState?.integrations || {}),
+      overlayMirror: {
+        ...DEFAULT_INTEGRATIONS.overlayMirror,
+        ...(parsedState?.integrations?.overlayMirror || {}),
+      },
       spotify: {
         ...DEFAULT_INTEGRATIONS.spotify,
         ...(parsedState?.integrations?.spotify || {}),
@@ -536,6 +552,77 @@ function normalizeText(value) {
     .toLowerCase()
 }
 
+function normalizeViewerHandle(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^@+/, '')
+    .toLowerCase()
+}
+
+function getSpecificUsersList(trigger) {
+  if (Array.isArray(trigger?.specificUsers)) {
+    return trigger.specificUsers
+      .map((userName) => normalizeViewerHandle(userName))
+      .filter(Boolean)
+  }
+
+  return []
+}
+
+function getTriggerAudience(trigger) {
+  if (trigger?.audience) {
+    return trigger.audience
+  }
+
+  if (getSpecificUsersList(trigger).length > 0) {
+    return 'specific-users'
+  }
+
+  if (trigger?.allowModerators) {
+    return 'moderators'
+  }
+
+  if (trigger?.allowSubscribers) {
+    return 'subscribers'
+  }
+
+  return 'any'
+}
+
+function matchesTriggerAudience(trigger, event) {
+  const audience = getTriggerAudience(trigger)
+
+  if (audience === 'any') {
+    return true
+  }
+
+  if (audience === 'specific-users') {
+    const normalizedUser = normalizeViewerHandle(event?.uniqueId || event?.sourceLabel || '')
+
+    return normalizedUser
+      ? getSpecificUsersList(trigger).includes(normalizedUser)
+      : false
+  }
+
+  if (audience === 'followers') {
+    return Boolean(event?.isFollower)
+  }
+
+  if (audience === 'subscribers') {
+    return Boolean(event?.isSubscriber)
+  }
+
+  if (audience === 'moderators') {
+    return Boolean(event?.isModerator)
+  }
+
+  if (audience === 'super-fans') {
+    return Boolean(event?.isSuperFan)
+  }
+
+  return true
+}
+
 function isAnyMatchRule(ruleText) {
   return [
     '',
@@ -543,6 +630,8 @@ function isAnyMatchRule(ruleText) {
     'cualquier',
     'cualquier follow',
     'cualquier comentario',
+    'comentario global',
+    'chat global',
     'cualquier gift',
     'cualquier regalo',
     'cualquier share',
@@ -589,6 +678,10 @@ function eventCarriesEmotes(event) {
 
 export function matchesTrigger(trigger, event) {
   if (!trigger || !event) {
+    return false
+  }
+
+  if (!matchesTriggerAudience(trigger, event)) {
     return false
   }
 
@@ -642,6 +735,7 @@ export function createManualIncomingEvent(type, payload = {}) {
     totalLikeCount: Number(payload.totalLikeCount || payload.likeCount || 0),
     shareTarget: payload.shareTarget || '',
     displayText: payload.displayText || '',
+    isFollower: Boolean(payload.isFollower),
     isSubscriber: Boolean(payload.isSubscriber),
     isModerator: Boolean(payload.isModerator),
     isSuperFan: Boolean(payload.isSuperFan),
