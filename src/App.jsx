@@ -5574,11 +5574,18 @@ function OverlayScreen({ slug }) {
   const [appState, setAppState] = useState(() => readStoredState())
   const [currentEvent, setCurrentEvent] = useState(null)
   const [overlayError, setOverlayError] = useState('')
+  const [mediaReady, setMediaReady] = useState(false)
   const seenEventIds = useRef(new Set())
   const queuedEventsRef = useRef([])
   const isShowingEventRef = useRef(false)
   const audioRef = useRef(null)
   const overlayAccessKey = readOverlayAccessKeyFromUrl()
+  const mediaKind = detectMediaKind(currentEvent?.mediaUrl)
+  const shouldRenderCleanMedia =
+    Boolean(currentEvent)
+    && ['image', 'video'].includes(mediaKind)
+    && currentEvent.outputs?.includes('overlayMedia')
+    && !currentEvent.outputs?.includes('overlayAlert')
 
   function playNextEvent() {
     if (isShowingEventRef.current) {
@@ -5592,6 +5599,7 @@ function OverlayScreen({ slug }) {
     }
 
     isShowingEventRef.current = true
+    setMediaReady(false)
     setCurrentEvent(nextEvent)
   }
 
@@ -5720,6 +5728,17 @@ function OverlayScreen({ slug }) {
       audioRef.current = audio
     }
 
+    if (shouldRenderCleanMedia && mediaKind === 'video' && !mediaReady) {
+      return undefined
+    }
+
+    const baseDurationMs = Number(currentEvent.durationMs || 5000)
+    const timeoutDurationMs = shouldRenderCleanMedia
+      ? mediaKind === 'video'
+        ? Math.max(baseDurationMs, 12000)
+        : Math.max(baseDurationMs, 6500)
+      : baseDurationMs
+
     const timeoutId = window.setTimeout(() => {
       if (audioRef.current) {
         audioRef.current.pause()
@@ -5731,21 +5750,15 @@ function OverlayScreen({ slug }) {
       }
 
       isShowingEventRef.current = false
+      setMediaReady(false)
       setCurrentEvent(null)
       playNextEvent()
-    }, currentEvent.durationMs || 5000)
+    }, timeoutDurationMs)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [currentEvent])
-
-  const mediaKind = detectMediaKind(currentEvent?.mediaUrl)
-  const shouldRenderCleanMedia =
-    Boolean(currentEvent)
-    && ['image', 'video'].includes(mediaKind)
-    && currentEvent.outputs?.includes('overlayMedia')
-    && !currentEvent.outputs?.includes('overlayAlert')
+  }, [currentEvent, mediaKind, mediaReady, shouldRenderCleanMedia])
 
   return (
     <div className="overlay-screen">
@@ -5763,6 +5776,7 @@ function OverlayScreen({ slug }) {
                 className="overlay-media overlay-media-clean"
                 src={currentEvent.mediaUrl}
                 alt={currentEvent.title || 'Overlay media'}
+                onLoad={() => setMediaReady(true)}
               />
             ) : null}
 
@@ -5775,6 +5789,8 @@ function OverlayScreen({ slug }) {
                 loop
                 playsInline
                 preload="auto"
+                onLoadedData={() => setMediaReady(true)}
+                onCanPlay={() => setMediaReady(true)}
               />
             ) : null}
           </>
