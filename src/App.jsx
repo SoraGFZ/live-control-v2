@@ -5741,16 +5741,43 @@ function OverlayScreen({ slug }) {
   }, [currentEvent])
 
   const mediaKind = detectMediaKind(currentEvent?.mediaUrl)
+  const shouldRenderCleanMedia =
+    Boolean(currentEvent)
+    && ['image', 'video'].includes(mediaKind)
+    && currentEvent.outputs?.includes('overlayMedia')
+    && !currentEvent.outputs?.includes('overlayAlert')
 
   return (
     <div className="overlay-screen">
-      <div className="overlay-stage">
+      <div className={`overlay-stage ${shouldRenderCleanMedia ? 'clean-media' : ''}`}>
         {overlayError ? (
           <div className="overlay-idle">
             <span className="overlay-idle-label">Overlay bloqueado</span>
             <h1>{appState.profile.projectName}</h1>
             <p>{overlayError}</p>
           </div>
+        ) : shouldRenderCleanMedia ? (
+          <>
+            {mediaKind === 'image' ? (
+              <img
+                className="overlay-media overlay-media-clean"
+                src={currentEvent.mediaUrl}
+                alt={currentEvent.title || 'Overlay media'}
+              />
+            ) : null}
+
+            {mediaKind === 'video' ? (
+              <video
+                className="overlay-media overlay-media-clean"
+                src={currentEvent.mediaUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            ) : null}
+          </>
         ) : currentEvent ? (
           <article className={`overlay-card theme-${currentEvent.theme || 'ember'}`}>
             <div className="overlay-card-head">

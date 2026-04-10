@@ -2055,6 +2055,12 @@
   padding: 36px;
 }
 
+.overlay-stage.clean-media {
+  align-items: center;
+  justify-items: center;
+  padding: 0;
+}
+
 .overlay-anchor {
   position: fixed;
   top: 18px;
@@ -2116,6 +2122,18 @@
   width: min(100%, 360px);
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.overlay-media-clean {
+  width: auto;
+  max-width: 100vw;
+  max-height: 100vh;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  object-fit: contain;
+  box-shadow: none;
+  background: transparent;
 }
 
 @media (max-width: 1120px) {
