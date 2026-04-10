@@ -62,6 +62,8 @@ await store.load()
 const spotifySessionStore = new SpotifySessionStore()
 const persistedSpotifySession = await spotifySessionStore.load()
 await ensureMediaDirectory()
+const distIndexFileMtimeMs = existsSync(distIndexFile) ? (await fs.stat(distIndexFile)).mtimeMs : Date.now()
+const staticAssetVersion = String(Math.round(distIndexFileMtimeMs))
 
 const app = express()
 app.use(express.json({ limit: '1mb' }))
@@ -2998,6 +3000,14 @@ function renderSpotifyDesktopCallbackPage({ success, message }) {
     </html>`
 }
 
+async function renderDistIndexHtml() {
+  const rawHtml = await fs.readFile(distIndexFile, 'utf8')
+
+  return rawHtml
+    .replace(/(\/assets\/[^"'?]+\.(?:js|css))(["'])/g, `$1?v=${staticAssetVersion}$2`)
+    .replace(/(\/favicon\.svg)(["'])/g, `$1?v=${staticAssetVersion}$2`)
+}
+
 app.get('/api/music/spotify/callback', async (request, response) => {
   const desktopDashboardUrl = normalizeBaseUrl(runtimeProcess.env.LIVE_CONTROL_DASHBOARD_URL || '')
   const isDesktopMode = String(runtimeProcess.env.LIVE_CONTROL_DESKTOP_MODE || '').trim() === '1'
@@ -3645,10 +3655,22 @@ if (existsSync(distIndexFile)) {
     next()
   })
 
-  app.use(express.static(distDirectory))
+  app.use(
+    express.static(distDirectory, {
+      etag: false,
+      maxAge: 0,
+      setHeaders: (response, filePath) => {
+        if (String(filePath || '').includes(`${path.sep}assets${path.sep}`)) {
+          response.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate')
+          response.setHeader('Pragma', 'no-cache')
+          response.setHeader('Expires', '0')
+        }
+      },
+    }),
+  )
 
-  app.get(/^(?!\/api).*/, (_request, response) => {
-    response.sendFile(distIndexFile)
+  app.get(/^(?!\/api).*/, async (_request, response) => {
+    response.type('html').send(await renderDistIndexHtml())
   })
 } else {
   app.get('/', (_request, response) => {
