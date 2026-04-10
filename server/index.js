@@ -26,11 +26,13 @@ import {
 } from '../src/live-control.js'
 import {
   createStoredMediaName,
+  detectMediaKindFromFileName,
   ensureMediaDirectory,
   getMediaDirectory,
   listMediaItems,
   removeMediaItem,
 } from './media-library.js'
+import { normalizeVideoFileForWeb } from './media-processing.js'
 import {
   buildSpotifyAuthorizeUrl,
   exchangeSpotifyCode,
@@ -2926,7 +2928,20 @@ app.put(
     }
 
     await ensureMediaDirectory()
-    await fs.writeFile(path.join(getMediaDirectory(), rawFileName), request.body)
+    const targetFilePath = path.join(getMediaDirectory(), rawFileName)
+    await fs.writeFile(targetFilePath, request.body)
+
+    if (detectMediaKindFromFileName(rawFileName) === 'video') {
+      try {
+        await normalizeVideoFileForWeb(targetFilePath)
+      } catch (error) {
+        response.status(400).json({
+          error: `No pude convertir ese video para el overlay publico: ${error.message}`,
+        })
+        return
+      }
+    }
+
     mediaLibraryCount = (await listMediaItems()).length
     broadcastStatus()
 
@@ -3494,6 +3509,17 @@ app.post('/api/media', mediaUpload.single('file'), async (request, response) => 
   if (!request.file) {
     response.status(400).json({ error: 'No llego ningun archivo.' })
     return
+  }
+
+  if (detectMediaKindFromFileName(request.file.filename) === 'video') {
+    try {
+      await normalizeVideoFileForWeb(request.file.path)
+    } catch (error) {
+      response.status(400).json({
+        error: `No pude preparar ese video para el overlay: ${error.message}`,
+      })
+      return
+    }
   }
 
   const mediaItems = await listMediaItems()

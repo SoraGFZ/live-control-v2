@@ -31,6 +31,10 @@ function detectMediaKindFromName(fileName) {
   return 'other'
 }
 
+export function detectMediaKindFromFileName(fileName) {
+  return detectMediaKindFromName(fileName)
+}
+
 function toMediaRecord(dirent, stats) {
   return {
     id: dirent.name,
@@ -57,7 +61,8 @@ export function createStoredMediaName(originalName) {
   const baseName = path.basename(originalName || 'media', extension)
   const safeBaseName = sanitizeFileBaseName(baseName) || 'media'
   const stamp = `${Date.now()}-${Math.round(Math.random() * 100000)}`
-  return `${stamp}-${safeBaseName}${extension}`
+  const normalizedExtension = detectMediaKindFromName(originalName) === 'video' ? '.mp4' : extension
+  return `${stamp}-${safeBaseName}${normalizedExtension}`
 }
 
 export async function listMediaItems() {
