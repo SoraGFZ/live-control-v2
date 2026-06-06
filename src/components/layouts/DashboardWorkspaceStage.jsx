@@ -6,7 +6,6 @@ import ActionsSection from '../sections/ActionsSection'
 
 import TTSSection from '../sections/TTSSection.jsx'
 import GamesSection from '../sections/GamesSection.jsx'
-import BattlesSection from '../sections/BattlesSection.jsx'
 import OverviewSection from '../sections/OverviewSection.jsx'
 import LiveHubSection from '../sections/LiveHubSection.jsx'
 import MusicSection from '../sections/MusicSection.jsx'
@@ -23,9 +22,7 @@ import SoundsSection from '../sections/SoundsSection.jsx'
 import ProfilesSection from '../sections/ProfilesSection.jsx'
 import {
   AccountSection,
-  AgenciesSection,
   CommunitySection,
-  EventsSection,
   StorageSection,
   GoalsSection,
   SupportSection,
@@ -313,20 +310,6 @@ function DashboardWorkspaceStage({ controller }) {
         serverStatus={serverStatus}
       />
     )
-  } else if (effectiveWorkspaceSection === 'battles') {
-    renderedWorkspace = (
-      <BattlesSection
-        onJump={scrollToSection}
-        profile={appState.profile}
-        serverStatus={serverStatus}
-      />
-    )
-  } else if (effectiveWorkspaceSection === 'events') {
-    renderedWorkspace = (
-      <EventsSection onJump={scrollToSection} profile={appState.profile} />
-    )
-  } else if (effectiveWorkspaceSection === 'agencies') {
-    renderedWorkspace = <AgenciesSection onJump={scrollToSection} />
   } else if (effectiveWorkspaceSection === 'support') {
     renderedWorkspace = <SupportSection onJump={scrollToSection} />
   } else if (effectiveWorkspaceSection === 'account') {

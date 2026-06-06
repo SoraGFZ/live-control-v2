@@ -172,11 +172,8 @@ export const WORKSPACE_SECTIONS = [
   { id: 'music', label: 'Spotify', token: 'MUS', description: 'Song request y cola musical.' },
   { id: 'gifts-hub', label: 'Regalos', token: 'GFT', description: 'Catalogo de gifts y emotes.' },
   { id: 'community', label: 'Comunidad', token: 'COM', description: 'Puntos, ranks y rankings de viewers.' },
-  { id: 'battles', label: 'Batallas', token: 'PK', description: 'PK TikTok, gift battle y overlays de duelo.' },
   { id: 'goals', label: 'Metas', token: 'GOL', description: 'Metas de likes, monedas, follows y shares.' },
-  { id: 'events', label: 'Eventos', token: 'EVT', description: 'Campanas, timer y widgets de eventos.' },
   { id: 'games', label: 'Gaming', token: 'GAME', description: 'Biblioteca de juegos interactivos.' },
-  { id: 'agencies', label: 'Agencias', token: 'AGN', description: 'Panel de agencia (cloud TikControl).' },
   { id: 'support', label: 'Soporte', token: 'SUP', description: 'Ayuda, logs y diagnostico.' },
 
   { id: 'account', label: 'Cuenta', token: 'USR', description: 'Plan, sesion y preferencias.' },

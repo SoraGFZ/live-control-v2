@@ -26,10 +26,7 @@ export const STREAMING_NAV = [
     ],
   },
   { type: 'item', id: 'community', label: 'Comunidad', sectionId: 'community' },
-  { type: 'item', id: 'battles', label: 'Batallas', sectionId: 'battles' },
   { type: 'item', id: 'gaming', label: 'Gaming', sectionId: 'games' },
-  { type: 'item', id: 'events', label: 'Eventos', sectionId: 'events' },
-  { type: 'item', id: 'agencies', label: 'Agencias', sectionId: 'agencies' },
   {
     type: 'group',
     id: 'settings',

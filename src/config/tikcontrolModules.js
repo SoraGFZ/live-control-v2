@@ -76,14 +76,6 @@ export const TIKCONTROL_MODULES = {
       'Historial de regalos de la sesion',
     ],
   },
-  battles: {
-    tikcontrolId: 'batallas',
-    label: 'Batallas',
-    title: 'Batallas TikTok LIVE',
-    lead: 'PK, linkMicBattle, gift battle y overlays de duelo.',
-    relatedSectionIds: ['widgets-gallery', 'live-hub'],
-    implemented: true,
-  },
   community: {
     tikcontrolId: 'puntos',
     label: 'Comunidad',
@@ -105,27 +97,6 @@ export const TIKCONTROL_MODULES = {
     lead: 'Biblioteca Steam-style y comandos por juego.',
     relatedSectionIds: ['actions'],
     implemented: true,
-  },
-  events: {
-    tikcontrolId: 'eventos',
-    label: 'Eventos',
-    title: 'Eventos del canal',
-    lead: 'Timer, subastas, notificaciones y metas del live.',
-    relatedSectionIds: ['community', 'actions', 'goals'],
-    implemented: true,
-    features: [
-      'Timer y subasta',
-      'Event notification overlay',
-      'Metas rotativas',
-    ],
-  },
-  agencies: {
-    tikcontrolId: 'agencias',
-    label: 'Agencias',
-    title: 'Agencias',
-    lead: 'Panel de agencia TikControl (cloud).',
-    relatedSectionIds: ['account'],
-    features: ['Explorer de creadores', 'Panel agencia'],
   },
   support: {
     tikcontrolId: 'soporte',

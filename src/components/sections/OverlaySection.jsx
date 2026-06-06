@@ -1,7 +1,7 @@
 import { formatDurationClock } from '../../dashboardViewHelpers'
 import { Trash2 } from 'lucide-react'
 import { DEFAULT_SERVER_STATUS } from '../../dashboardShared'
-import { SmartBarWidget } from '../overlay/OverlayWidgets'
+import { SmartBarWidget, TopLikesWidget } from '../overlay/OverlayWidgets'
 import TikControlWidgetFrame from '../overlay/TikControlWidgetFrame'
 import SectionHeader from '../common/SectionHeader'
 import WidgetErrorBoundary from '../common/WidgetErrorBoundary'
@@ -405,111 +405,141 @@ function OverlaySection({
         </div>
 
         <div className="surface-card settings-card">
-          <h3>Top Likes (TikControl)</h3>
+          <h3>Top Likes</h3>
           <p className="support-copy">
-            Vista previa del HTML original de TikControl. Los cambios de titulo, filas y color se
-            aplican al widget en OBS al guardar.
+            Configura el ranking de likes del live. Los cambios se reflejan en tiempo real en la preview y en el widget de OBS.
           </p>
-          <div className="tikcontrol-widget-preview-shell">
-            <TikControlWidgetFrame widgetFile="top-likes.html" className="tikcontrol-widget-frame--preview" />
+
+          {/* Live preview using the real component (Tikfinity / premium style) */}
+          <div className="music-spotify-preview-shell" style={{ marginBottom: '16px' }}>
+            <span className="snippet-label">Preview en vivo (cambios instantáneos)</span>
+            <TopLikesWidget
+              widgets={{ topLikes }}
+              leaderboards={leaderboards || leaderboardState}
+              preview
+            />
           </div>
-          <label className="field-label" htmlFor="top-likes-overlay-title">
-            Titulo
-          </label>
-          <input
-            id="top-likes-overlay-title"
-            className="text-field"
-            value={topLikes.title || 'Top Likes'}
-            onChange={(event) => updateTopLikesWidgetField('title', event.target.value)}
-          />
-          <label className="field-label" htmlFor="top-likes-overlay-kicker">
-            Subtitulo (kicker)
-          </label>
-          <input
-            id="top-likes-overlay-kicker"
-            className="text-field"
-            value={topLikes.kicker || 'TikTok Live'}
-            onChange={(event) => updateTopLikesWidgetField('kicker', event.target.value)}
-          />
-          <label className="field-label" htmlFor="top-likes-overlay-visible">
-            Posiciones visibles
-          </label>
-          <input
-            id="top-likes-overlay-visible"
-            className="text-field"
-            value={topLikes.maxVisible || '5'}
-            onChange={(event) => updateTopLikesWidgetField('maxVisible', event.target.value)}
-          />
-          <label className="field-label" htmlFor="top-likes-accent-color">
-            Color de acento
-          </label>
-          <input
-            id="top-likes-accent-color"
-            className="text-field"
-            placeholder="#ff6b9d"
-            value={topLikes.accentColor || ''}
-            onChange={(event) => updateTopLikesWidgetField('accentColor', event.target.value)}
-          />
-          <div className="leaderboard-widget-toggles">
-            <label className="leaderboard-widget-toggle">
-              <input
-                type="checkbox"
-                checked={topLikes.showRank !== false}
-                onChange={(event) => updateTopLikesWidgetField('showRank', event.target.checked)}
-              />
-              Mostrar posicion
-            </label>
-            <label className="leaderboard-widget-toggle">
-              <input
-                type="checkbox"
-                checked={topLikes.showAvatar !== false}
-                onChange={(event) => updateTopLikesWidgetField('showAvatar', event.target.checked)}
-              />
-              Mostrar avatar
-            </label>
-            <label className="leaderboard-widget-toggle">
-              <input
-                type="checkbox"
-                checked={topLikes.showUsername !== false}
-                onChange={(event) => updateTopLikesWidgetField('showUsername', event.target.checked)}
-              />
-              Mostrar @usuario
-            </label>
-            <label className="leaderboard-widget-toggle">
-              <input
-                type="checkbox"
-                checked={topLikes.showHeartIcons !== false}
-                onChange={(event) => updateTopLikesWidgetField('showHeartIcons', event.target.checked)}
-              />
-              Iconos de corazones
-            </label>
-          </div>
-          <div className="link-stack">
+
+          <div className="form-grid two-col">
             <div>
-              <span className="snippet-label">Top Likes local</span>
+              <label className="field-label" htmlFor="top-likes-overlay-title">Título</label>
+              <input
+                id="top-likes-overlay-title"
+                className="text-field"
+                value={topLikes.title || 'Top Likes'}
+                onChange={(event) => updateTopLikesWidgetField('title', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="top-likes-overlay-kicker">Subtítulo / kicker</label>
+              <input
+                id="top-likes-overlay-kicker"
+                className="text-field"
+                value={topLikes.kicker || 'TikTok Live'}
+                onChange={(event) => updateTopLikesWidgetField('kicker', event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="form-grid two-col">
+            <div>
+              <label className="field-label" htmlFor="top-likes-overlay-visible">Posiciones visibles (1-20)</label>
+              <input
+                id="top-likes-overlay-visible"
+                className="text-field"
+                type="number"
+                min="1"
+                max="20"
+                value={topLikes.maxVisible || '5'}
+                onChange={(event) => updateTopLikesWidgetField('maxVisible', event.target.value)}
+              />
+            </div>
+            <div>
+              <label className="field-label" htmlFor="top-likes-accent-color">Color de acento</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="color"
+                  value={topLikes.accentColor || '#ff6b9d'}
+                  onChange={(event) => updateTopLikesWidgetField('accentColor', event.target.value)}
+                  style={{ width: '48px', height: '38px', padding: 0, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', background: 'transparent' }}
+                />
+                <input
+                  id="top-likes-accent-color"
+                  className="text-field"
+                  placeholder="#ff6b9d"
+                  value={topLikes.accentColor || ''}
+                  onChange={(event) => updateTopLikesWidgetField('accentColor', event.target.value)}
+                  style={{ flex: 1 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '12px' }}>
+            <div className="field-label" style={{ marginBottom: '8px' }}>Mostrar en el ranking</div>
+            <div className="leaderboard-widget-toggles" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+              <label className="leaderboard-widget-toggle">
+                <input
+                  type="checkbox"
+                  checked={topLikes.showRank !== false}
+                  onChange={(event) => updateTopLikesWidgetField('showRank', event.target.checked)}
+                />
+                Posición (#)
+              </label>
+              <label className="leaderboard-widget-toggle">
+                <input
+                  type="checkbox"
+                  checked={topLikes.showAvatar !== false}
+                  onChange={(event) => updateTopLikesWidgetField('showAvatar', event.target.checked)}
+                />
+                Avatar
+              </label>
+              <label className="leaderboard-widget-toggle">
+                <input
+                  type="checkbox"
+                  checked={topLikes.showUsername !== false}
+                  onChange={(event) => updateTopLikesWidgetField('showUsername', event.target.checked)}
+                />
+                @usuario
+              </label>
+              <label className="leaderboard-widget-toggle">
+                <input
+                  type="checkbox"
+                  checked={topLikes.showHeartIcons !== false}
+                  onChange={(event) => updateTopLikesWidgetField('showHeartIcons', event.target.checked)}
+                />
+                Íconos de corazones
+              </label>
+            </div>
+          </div>
+
+          <div className="link-stack" style={{ marginTop: '16px' }}>
+            <div>
+              <span className="snippet-label">Widget para OBS / Live Studio</span>
               <code className="overlay-link">{localTopLikesUrl}</code>
             </div>
             <div>
-              <span className="snippet-label">Top Likes publica</span>
+              <span className="snippet-label">Widget público</span>
               <code className="overlay-link">
-                {publicTopLikesUrl || 'Completa la URL publica base para generar el link real.'}
+                {publicTopLikesUrl || 'Configura la URL pública base para generar el link.'}
               </code>
             </div>
           </div>
+
           <div className="card-actions">
-            <button type="button" className="primary-button" onClick={onTestTopLikes}>
-              Probar Top Likes
+            <button type="button" className="ae-op-btn" onClick={onTestTopLikes}>
+              Probar con datos demo
             </button>
-            <button type="button" className="secondary-button" onClick={onCopyTopLikesUrl}>
-              {publicTopLikesUrl ? 'Copiar Top Likes publico' : 'Copiar Top Likes local'}
+            <button type="button" className="ae-op-btn" onClick={onCopyTopLikesUrl}>
+              {publicTopLikesUrl ? 'Copiar público' : 'Copiar local'}
             </button>
-            <button type="button" className="secondary-button" onClick={onOpenTopLikesWindow}>
-              Abrir Top Likes
+            <button type="button" className="ae-op-btn" onClick={onOpenTopLikesWindow}>
+              Abrir preview
             </button>
           </div>
-          <p className="support-copy">
-            Usa la URL de arriba en OBS (Browser Source). &quot;Probar Top Likes&quot; inyecta datos de
-            prueba en el widget TikControl igual que en su app original.
+
+          <p className="support-copy" style={{ marginTop: '8px' }}>
+            Usa el link de arriba como Browser Source en OBS. La preview de arriba se actualiza al instante con tus cambios.
           </p>
         </div>
 
