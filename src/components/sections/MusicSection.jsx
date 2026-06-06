@@ -636,11 +636,11 @@ function MusicSection({
 
           <div className="link-stack music-links">
             <div>
-              <span className="snippet-label">Widget local</span>
+              <span className="snippet-label">Widget para OBS / Live Studio (usa URL pública si la configuraste)</span>
               <code className="overlay-link">{localSongRequestUrl}</code>
             </div>
             <div>
-              <span className="snippet-label">Widget público</span>
+              <span className="snippet-label">Widget público explícito</span>
               <code className="overlay-link">
                 {publicSongRequestUrl || 'Completa la URL pública base para generar el link real.'}
               </code>
@@ -649,7 +649,7 @@ function MusicSection({
 
           <div className="card-actions music-widget-actions">
             <button className="ae-op-btn" onClick={onCopySongRequestUrl}>
-              Copiar widget {publicSongRequestUrl ? 'público' : 'local'}
+              Copiar widget {publicSongRequestUrl ? 'público' : 'principal'}
             </button>
             <button className="ae-op-btn" onClick={onOpenSongRequestWindow}>
               Abrir en ventana
