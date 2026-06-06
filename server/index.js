@@ -3347,6 +3347,36 @@ async function dispatchMinecraftBridgeCommand({
   broadcast('app', { type: 'dispatch', payload: dispatchRecord })
   broadcastStatus()
 
+  // Also attempt RCON execution for test/manual Minecraft commands (makes "Probar" actually run the command on server)
+  if (trimmedCommandText) {
+    try {
+      const currentState = store.getState()
+      const rcon = await ensureMinecraftRcon(currentState.profile)
+      const response = await rcon.send(normalizeMinecraftCommand(trimmedCommandText))
+      dispatchRecord.bridgeResults.minecraft = {
+        ...dispatchRecord.bridgeResults.minecraft,
+        viaRcon: true,
+        response,
+      }
+      setMinecraftRconStatus({
+        connected: true,
+        lastError: '',
+        lastCommandAt: Date.now(),
+      })
+    } catch (error) {
+      dispatchRecord.bridgeResults.minecraft = {
+        ...dispatchRecord.bridgeResults.minecraft,
+        viaRcon: false,
+        error: error.message,
+      }
+      setMinecraftRconStatus({
+        connected: false,
+        lastError: error.message,
+        lastCommandAt: Date.now(),
+      })
+    }
+  }
+
   return dispatchRecord
 }
 

@@ -1222,6 +1222,7 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
 
   async function runMinecraftPreset(preset) {
     try {
+      const mode = preset?.minecraftMode || (preset?.id?.includes('oneblock') ? 'oneblock' : 'bedrock-box')
       const dispatchRecord = await requestJson(
         '/api/minecraft/test',
         {
@@ -1230,11 +1231,11 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
             name: preset?.name || 'Prueba Minecraft',
             description: preset?.note || '',
             commandText: preset?.commandText || '',
-            minecraftMode: 'bedrock-box',
+            minecraftMode: mode,
             minecraftBedrockPresetId: preset?.id || '',
             minecraftBedrockPresetName: preset?.name || '',
             userName: 'manual-minecraft',
-            comment: `Prueba Bedrock Box: ${preset?.name || 'preset'}`,
+            comment: `Prueba ${mode === 'oneblock' ? 'OneBlock' : 'Bedrock Box'}: ${preset?.name || 'preset'}`,
           }),
         },
         dashboardAccessKey,
