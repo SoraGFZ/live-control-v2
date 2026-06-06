@@ -40,6 +40,7 @@ import {
   normalizeDesktopDashboardUrl,
   readWorkspacePanelFromUrl,
 } from '../dashboardViewHelpers'
+import { buildOverlayScreens } from '../config/actionsEventsHelpers'
 
 function resolveInitialWorkspaceSection(initialPanelSection) {
   const fromUrl = readWorkspacePanelFromUrl()
@@ -563,6 +564,11 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
   const topGiftsUrl = publicTopGiftsUrl || localTopGiftsUrl
   const smartBarUrl = publicSmartBarUrl || localSmartBarUrl
   const overlayUrl = publicOverlayUrl || localOverlayUrl
+
+  // Screen overlays (the 10 ?screen=N variants used in Acciones y Eventos > Pantallas)
+  // Use effectiveBase so that when publicBaseUrl is set, all pantalla URLs already have the user's domain (no 127).
+  const overlayScreens = buildOverlayScreens(effectiveBase, appState.profile)
+
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
   const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
     ? appState.integrations.tiktok.giftCatalog
@@ -1696,6 +1702,7 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
     localSongRequestUrl,
     localTopGiftsUrl,
     localTopLikesUrl,
+    overlayScreens,
     mediaLibrary,
     mediaLibraryError,
     openBackupImportPicker,

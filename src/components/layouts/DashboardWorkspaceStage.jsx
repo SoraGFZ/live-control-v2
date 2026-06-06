@@ -61,6 +61,7 @@ function DashboardWorkspaceStage({ controller }) {
     localSongRequestUrl,
     localTopGiftsUrl,
     localTopLikesUrl,
+    overlayScreens,
     mediaLibrary,
     mediaLibraryError,
     openBackupImportPicker,
@@ -342,6 +343,7 @@ function DashboardWorkspaceStage({ controller }) {
         triggers={appState.triggers}
         profile={appState.profile}
         localOverlayUrl={localOverlayUrl}
+        overlayScreens={overlayScreens}
         emoteCatalog={tikTokEmoteCatalog}
         giftCatalog={tikTokGiftCatalog}
         addAction={controller.addAction}

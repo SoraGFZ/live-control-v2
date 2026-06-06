@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { buildOverlayScreens } from '../../config/actionsEventsHelpers'
 import { Copy, ExternalLink } from 'lucide-react'
 
-function ActionsScreensPanel({ localOverlayUrl, profile, onCopyOverlayUrl }) {
-  const screens = buildOverlayScreens(localOverlayUrl, profile)
+function ActionsScreensPanel({ localOverlayUrl, overlayScreens, profile, onCopyOverlayUrl }) {
+  // Prefer precomputed overlayScreens from controller (uses effectiveBase / publicBaseUrl when set).
+  // This makes the "Pantallas" cards in Acciones y Eventos show the user's public domain instead of 127.0.0.1.
+  const screens = Array.isArray(overlayScreens) && overlayScreens.length > 0
+    ? overlayScreens
+    : buildOverlayScreens(localOverlayUrl, profile)
   const [copiedScreen, setCopiedScreen] = useState(null)
 
   async function copyScreenUrl(screen, url) {

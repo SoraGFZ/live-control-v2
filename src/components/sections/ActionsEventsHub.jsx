@@ -77,6 +77,7 @@ function ActionsEventsHub({
   triggers,
   profile,
   localOverlayUrl,
+  overlayScreens,
   emoteCatalog,
   giftCatalog,
   addAction,
@@ -189,6 +190,7 @@ function ActionsEventsHub({
 
       <ActionsScreensPanel
         localOverlayUrl={localOverlayUrl}
+        overlayScreens={overlayScreens}
         profile={profile}
         onCopyOverlayUrl={onCopyOverlayUrl}
       />
