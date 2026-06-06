@@ -226,7 +226,17 @@ export function GamesSectionCore({
 
         <div className="game-detail-hero">
           <aside className="game-detail-aside">
-            <img className="game-detail-poster" src={selectedGame.coverUrl} alt={selectedGame.coverAlt} />
+            <div className="game-cover-frame" style={{ '--game-accent': selectedGame.accent }}>
+              <img
+                className="game-detail-poster"
+                src={selectedGame.coverUrl}
+                alt={selectedGame.coverAlt || selectedGame.title}
+                onError={(e) => {
+                  e.currentTarget.src = '/gta-v-cover.svg'
+                }}
+              />
+              <div className="game-cover-overlay" />
+            </div>
             <strong>{selectedGame.title}</strong>
             <span className="game-detail-subtitle">{selectedGame.modeLabel}</span>
             <div className="game-detail-meta">

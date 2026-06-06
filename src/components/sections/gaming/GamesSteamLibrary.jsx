@@ -395,17 +395,28 @@ function GamesSteamLibrary({
                           setCommandSearch('')
                           setCommandFeedback('')
                         }}
+                        title={game.name}
                       >
-                        {game.coverUrl ? (
-                          <img className="steam-sidebar-thumb" src={game.coverUrl} alt="" />
-                        ) : (
+                        <div className="steam-cover-wrap">
+                          {game.coverUrl ? (
+                            <img
+                              className="steam-sidebar-thumb"
+                              src={game.coverUrl}
+                              alt={game.name}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                                const fb = e.currentTarget.parentElement.querySelector('.steam-cover-fallback')
+                                if (fb) fb.style.display = 'flex'
+                              }}
+                            />
+                          ) : null}
                           <span
-                            className="steam-sidebar-thumb steam-sidebar-thumb-fallback"
-                            style={{ background: game.accent }}
+                            className="steam-cover-fallback"
+                            style={{ background: game.accent || '#3b3b4a', display: game.coverUrl ? 'none' : 'flex' }}
                           >
-                            {game.name.slice(0, 1)}
+                            {game.name.slice(0, 2).toUpperCase()}
                           </span>
-                        )}
+                        </div>
                         <span className="steam-sidebar-name">{game.name}</span>
                         <span className={`steam-sidebar-dot ${dotClass}`} aria-hidden="true" />
                       </button>
