@@ -1,1 +1,0 @@
-module.exports=new Proxy({},{get(){throw new Error('modules/tiktok.js has been retired. Use require("./ConexionesV2") and its API instead.')}});

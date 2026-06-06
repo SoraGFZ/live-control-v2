@@ -1,1 +1,0 @@
-window.__TAB_REGALOS__||(window.__TAB_REGALOS__=!0,import("./gifts.js").then(()=>console.log("[Tab][Regalos] gifts.js listo")).catch(o=>console.warn("[Tab][Regalos] Error gifts.js",o)));

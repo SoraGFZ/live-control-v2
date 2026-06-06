@@ -1,1 +1,0 @@
-export function t(n){return window.i18n&&window.i18n.t?window.i18n.t(n):n}"undefined"!=typeof window&&(window.aeT=t);

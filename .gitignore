@@ -26,3 +26,13 @@ bridge-config.json
 *.njsproj
 *.sln
 *.sw?
+
+.env
+.env.*
+node_modules/
+release/
+dist/
+.tikcontrol-extract/
+storage/
+tmp-*.txt
+*.log
