@@ -1,0 +1,17 @@
+{
+  "likefountain_randomColor": true,
+  "likefountain_heartColor1": "#ff0050",
+  "likefountain_heartColor2": "#ff69b4",
+  "likefountain_showProfilePictures": true,
+  "likefountain_profileLikeEvery": 15,
+  "likefountain_profileShareEvery": 2,
+  "likefountain_randomPosition": true,
+  "randomColor": true,
+  "heartColor1": "#ff0050",
+  "heartColor2": "#ff69b4",
+  "showProfilePictures": true,
+  "profileLikeEvery": 15,
+  "profileShareEvery": 2,
+  "randomPosition": true,
+  "rainbowMode": false
+}

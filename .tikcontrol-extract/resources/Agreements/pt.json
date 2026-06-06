@@ -1,0 +1,101 @@
+{
+  "version": "2.0",
+  "title": "TERMOS DE USO",
+  "intro": {
+    "h1": "Antes de começar",
+    "h2": "TikControl não é apenas mais uma ferramenta",
+    "h3": "Como funciona o TikControl",
+    "bullets": [
+      "Você controla o seu LIVE",
+      "O TikControl não toma decisões sobre a sua conta do TikTok",
+      "Você deve cumprir as políticas do TikTok",
+      "Os resultados dependem de como você utiliza a plataforma"
+    ],
+    "smallText": "O TikControl é uma plataforma independente. O uso do serviço é de responsabilidade do usuário."
+  },
+  "checkbox": "Aceito os Termos de Uso e a Política de Privacidade",
+  "acceptButton": "Aceitar e continuar",
+  "languageLabel": "Idioma",
+  "sections": [
+    {
+      "heading": "1. IDENTIFICAÇÃO",
+      "body": "Este serviço é operado por TIKCONTROL TECHNOLOGIES S.L., NIF: B26633057 (doravante, \"TikControl\")."
+    },
+    {
+      "heading": "2. ACEITAÇÃO E CARÁTER VINCULATIVO",
+      "body": "Ao acessar, registrar-se ou utilizar o TikControl, o usuário concorda em ficar legalmente vinculado a estes termos. Caso não concorde, não deve utilizar o serviço. O TikControl pode modificar estes termos a qualquer momento. O uso contínuo implica a aceitação das alterações."
+    },
+    {
+      "heading": "3. NATUREZA DO SERVIÇO",
+      "body": "O TikControl é uma plataforma tecnológica que fornece ferramentas de produção, controle e gestão para TikTok LIVE. O TikControl não é uma plataforma de monetização, não intermedeia pagamentos entre usuários e não garante resultados, rendimentos ou crescimento. O usuário reconhece que o TikControl é uma ferramenta de suporte operacional."
+    },
+    {
+      "heading": "4. INDEPENDÊNCIA DO TIKTOK",
+      "body": "O TikControl é um serviço independente e não está afiliado, autorizado ou associado ao TikTok. O TikControl não tem controle sobre algoritmos, políticas da plataforma, moderação, suspensões ou bloqueios. O usuário assume integralmente os riscos da sua atividade no TikTok."
+    },
+    {
+      "heading": "5. CONTA E ACESSO",
+      "body": "O acesso pode ser realizado através de registro por e-mail, autenticação via terceiros (ex.: Google) ou conexão opcional com conta TikTok. O usuário é responsável por manter a confidencialidade das credenciais e por todas as atividades realizadas na sua conta. O TikControl pode suspender ou eliminar contas a qualquer momento."
+    },
+    {
+      "heading": "6. USO PROIBIDO",
+      "body": "É proibido o uso ilegal ou fraudulento, a tentativa de violar a segurança, o uso abusivo da plataforma e a automação não autorizada. O TikControl pode agir sem aviso prévio."
+    },
+    {
+      "heading": "7. RESPONSABILIDADE DO USUÁRIO",
+      "body": "O usuário é responsável pelos conteúdos transmitidos, pelo uso da plataforma e pelo cumprimento das políticas do TikTok e da legislação aplicável. O TikControl não monitora conteúdos gerados pelos usuários."
+    },
+    {
+      "heading": "8. DISPONIBILIDADE DO SERVIÇO",
+      "body": "O TikControl não garante acesso contínuo nem ausência de erros. O serviço pode ser modificado, interrompido ou suspenso a qualquer momento."
+    },
+    {
+      "heading": "9. ASSINATURAS E PAGAMENTOS",
+      "body": "Algumas funcionalidades requerem assinatura. O usuário concorda que as assinaturas podem ser recorrentes, que a renovação pode ser automática e que é sua responsabilidade cancelar antes da renovação. Os pagamentos são processados por provedores externos (ex.: Stripe). O TikControl pode alterar preços mediante aviso prévio. Em caso de falha de pagamento, o acesso pode ser suspenso."
+    },
+    {
+      "heading": "10. DIREITO DE ARREPENDIMENTO",
+      "body": "Caso o usuário seja consumidor, poderá exercer o direito de arrependimento no prazo de 14 dias. No entanto, ao acessar e utilizar imediatamente o serviço digital, este direito pode ser perdido conforme a legislação aplicável."
+    },
+    {
+      "heading": "11. PROPRIEDADE INTELECTUAL",
+      "body": "Todos os elementos do TikControl são propriedade de TIKCONTROL TECHNOLOGIES S.L. O usuário mantém a titularidade do seu conteúdo, mas concede ao TikControl uma licença limitada para operar o serviço. É proibida qualquer utilização não autorizada."
+    },
+    {
+      "heading": "12. PROTEÇÃO DE DADOS",
+      "body": "O TikControl trata dados pessoais em conformidade com o RGPD. Os dados são utilizados para operar o serviço, melhorar a plataforma e gerir a relação com o usuário. Para mais informações, consulte a Política de Privacidade."
+    },
+    {
+      "heading": "13. SERVIÇOS DE TERCEIROS",
+      "body": "O usuário pode conectar serviços externos como TikTok. O TikControl não é responsável por alterações de APIs, falhas de serviços externos ou restrições impostas por terceiros."
+    },
+    {
+      "heading": "14. LIMITAÇÃO DE RESPONSABILIDADE",
+      "body": "Na máxima medida permitida por lei, o TikControl não será responsável por suspensões ou bloqueios no TikTok, perdas financeiras, danos diretos ou indiretos, erros técnicos ou interrupções. O uso do serviço é por conta e risco do usuário."
+    },
+    {
+      "heading": "15. LIMITAÇÃO GLOBAL DE RESPONSABILIDADE",
+      "body": "A responsabilidade total do TikControl não excederá o valor pago pelo usuário nos últimos 30 dias."
+    },
+    {
+      "heading": "16. RESCISÃO",
+      "body": "O TikControl pode suspender ou encerrar contas a qualquer momento."
+    },
+    {
+      "heading": "17. INDENIZAÇÃO",
+      "body": "O usuário concorda em indenizar o TikControl por quaisquer reclamações decorrentes de uso do serviço, conteúdos gerados, violação destes termos ou violação de direitos de terceiros."
+    },
+    {
+      "heading": "18. USO POR AGÊNCIAS",
+      "body": "As agências são responsáveis por seus criadores, seus managers e sua operação. O TikControl não faz parte dessas relações."
+    },
+    {
+      "heading": "19. IDADE MÍNIMA",
+      "body": "O usuário declara ter pelo menos 18 anos ou autorização legal suficiente."
+    },
+    {
+      "heading": "20. LEI APLICÁVEL E JURISDIÇÃO",
+      "body": "Estes termos são regidos pela legislação espanhola. Qualquer disputa será submetida aos tribunais de Madrid, Espanha."
+    }
+  ]
+}

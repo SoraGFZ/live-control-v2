@@ -1,0 +1,105 @@
+/*
+ * TikControl - Comunidad (view-puntos) + legado puntos
+ * Shell: section #view-puntos > #puntos-root (como #gifts-root / #widgets-root)
+ */
+
+#view-puntos {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Sin padding de .view (24px 32px): el espaciado lo lleva .community-wrapper */
+#view-puntos.view {
+    padding: 0;
+}
+
+#view-puntos.view.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 64px);
+}
+
+#view-puntos #puntos-root {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+}
+
+#view-puntos #puntos-root > .community-wrapper {
+    max-width: var(--view-max-width);
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#view-puntos .section-header-icon.puntos-icon {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
+    border-color: rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+}
+
+#view-puntos .puntos-controls {
+    background: linear-gradient(135deg, rgba(15, 15, 20, 0.95), rgba(10, 10, 14, 0.98));
+    border: 1px solid rgba(251, 191, 36, 0.15);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+#view-puntos .puntos-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#view-puntos .puntos-table thead {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.06));
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#view-puntos .puntos-table thead th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+#view-puntos .puntos-table tbody tr {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+#view-puntos .puntos-table tbody tr:hover {
+    background: rgba(251, 191, 36, 0.08);
+}
+
+#view-puntos .puntos-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(251, 191, 36, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+}

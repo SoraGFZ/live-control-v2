@@ -1,0 +1,57 @@
+/* ═══════════════════════════════════════════════════════════
+   OVERLAY EDITOR — TEMA CLARO
+   ═══════════════════════════════════════════════════════════ */
+
+/* Contenedor principal del editor */
+html.modo-claro #view-overlay .overlay-editor-container {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+}
+
+/* Iframe — el fondo oscuro se reemplaza por uno neutro */
+html.modo-claro #view-overlay .overlay-editor-container iframe {
+    background: #f0f2f5;
+}
+
+/* Sidebar de capas / objetos */
+html.modo-claro #view-overlay .overlay-sidebar {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+}
+
+/* Área de canvas */
+html.modo-claro #view-overlay .overlay-canvas-area {
+    background: var(--bg-elevated);
+}
+
+/* Panel de propiedades */
+html.modo-claro #view-overlay .overlay-properties {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+}
+
+html.modo-claro #view-overlay .overlay-properties input,
+html.modo-claro #view-overlay .overlay-properties select {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+/* Toolbar */
+html.modo-claro #view-overlay .overlay-toolbar {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+}
+
+/* Botones de versión */
+html.modo-claro #view-overlay .overlay-version-btn {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-overlay .overlay-version-btn.active {
+    background: var(--accent-primary);
+    color: #ffffff;
+    border-color: var(--accent-primary);
+}

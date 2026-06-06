@@ -1,0 +1,1 @@
+!function(e){"use strict";var f={offerStartIso:"2026-05-07T22:01:00Z",offerEndIso:"2026-07-08T21:59:00Z"};f.offerStartMs=Date.parse(f.offerStartIso),f.offerEndMs=Date.parse(f.offerEndIso),e.TIKCONTROL_FOUNDERS_WINDOW=Object.freeze?Object.freeze(f):f}("undefined"!=typeof globalThis?globalThis:window);

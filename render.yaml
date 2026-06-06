@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: live-control-beta
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/status
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: LIVE_CONTROL_STORAGE_DIR
+        value: /data
+    disk:
+      name: live-control-data
+      mountPath: /data
+      sizeGB: 1

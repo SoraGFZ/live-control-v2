@@ -1,0 +1,556 @@
+/**
+ * TikControl Widget System - CSS v2.0
+ * Estilos unificados para TODOS los widgets
+ */
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET Y BASE
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--tc-font, 'Outfit', system-ui, -apple-system, sans-serif);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--tc-text, #ffffff);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VARIABLES CSS
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* Colores principales */
+  --tc-primary: #a855f7;
+  --tc-secondary: #ec4899;
+  --tc-accent: #06b6d4;
+  --tc-success: #10b981;
+  --tc-warning: #f59e0b;
+  --tc-error: #ef4444;
+  
+  /* Texto */
+  --tc-text: #ffffff;
+  --tc-text-muted: rgba(255, 255, 255, 0.7);
+  --tc-text-dim: rgba(255, 255, 255, 0.5);
+  
+  /* Fondos - TRANSPARENTE por defecto para OBS */
+  --tc-bg: transparent;
+  --tc-bg-solid: rgba(15, 23, 42, 0.95);
+  --tc-bg-card: rgba(30, 41, 59, 0.9);
+  --tc-bg-hover: rgba(51, 65, 85, 0.8);
+  
+  /* Bordes */
+  --tc-border: rgba(255, 255, 255, 0.1);
+  --tc-border-glow: rgba(168, 85, 247, 0.5);
+  
+  /* Sombras */
+  --tc-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --tc-shadow-glow: 0 0 20px rgba(168, 85, 247, 0.3);
+  
+  /* Espaciado */
+  --tc-gap: 12px;
+  --tc-radius: 12px;
+  --tc-radius-sm: 8px;
+  
+  /* Efectos de texto */
+  --tc-stroke-color: #000000;
+  --tc-stroke-width: 2px;
+  
+  /* Fuente personalizada (se sobrescribe via config) */
+  --tc-font: 'Outfit', system-ui, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTENEDOR PRINCIPAL
+   ═══════════════════════════════════════════════════════════════ */
+.tc-widget {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--tc-gap);
+  background: var(--tc-bg);
+  border-radius: var(--tc-radius);
+  border: none;
+  box-shadow: none;
+}
+
+.tc-widget.has-bg {
+  border: 1px solid var(--tc-border);
+  box-shadow: var(--tc-shadow);
+}
+
+.tc-widget.transparent {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TÍTULO
+   ═══════════════════════════════════════════════════════════════ */
+.tc-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: var(--tc-gap);
+  color: var(--tc-title-color, var(--tc-text));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LISTA / RANKING
+   ═══════════════════════════════════════════════════════════════ */
+.tc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--tc-row-bg, rgba(255, 255, 255, 0.08));
+  border-radius: var(--tc-radius-sm);
+  border: none;
+  transition: transform 0.5s ease, opacity 0.3s ease, background 0.3s ease;
+  pointer-events: none;
+}
+
+.tc-widget.has-bg .tc-row {
+  border: 1px solid var(--tc-border);
+}
+
+.tc-row.no-bg {
+  background: transparent;
+  border: none;
+}
+
+/* Pidió el creador eliminar las decoraciones de top 1/2/3 (línea
+   vertical lateral oro/plata/bronce + gradiente de fondo). Las filas
+   se ven uniformes con .tc-row genérica. El color del nombre/posición
+   sigue aplicándose vía .tc-row.top-N .tc-name / .tc-pos en cada
+   widget para mantener un mínimo de jerarquía visual. */
+.tc-row.top-1.no-bg,
+.tc-row.top-2.no-bg,
+.tc-row.top-3.no-bg {
+  background: transparent;
+  border: none;
+}
+
+/* Posición */
+.tc-pos {
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--tc-text-muted);
+}
+
+.tc-pos.medal {
+  font-size: 1.4rem;
+}
+
+/* Avatar */
+.tc-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--tc-border);
+  flex-shrink: 0;
+}
+
+.tc-row.top-1 .tc-avatar { border-color: #ffd700; }
+.tc-row.top-2 .tc-avatar { border-color: #c0c0c0; }
+.tc-row.top-3 .tc-avatar { border-color: #cd7f32; }
+
+/* Info */
+.tc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tc-name {
+  font-weight: 600;
+  font-size: var(--tc-font-size, 0.95rem);
+  color: var(--tc-text-color, var(--tc-text, #ffffff));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tc-username {
+  font-size: 0.8rem;
+  color: var(--tc-text-dim);
+}
+
+/* Valor */
+.tc-value {
+  font-weight: 700;
+  font-size: var(--tc-font-size, 1.2rem);
+  color: var(--tc-value-color, var(--tc-primary));
+  text-align: right;
+  min-width: 60px;
+}
+
+/* Icono junto al valor */
+.tc-icon {
+  font-size: 1.2rem;
+  margin-left: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EFECTOS DE TEXTO
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Contorno de texto */
+.tc-stroke {
+  -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+  text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+  paint-order: stroke fill;
+}
+
+/* Efecto Glow */
+.tc-effect-glow {
+  text-shadow: 
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
+/* Efecto Neon */
+.tc-effect-neon {
+  text-shadow: 
+    0 0 5px #fff,
+    0 0 10px #fff,
+    0 0 20px var(--tc-primary),
+    0 0 40px var(--tc-primary),
+    0 0 80px var(--tc-primary);
+}
+
+/* Efecto Rainbow */
+.tc-effect-rainbow {
+  background: linear-gradient(
+    90deg,
+    #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: tc-rainbow 3s linear infinite;
+}
+
+@keyframes tc-rainbow {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Efecto Pulse */
+.tc-effect-pulse {
+  animation: tc-pulse 2s ease-in-out infinite;
+}
+
+@keyframes tc-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMACIONES DE ENTRADA - SUAVES SIN PARPADEO
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ✅ Animación SUAVE sin parpadeo para nuevas entradas */
+.tc-animate-in {
+  animation: tc-smoothIn 0.6s ease-out forwards;
+}
+
+@keyframes tc-smoothIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ✅ Animación para ACTUALIZACIÓN de valor (sin mover la fila) */
+.tc-value-updated {
+  animation: tc-valueGlow 0.5s ease;
+}
+
+@keyframes tc-valueGlow {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); filter: brightness(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* ✅ Animación para cambio de posición (subir/bajar suavemente) */
+.tc-position-up {
+  animation: tc-moveUp 0.5s ease-out;
+}
+
+@keyframes tc-moveUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.tc-animate-fade {
+  animation: tc-fadeIn 0.4s ease forwards;
+}
+
+@keyframes tc-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tc-animate-scale {
+  animation: tc-scaleIn 0.4s ease forwards;
+}
+
+@keyframes tc-scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ✅ Stagger MUY suave para evitar parpadeos */
+.tc-row:nth-child(1) { animation-delay: 0ms; }
+.tc-row:nth-child(2) { animation-delay: 30ms; }
+.tc-row:nth-child(3) { animation-delay: 60ms; }
+.tc-row:nth-child(4) { animation-delay: 90ms; }
+.tc-row:nth-child(5) { animation-delay: 120ms; }
+.tc-row:nth-child(6) { animation-delay: 150ms; }
+.tc-row:nth-child(7) { animation-delay: 180ms; }
+.tc-row:nth-child(8) { animation-delay: 210ms; }
+.tc-row:nth-child(9) { animation-delay: 240ms; }
+.tc-row:nth-child(10) { animation-delay: 270ms; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ALERTAS / NOTIFICACIONES
+   ═══════════════════════════════════════════════════════════════ */
+.tc-alert {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: var(--tc-bg);
+  border: 2px solid var(--tc-primary);
+  border-radius: var(--tc-radius);
+  padding: 24px 32px;
+  text-align: center;
+  box-shadow: var(--tc-shadow-glow);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1000;
+}
+
+.tc-alert.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.tc-alert-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.tc-alert-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.tc-alert-message {
+  font-size: 1rem;
+  color: var(--tc-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO VACÍO
+   ═══════════════════════════════════════════════════════════════ */
+.tc-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--tc-text-dim);
+  padding: 20px;
+}
+
+.tc-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.tc-empty-text {
+  font-size: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT
+   ═══════════════════════════════════════════════════════════════ */
+.tc-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.tc-message {
+  display: flex;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--tc-bg-card);
+  border-radius: var(--tc-radius-sm);
+  animation: tc-slideIn 0.3s ease;
+}
+
+.tc-message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tc-message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.tc-message-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--tc-primary);
+  margin-bottom: 2px;
+}
+
+.tc-message-text {
+  font-size: 0.95rem;
+  word-wrap: break-word;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GIFTS
+   ═══════════════════════════════════════════════════════════════ */
+.tc-gift {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--tc-bg-card);
+  border-radius: var(--tc-radius);
+  border: none;
+}
+
+.tc-widget.has-bg .tc-gift {
+  border: 1px solid var(--tc-border);
+}
+
+.tc-gift-image {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.tc-gift-info {
+  flex: 1;
+}
+
+.tc-gift-name {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--tc-primary);
+}
+
+.tc-gift-sender {
+  font-size: 0.9rem;
+  color: var(--tc-text-muted);
+}
+
+.tc-gift-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--tc-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR - Oculta en widgets de streaming (no interactuables)
+   ═══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .tc-widget {
+    padding: 8px;
+  }
+  
+  .tc-row {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  
+  .tc-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .tc-name {
+    font-size: 0.85rem;
+  }
+  
+  .tc-value {
+    font-size: 1rem;
+  }
+}
+

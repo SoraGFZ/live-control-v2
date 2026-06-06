@@ -1,0 +1,15 @@
+/*
+ * TikControl - Components Index
+ * Importa todos los archivos de componentes en orden
+ */
+
+@import './buttons.css';
+@import './cards.css';
+@import './inputs.css';
+@import './custom-select.css';
+@import './modals.css';
+@import './tikfinity-import-prompt.css';
+@import './tables.css';
+@import './chips.css';
+@import './misc.css';
+@import './gaming-hud.css';

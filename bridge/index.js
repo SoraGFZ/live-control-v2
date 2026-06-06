@@ -1,10 +1,16 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
+import http from 'node:http'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, parse as parseUrl } from 'node:url'
 import { WebSocket, WebSocketServer } from 'ws'
 import { Rcon } from 'rcon-client'
-import { buildChaosModCatalog, CHAOSMOD_EFFECTS_SOURCE_URL } from '../src/chaosmod.js'
+import {
+  parseChaosModEffectsIni,
+  inferChaosModCategory,
+  formatChaosModFallbackName,
+  getChaosModCategoryLabel,
+} from '../src/chaosmod.js'
 import {
   buildWebSocketUrl,
   LOCAL_BRIDGE_DEFAULTS,
@@ -19,64 +25,41 @@ const projectRoot = path.resolve(__dirname, '..')
 const CONFIG_PATH = String(runtimeProcess.env.LIVE_CONTROL_BRIDGE_CONFIG || '').trim()
   ? path.resolve(String(runtimeProcess.env.LIVE_CONTROL_BRIDGE_CONFIG || '').trim())
   : path.join(projectRoot, 'bridge-config.json')
-const CHAOSMOD_ACTIVATOR_PATH = path.join(projectRoot, 'bridge', 'activate-chaosmod-effect.ps1')
-const CHAOSMOD_SHORTCUT_TRIGGER_PATH = path.join(
-  projectRoot,
-  'bridge',
-  'trigger-chaosmod-shortcut.ps1',
-)
-const CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG = '.enabledebugsocket'
-const CHAOSMOD_SHORTCUT_POOL = [
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x78 + index,
-    isCtrlPressed: true,
-    isShiftPressed: true,
-    isAltPressed: false,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x78 + index,
-    isCtrlPressed: true,
-    isShiftPressed: false,
-    isAltPressed: true,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x78 + index,
-    isCtrlPressed: false,
-    isShiftPressed: true,
-    isAltPressed: true,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x78 + index,
-    isCtrlPressed: true,
-    isShiftPressed: true,
-    isAltPressed: true,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x74 + index,
-    isCtrlPressed: true,
-    isShiftPressed: true,
-    isAltPressed: false,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x74 + index,
-    isCtrlPressed: true,
-    isShiftPressed: false,
-    isAltPressed: true,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x74 + index,
-    isCtrlPressed: false,
-    isShiftPressed: true,
-    isAltPressed: true,
-  })),
-  ...Array.from({ length: 4 }, (_, index) => ({
-    keyCode: 0x74 + index,
-    isCtrlPressed: true,
-    isShiftPressed: true,
-    isAltPressed: true,
-  })),
+const GTAV_WEBHOOK_EVENT_HINTS = [
+  'toolup',
+  'parkour',
+  'sky parkour',
+  'pointtopoint',
+  'point to point',
+  'chiliad',
+  'prop',
+  'map',
+  'spawn vehicle',
+  'replace vehicle',
+  'vehicle replace',
 ]
-const GTA_RESERVED_SHORTCUT_KEYCODES = new Set([0x70, 0x71, 0x72, 0x73])
+const CHAOSMOD_INSTALL_CANDIDATES = [
+  {
+    modPath: 'C:\\Program Files\\Epic Games\\GTAVEnhanced\\chaosmod',
+    processName: 'GTA5_Enhanced',
+    label: 'GTAVEnhanced',
+  },
+  {
+    modPath: 'C:\\Program Files (x86)\\Epic Games\\GTAVEnhanced\\chaosmod',
+    processName: 'GTA5_Enhanced',
+    label: 'GTAVEnhanced x86',
+  },
+  {
+    modPath: 'C:\\Program Files\\Epic Games\\GTAV\\chaosmod',
+    processName: 'GTA5',
+    label: 'GTAV',
+  },
+  {
+    modPath: 'C:\\Program Files (x86)\\Epic Games\\GTAV\\chaosmod',
+    processName: 'GTA5',
+    label: 'GTAV x86',
+  },
+]
 
 const DEFAULT_CONFIG = {
   serverBaseUrl: 'https://TU-APP.up.railway.app',
@@ -99,29 +82,21 @@ const DEFAULT_CONFIG = {
   },
   chaosmod: {
     enabled: true,
-    modPath: 'C:\\Program Files\\Epic Games\\GTAV\\chaosmod',
-    autoEnableEffectMenu: true,
-    autoEnableDebugSocket: true,
-    preferLocalHttp: true,
-    localHttpHost: '127.0.0.1',
-    localHttpPort: 8082,
-    localHttpPath: '/trigger_effect',
-    localHttpSender: 'StreamToEarn',
-    localHttpTokenHeader: 'Superdupertoken',
-    localHttpToken: 'glory to ukraine',
-    preferDirectSocket: true,
-    allowMenuFallback: false,
-    assumeTopSelectionOnStartup: true,
-    gtaProcessName: 'GTA5',
-    debugSocketPort: 31819,
-    debugSocketReconnectDelayMs: 3000,
-    catalogResyncIntervalMs: 30000,
-    preferShortcutFallback: true,
+    modPath: 'C:\\Program Files\\Epic Games\\GTAVEnhanced\\chaosmod',
+    gtaProcessName: 'GTA5_Enhanced',
+    preferShortcutTrigger: true,
+    allowMenuFallback: true,
     shortcutReloadDelayMs: 850,
     shortcutPostReloadDelayMs: 1400,
     shortcutKeyDelayMs: 45,
     menuOpenDelayMs: 220,
     keyDelayMs: 35,
+  },
+  s4eBridge: {
+    enabled: true,
+    localHttpHost: '127.0.0.1',
+    localHttpPort: 3087,
+    wsPort: 7704,
   },
 }
 
@@ -158,11 +133,18 @@ function readConfigFile() {
   ensureConfigFile()
   const rawConfig = readFileSync(CONFIG_PATH, 'utf8')
   const parsedConfig = mergeBridgeConfig(JSON.parse(rawConfig))
-  const normalizedBaseUrl = normalizeBaseUrl(parsedConfig.serverBaseUrl)
+  
+  // Allow environment variable override for backend URL
+  let serverBaseUrl = String(runtimeProcess.env.LIVE_CONTROL_BACKEND_URL || '').trim()
+  if (!serverBaseUrl) {
+    serverBaseUrl = parsedConfig.serverBaseUrl
+  }
+  
+  const normalizedBaseUrl = normalizeBaseUrl(serverBaseUrl)
 
   if (!normalizedBaseUrl || normalizedBaseUrl.includes('TU-APP.up.railway.app')) {
     throw new Error(
-      'bridge-config.json necesita una serverBaseUrl real de Railway antes de arrancar.',
+      'bridge-config.json necesita una serverBaseUrl real. Configura LIVE_CONTROL_BACKEND_URL o edita bridge-config.json.',
     )
   }
 
@@ -172,6 +154,122 @@ function readConfigFile() {
     localDashboardBaseUrl: normalizeBaseUrl(parsedConfig.localDashboardBaseUrl),
     dashboardKey: String(parsedConfig.dashboardKey || '').trim(),
   }
+}
+
+function inferChaosModProcessName(modPath) {
+  const normalizedPath = String(modPath || '').toLowerCase()
+
+  if (normalizedPath.includes('gtavenhanced')) {
+    return 'GTA5_Enhanced'
+  }
+
+  return 'GTA5'
+}
+
+function buildChaosModRuntimeCandidates(chaosModConfig) {
+  const configuredModPath = String(chaosModConfig.modPath || '').trim()
+  const configuredProcessName = String(chaosModConfig.gtaProcessName || '').trim()
+  const candidates = []
+  const seenPaths = new Set()
+
+  // Si hay un processName explícito, filtramos los candidatos estaticos para que solo
+  // queden los que coincidan — así GTAVEnhanced y GTAV no se cruzan nunca.
+  const staticCandidates = configuredProcessName
+    ? CHAOSMOD_INSTALL_CANDIDATES.filter(
+        (c) => c.processName.toLowerCase() === configuredProcessName.toLowerCase(),
+      )
+    : CHAOSMOD_INSTALL_CANDIDATES
+
+  ;[
+    configuredModPath
+      ? {
+          modPath: configuredModPath,
+          processName: configuredProcessName || inferChaosModProcessName(configuredModPath),
+          label: 'configurado',
+        }
+      : null,
+    ...staticCandidates,
+  ]
+    .filter(Boolean)
+    .forEach((candidate) => {
+      const normalizedModPath = path.resolve(String(candidate.modPath || '').trim())
+
+      if (!normalizedModPath || seenPaths.has(normalizedModPath)) {
+        return
+      }
+
+      seenPaths.add(normalizedModPath)
+      candidates.push({
+        ...candidate,
+        modPath: normalizedModPath,
+        effectsFilePath: path.join(normalizedModPath, 'configs', 'effects.ini'),
+        configFilePath: path.join(normalizedModPath, 'configs', 'config.ini'),
+        chaosLogFilePath: path.join(normalizedModPath, 'chaoslog.txt'),
+      })
+    })
+
+  return candidates.filter((candidate) => existsSync(candidate.effectsFilePath))
+}
+
+function findRunningChaosModProcessName(candidates) {
+  const processNames = Array.from(
+    new Set(candidates.map((candidate) => String(candidate.processName || '').trim()).filter(Boolean)),
+  )
+
+  if (processNames.length === 0) {
+    return ''
+  }
+
+  const taskListResult = spawnSync('tasklist', ['/FO', 'CSV', '/NH'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  })
+
+  if (taskListResult.status !== 0) {
+    return ''
+  }
+
+  const processListText = String(taskListResult.stdout || '').toLowerCase()
+
+  return processNames.find((processName) =>
+    processListText.includes(`"${String(processName).toLowerCase()}.exe"`),
+  ) || ''
+}
+
+function resolveChaosModRuntime(chaosModConfig) {
+  const candidates = buildChaosModRuntimeCandidates(chaosModConfig)
+  const fallbackModPath = path.resolve(String(chaosModConfig.modPath || '').trim())
+  const fallbackRuntime = {
+    label: 'configurado',
+    modPath: fallbackModPath,
+    processName: String(chaosModConfig.gtaProcessName || '').trim() || inferChaosModProcessName(fallbackModPath),
+    effectsFilePath: path.join(fallbackModPath, 'configs', 'effects.ini'),
+    configFilePath: path.join(fallbackModPath, 'configs', 'config.ini'),
+    chaosLogFilePath: path.join(fallbackModPath, 'chaoslog.txt'),
+  }
+
+  if (candidates.length === 0) {
+    return fallbackRuntime
+  }
+
+  const runningProcessName = findRunningChaosModProcessName(candidates)
+  const runtimeFromRunningProcess = candidates.find(
+    (candidate) => candidate.processName.toLowerCase() === runningProcessName.toLowerCase(),
+  )
+
+  if (runtimeFromRunningProcess) {
+    return runtimeFromRunningProcess
+  }
+
+  const configuredRuntime = candidates.find((candidate) => candidate.modPath === fallbackModPath)
+
+  if (configuredRuntime) {
+    return configuredRuntime
+  }
+
+  const preferredEnhancedRuntime = candidates.find((candidate) => candidate.processName === 'GTA5_Enhanced')
+
+  return preferredEnhancedRuntime || candidates[0]
 }
 
 function safeJsonSend(socket, payload) {
@@ -218,6 +316,232 @@ function createLocalBridgeServer(channelName, channelConfig) {
   }
 }
 
+let s4eLauncherSocket = null
+let s4eCommandBuffer = []
+const s4eConnectionInfo = {
+  isConnected: false,
+  isLauncher: false,
+  clientInfo: null,
+  launcherInfo: null,
+  connectedAt: null,
+}
+
+function trackS4eOutgoingFrame(frame, note = '') {
+  const rawOutgoing = JSON.stringify(frame)
+  console.log(
+    `[s4e] mensaje websocket saliente${note ? ` (${note})` : ''}: ${rawOutgoing.slice(0, 500)}`,
+  )
+  s4eCommandBuffer.push({
+    at: new Date().toISOString(),
+    direction: 'outgoing',
+    note,
+    raw: rawOutgoing,
+  })
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function createS4eBridgeWebSocketServer(bridgeConfig) {
+  const wsPort = Number(bridgeConfig.s4eBridge?.wsPort || 7704)
+  const wsServer = new WebSocketServer({ port: wsPort })
+
+  wsServer.on('connection', (socket, req) => {
+    if (s4eLauncherSocket && s4eLauncherSocket.readyState === WebSocket.OPEN) {
+      console.log('[s4e] rechazando nueva conexion, ya existe un cliente conectado')
+      socket.close(1000, 'Server already has a client')
+      return
+    }
+
+    s4eLauncherSocket = socket
+    s4eConnectionInfo.isConnected = true
+    s4eConnectionInfo.clientInfo = {
+      ip: req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+      connectedAt: new Date().toISOString(),
+    }
+    s4eConnectionInfo.connectedAt = new Date().toISOString()
+
+    console.log(`[s4e] socket conectado en ws://127.0.0.1:${wsPort}`)
+
+    socket.on('message', (message) => {
+      const rawMessage = message.toString()
+      console.log(`[s4e] mensaje websocket recibido: ${rawMessage.slice(0, 500)}`)
+      s4eCommandBuffer.push({
+        at: new Date().toISOString(),
+        direction: 'incoming',
+        raw: rawMessage,
+      })
+      try {
+        const msgObj = JSON.parse(rawMessage)
+
+        if (msgObj?.type === 'launcher_connect') {
+          console.log('[s4e] handshake launcher_connect recibido')
+          s4eConnectionInfo.isLauncher = true
+          s4eConnectionInfo.launcherInfo = {
+            ip: req.socket.remoteAddress,
+            userAgent: req.headers['user-agent'],
+            connectedAt: new Date().toISOString(),
+          }
+          socket.send(JSON.stringify({ type: 'launcher_connected', success: true }))
+          return
+        }
+
+        if (msgObj?.type === 'win' || msgObj?.type === 'lose') {
+          console.log(`[s4e] comando de juego recibido: ${msgObj.type}`)
+          return
+        }
+
+        if (msgObj?.type === 'get_minecraft_status') {
+          socket.send(JSON.stringify({ type: 'minecraft_status', isRunning: false }))
+          return
+        }
+
+        console.log(`[s4e] mensaje websocket sin manejar: ${JSON.stringify(msgObj)}`)
+      } catch (error) {
+        console.log('[s4e] mensaje invalido recibido:', error.message)
+      }
+    })
+
+    socket.on('close', () => {
+      console.log('[s4e] socket desconectado')
+      s4eLauncherSocket = null
+      s4eConnectionInfo.isConnected = false
+      s4eConnectionInfo.isLauncher = false
+    })
+
+    socket.on('error', (error) => {
+      console.error('[s4e] error de websocket:', error.message)
+      s4eLauncherSocket = null
+      s4eConnectionInfo.isConnected = false
+      s4eConnectionInfo.isLauncher = false
+    })
+  })
+
+  return wsServer
+}
+
+function createS4eBridgeHttpServer(bridgeConfig) {
+  const host = String(bridgeConfig.s4eBridge?.localHttpHost || '127.0.0.1').trim() || '127.0.0.1'
+  const port = Number(bridgeConfig.s4eBridge?.localHttpPort || 3087)
+
+  const server = http.createServer(async (req, res) => {
+    const parsedUrl = parseUrl(req.url || '', true)
+    const method = req.method
+
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+    if (method === 'OPTIONS') {
+      res.writeHead(200)
+      res.end()
+      return
+    }
+
+    const sendJson = (statusCode, payload) => {
+      const body = JSON.stringify(payload)
+      res.writeHead(statusCode, {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body, 'utf8'),
+      })
+      res.end(body)
+    }
+
+    const readRequestBody = () =>
+      new Promise((resolve, reject) => {
+        let rawBody = ''
+        req.on('data', (chunk) => {
+          rawBody += chunk
+        })
+        req.on('end', () => {
+          if (!rawBody) {
+            resolve({})
+            return
+          }
+          try {
+            resolve(JSON.parse(rawBody))
+          } catch {
+            reject(new Error('Invalid JSON body'))
+          }
+        })
+        req.on('error', reject)
+      })
+
+    if (method === 'GET' && parsedUrl.pathname === '/commands') {
+      const response = [...s4eCommandBuffer]
+      s4eCommandBuffer = []
+      sendJson(200, response)
+      return
+    }
+
+    if (method === 'GET' && parsedUrl.pathname === '/connection-info') {
+      sendJson(200, {
+        success: true,
+        connected: s4eConnectionInfo.isConnected,
+        socketConnectionInfo: s4eConnectionInfo,
+      })
+      return
+    }
+
+    if (method === 'POST' && parsedUrl.pathname === '/win') {
+      sendJson(200, { success: true, message: 'Win event handled' })
+      return
+    }
+
+    if (method === 'POST' && parsedUrl.pathname === '/lose') {
+      sendJson(200, { success: true, message: 'Lose event handled' })
+      return
+    }
+
+    if (method === 'POST' && parsedUrl.pathname === '/s4e-bridge') {
+      try {
+        const body = await readRequestBody()
+        if (!s4eLauncherSocket || s4eLauncherSocket.readyState !== WebSocket.OPEN) {
+          sendJson(503, { success: false, error: 'Launcher socket not connected' })
+          return
+        }
+
+        const payload = body.raw || { type: 's4e-bridge', payload: body.message ?? body }
+        const launcherConnectFrame = { type: 'launcher_connect' }
+        trackS4eOutgoingFrame(launcherConnectFrame, 'handshake')
+        s4eLauncherSocket.send(JSON.stringify(launcherConnectFrame))
+        await sleep(150)
+        trackS4eOutgoingFrame(payload, 'command')
+        s4eLauncherSocket.send(JSON.stringify(payload))
+        sendJson(200, {
+          success: true,
+          handshakeSent: launcherConnectFrame,
+          forwarded: payload,
+        })
+      } catch (error) {
+        sendJson(400, { success: false, error: error.message })
+      }
+      return
+    }
+
+    sendJson(404, {
+      success: false,
+      error: 'Endpoint not found. Available endpoints: GET /commands, GET /connection-info, POST /win, POST /lose, POST /s4e-bridge',
+    })
+  })
+
+  server.listen(port, host, () => {
+    console.log(`[s4e] HTTP bridge escuchando en http://${host}:${port}`)
+  })
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.log(`[s4e] puerto ${port} en uso. No se puede iniciar el HTTP bridge.`)
+    } else {
+      console.error('[s4e] error de HTTP bridge:', err.message)
+    }
+  })
+
+  return server
+}
+
 let minecraftRcon = null
 let minecraftRconSignature = ''
 
@@ -248,25 +572,56 @@ async function ensureMinecraftRcon(minecraftConfig) {
 function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs, onOpen) {
   let socket = null
   let reconnectTimeoutId = null
+  let heartbeatIntervalId = null
   let isStopped = false
+  let attempt = 0
+  const MAX_BACKOFF_MS = 30000
 
   function scheduleReconnect() {
     if (isStopped) {
       return
     }
 
-    reconnectTimeoutId = setTimeout(connect, reconnectDelayMs)
+    // Exponential backoff: 2500, 5000, 10000, 20000, 30000 ms max
+    const backoff = Math.min(reconnectDelayMs * Math.pow(2, attempt), MAX_BACKOFF_MS)
+    attempt++
+    console.log(`[remote:${channelName}] reintentando en ${Math.round(backoff / 1000)}s...`)
+    reconnectTimeoutId = setTimeout(connect, backoff)
+  }
+
+  function startHeartbeat() {
+    stopHeartbeat()
+    heartbeatIntervalId = setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.ping()
+      }
+    }, 25000)
+  }
+
+  function stopHeartbeat() {
+    if (heartbeatIntervalId) {
+      clearInterval(heartbeatIntervalId)
+      heartbeatIntervalId = null
+    }
   }
 
   function connect() {
-    console.log(`[remote:${channelName}] conectando a ${url}`)
+    const isLocal = url.includes('127.0.0.1') || url.includes('localhost')
+    const prefix = isLocal ? '🟢' : '🔵'
+    console.log(`\n${prefix} [remote:${channelName}] Conectando a ${url}`)
     socket = new WebSocket(url)
 
     socket.on('open', () => {
-      console.log(`[remote:${channelName}] conectado`)
+      attempt = 0
+      console.log(`${prefix} [remote:${channelName}] ✅ Conectado exitosamente`)
+      startHeartbeat()
       Promise.resolve(onOpen?.()).catch((error) => {
         console.error(`[remote:${channelName}] no pude correr onOpen: ${error.message}`)
       })
+    })
+
+    socket.on('pong', () => {
+      // conexion sigue viva
     })
 
     socket.on('message', async (rawMessage) => {
@@ -279,12 +634,13 @@ function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs, onO
     })
 
     socket.on('close', () => {
-      console.log(`[remote:${channelName}] desconectado, reintentando...`)
+      stopHeartbeat()
+      console.log(`[remote:${channelName}] ❌ Desconectado | Reintentando en ${reconnectDelayMs}ms...`)
       scheduleReconnect()
     })
 
     socket.on('error', (error) => {
-      console.error(`[remote:${channelName}] error: ${error.message}`)
+      console.error(`[remote:${channelName}] 🔴 Error de conexión: ${error.message}`)
       socket.close()
     })
   }
@@ -293,6 +649,7 @@ function connectRemoteChannel(channelName, url, onMessage, reconnectDelayMs, onO
 
   return () => {
     isStopped = true
+    stopHeartbeat()
     clearTimeout(reconnectTimeoutId)
     socket?.close()
   }
@@ -313,6 +670,70 @@ function updateIniValue(filePath, key, value) {
   }
 
   writeFileSync(filePath, `${iniContent.trimEnd()}\n${normalizedLine}\n`, 'utf8')
+}
+
+function isBusyFileError(error) {
+  return ['EBUSY', 'EPERM', 'EACCES'].includes(String(error?.code || '').toUpperCase())
+}
+
+/**
+ * Lee un archivo INI con tolerancia a bloqueos
+ * Reintentos: 3 intentos con 100ms de espera entre cada uno
+ */
+function readEffectsIniWithRetry(filePath, maxRetries = 3, retryDelayMs = 100) {
+  let lastError = null
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const content = readFileSync(filePath, 'utf8')
+      if (attempt > 1) {
+        console.log(`[bridge:chaosmod] ✅ Lectura de effects.ini exitosa en intento ${attempt}`)
+      }
+      return content
+    } catch (error) {
+      lastError = error
+      
+      if (!isBusyFileError(error)) {
+        throw error // No es bloqueo, lanzar error directamente
+      }
+      
+      console.warn(`[bridge:chaosmod] ⚠️ [EBUSY] Intento ${attempt}/${maxRetries} falló: ${error.message}`)
+      
+      // Esperar antes de reintentar (excepto en el último)
+      if (attempt < maxRetries) {
+        const endTime = Date.now() + retryDelayMs
+        while (Date.now() < endTime) {
+          // Spin-wait para mantener CPU ocupada sin bloquear
+        }
+      }
+    }
+  }
+
+  // Si todos los reintentos fallaron
+  console.error(`[bridge:chaosmod] ❌ [EBUSY] FALLO PERMANENTE: effects.ini está bloqueado después de ${maxRetries} intentos`)
+  console.error(`[bridge:chaosmod]    Error original: ${lastError.message}`)
+  console.error(`[bridge:chaosmod]    Causa probable: GTA5 o ChaosMod UI tiene el archivo abierto`)
+  console.error(`[bridge:chaosmod]    Solución: Cierra GTA5 y ChaosMod, espera 2 segundos, reintenta`)
+  
+  throw new Error(
+    `[EBUSY-BLOQUEADO] effects.ini está permanentemente bloqueado. ${lastError.message}`
+  )
+}
+
+function tryUpdateIniValue(filePath, key, value, contextLabel = filePath) {
+  try {
+    updateIniValue(filePath, key, value)
+    return true
+  } catch (error) {
+    if (isBusyFileError(error)) {
+      console.warn(
+        `[chaosmod] no pude actualizar ${contextLabel} (${key}) porque el archivo esta bloqueado: ${error.message}`,
+      )
+      return false
+    }
+
+    throw error
+  }
 }
 
 function parseCommaSeparatedValues(valueText) {
@@ -340,118 +761,328 @@ function parseCommaSeparatedValues(valueText) {
   return values
 }
 
-function parseChaosModEffectsConfig(effectsIniText) {
-  return String(effectsIniText || '')
-    .split(/\r?\n/)
-    .map((rawLine, index) => {
-      const line = rawLine.trim()
-
-      if (!line || line.startsWith('#') || line.startsWith(';') || !line.includes('=')) {
-        return {
-          kind: 'raw',
-          rawLine,
-          lineIndex: index,
-        }
-      }
-
-      const [rawId, rawConfig] = rawLine.split('=', 2)
-      const configValues = parseCommaSeparatedValues(rawConfig).map((value) => value.trim())
-
-      while (configValues.length < 8) {
-        configValues.push('')
-      }
+function buildChaosModCatalogFromEffectsIni(effectsIniText) {
+  return parseChaosModEffectsIni(effectsIniText)
+    .filter((entry) => entry.enabled)
+    .map((entry) => {
+      const category = inferChaosModCategory(entry.id)
 
       return {
-        kind: 'effect',
-        id: rawId.trim(),
-        rawId,
-        configValues,
-        lineIndex: index,
+        id: entry.id,
+        name: formatChaosModFallbackName(entry.id),
+        category,
+        categoryLabel: getChaosModCategoryLabel(category),
+        source: 'effects.ini',
       }
     })
 }
 
-function serializeChaosModEffectsConfig(parsedEntries) {
-  return `${parsedEntries
-    .map((entry) =>
-      entry.kind === 'effect'
-        ? `${entry.rawId || entry.id}=${entry.configValues.join(',')}`
-        : entry.rawLine,
+function readChaosModExactCatalog(effectsFilePath) {
+  if (!effectsFilePath || !existsSync(effectsFilePath)) {
+    return []
+  }
+
+  return buildChaosModCatalogFromEffectsIni(readEffectsIniWithRetry(effectsFilePath))
+}
+
+function resolveGtavWebhookPaths(chaosModState, bridgeConfig) {
+  const chaosModBasePath = chaosModState?.sourcePath || bridgeConfig?.chaosmod?.modPath || ''
+  const gameBasePath = chaosModBasePath ? path.resolve(chaosModBasePath, '..') : ''
+
+  return {
+    gameBasePath,
+    dllPath: gameBasePath ? path.join(gameBasePath, 'scripts', 'GTAVWebhook.dll') : '',
+    logPath: gameBasePath ? path.join(gameBasePath, 'GTAVWebhook.log') : '',
+    configPath: gameBasePath ? path.join(gameBasePath, 'scripts', 'config.yml') : '',
+  }
+}
+
+function inspectGtavWebhookRuntime(chaosModState, bridgeConfig) {
+  const paths = resolveGtavWebhookPaths(chaosModState, bridgeConfig)
+  const logText = paths.logPath && existsSync(paths.logPath) ? readFileSync(paths.logPath, 'utf8') : ''
+  const wsPort = Number(bridgeConfig?.s4eBridge?.wsPort || 7704)
+  const httpHost = String(bridgeConfig?.s4eBridge?.localHttpHost || '127.0.0.1').trim() || '127.0.0.1'
+  const httpPort = Number(bridgeConfig?.s4eBridge?.localHttpPort || 3087)
+
+  return {
+    ...paths,
+    dllExists: Boolean(paths.dllPath && existsSync(paths.dllPath)),
+    logExists: Boolean(paths.logPath && existsSync(paths.logPath)),
+    configExists: Boolean(paths.configPath && existsSync(paths.configPath)),
+    httpServerStarted: /HttpServer started/i.test(logText),
+    webSocketConnected: /Connected to WebSocket server/i.test(logText),
+    probableWsUrl: `ws://127.0.0.1:${wsPort}`,
+    probableHttpBaseUrl: `http://${httpHost}:${httpPort}`,
+    launcherSocketOpen: Boolean(s4eLauncherSocket && s4eLauncherSocket.readyState === WebSocket.OPEN),
+  }
+}
+
+async function runGtavWebhookTransportProbe(diagnostic) {
+  const baseUrl = diagnostic?.probableHttpBaseUrl
+
+  if (!baseUrl) {
+    return { httpProbeSkipped: true }
+  }
+
+  const probeResults = {}
+
+  for (const endpoint of ['/connection-info', '/commands']) {
+    const probeUrl = `${baseUrl}${endpoint}`
+    try {
+      const response = await fetch(probeUrl, { method: 'GET' })
+      const responseText = await response.text().catch(() => '')
+      probeResults[endpoint] = {
+        status: response.status,
+        body: responseText.slice(0, 500),
+      }
+    } catch (error) {
+      probeResults[endpoint] = {
+        error: error.message,
+      }
+    }
+  }
+
+  return probeResults
+}
+
+function buildGtavWebhookCandidateRequest(pathname, command, payload, eventName) {
+  const safePayload =
+    payload === null || typeof payload === 'undefined'
+      ? {}
+      : payload
+
+  return {
+    command,
+    payload: safePayload,
+    actionName: eventName || command,
+  }
+}
+
+function gtavWebhookCommandRequiresPayload(command) {
+  return ['replace_vehicle', 'spawn_vehicle', 'toolup', 'props', 'parkour', 'maps'].includes(
+    String(command || '').trim().toLowerCase(),
+  )
+}
+
+function buildGtavWebhookPlaceholderContext(payload = {}, eventName = '') {
+  const sourceEvent = payload?.sourceEvent || {}
+  const nickname =
+    sourceEvent?.uniqueId
+    || sourceEvent?.userName
+    || sourceEvent?.sourceLabel
+    || sourceEvent?.displayText
+    || 'unknown-user'
+
+  return {
+    nickname,
+    username: nickname,
+    uniqueId: sourceEvent?.uniqueId || nickname,
+    userName: sourceEvent?.userName || nickname,
+    sourceLabel: sourceEvent?.sourceLabel || nickname,
+    displayText: sourceEvent?.displayText || '',
+    comment: sourceEvent?.comment || '',
+    giftName: sourceEvent?.giftName || '',
+    giftCoins: sourceEvent?.giftCoins ?? 0,
+    emoteName: sourceEvent?.emoteName || '',
+    emoteId: sourceEvent?.emoteId || '',
+    repeatCount: sourceEvent?.repeatCount ?? 1,
+    likeCount: sourceEvent?.likeCount ?? 0,
+    totalLikeCount: sourceEvent?.totalLikeCount ?? 0,
+    eventName: payload?.actionName || eventName || '',
+    command: payload?.gtaWebhookCommand || '',
+  }
+}
+
+function resolveGtavWebhookPlaceholders(value, context) {
+  if (typeof value === 'string') {
+    return value.replace(/\{\{?\s*([a-zA-Z0-9_.-]+)\s*\}?\}/g, (match, key) => {
+      if (!Object.prototype.hasOwnProperty.call(context, key)) {
+        return match
+      }
+
+      const resolved = context[key]
+      return resolved === null || typeof resolved === 'undefined' ? '' : String(resolved)
+    })
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => resolveGtavWebhookPlaceholders(entry, context))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entryValue]) => [
+        key,
+        resolveGtavWebhookPlaceholders(entryValue, context),
+      ]),
     )
-    .join('\n')}\n`
+  }
+
+  return value
 }
 
-function formatChaosModShortcutLabel(shortcut) {
-  if (!shortcut?.keyCode) {
-    return 'sin atajo'
+function normalizeGtavWebhookPayload(rawPayload, context) {
+  const originalPayload = rawPayload
+  let parsedPayload = rawPayload
+
+  if (typeof parsedPayload === 'string') {
+    const trimmedPayload = parsedPayload.trim()
+
+    if (!trimmedPayload) {
+      return {
+        originalPayload,
+        resolvedPayload: {},
+      }
+    }
+
+    try {
+      parsedPayload = JSON.parse(trimmedPayload)
+    } catch {
+      const placeholderOnlyMatch = trimmedPayload.match(/^\{\s*([a-zA-Z0-9_.-]+)\s*\}$/)
+      if (placeholderOnlyMatch) {
+        const key = placeholderOnlyMatch[1]
+        const resolvedValue = Object.prototype.hasOwnProperty.call(context, key) ? context[key] : trimmedPayload
+        return {
+          originalPayload,
+          resolvedPayload: {
+            [key]: resolvedValue,
+          },
+        }
+      }
+
+      parsedPayload = trimmedPayload
+    }
   }
 
-  const keyLabelMap = {
-    0x70: 'F1',
-    0x71: 'F2',
-    0x72: 'F3',
-    0x73: 'F4',
-    0x74: 'F5',
-    0x75: 'F6',
-    0x76: 'F7',
-    0x77: 'F8',
-    0x78: 'F9',
-    0x79: 'F10',
-    0x7a: 'F11',
-    0x7b: 'F12',
-    0x7c: 'F13',
-    0x7d: 'F14',
-    0x7e: 'F15',
-    0x7f: 'F16',
-    0x80: 'F17',
-    0x81: 'F18',
-    0x82: 'F19',
-    0x83: 'F20',
-    0x84: 'F21',
-    0x85: 'F22',
-    0x86: 'F23',
-    0x87: 'F24',
-  }
-  const parts = []
+  const resolvedPayload = resolveGtavWebhookPlaceholders(parsedPayload, context)
 
-  if (shortcut.isCtrlPressed) {
-    parts.push('Ctrl')
+  return {
+    originalPayload,
+    resolvedPayload:
+      resolvedPayload === null || typeof resolvedPayload === 'undefined' ? {} : resolvedPayload,
   }
-
-  if (shortcut.isShiftPressed) {
-    parts.push('Shift')
-  }
-
-  if (shortcut.isAltPressed) {
-    parts.push('Alt')
-  }
-
-  parts.push(keyLabelMap[shortcut.keyCode] || `VK ${shortcut.keyCode}`)
-  return parts.join(' + ')
 }
 
-function ensureFeatureFlagFile(directoryPath, featureFlagName) {
-  const featureFlagPath = path.join(directoryPath, featureFlagName)
+function applyGtavWebhookCommandPayloadFallback(command, resolvedPayload) {
+  const normalizedCommand = String(command || '').trim().toLowerCase()
+  const safePayload =
+    resolvedPayload && typeof resolvedPayload === 'object' && !Array.isArray(resolvedPayload)
+      ? resolvedPayload
+      : {}
 
-  if (!existsSync(featureFlagPath)) {
-    writeFileSync(featureFlagPath, '', 'utf8')
+  if (normalizedCommand === 'replace_vehicle' && Object.keys(safePayload).length === 0) {
+    return {
+      hash: '0x18606535',
+    }
   }
 
-  return featureFlagPath
+  return resolvedPayload
 }
 
-async function fetchChaosModEffectsSource() {
-  const response = await fetch(CHAOSMOD_EFFECTS_SOURCE_URL, {
-    headers: {
-      'User-Agent': 'live-control-app-chaosmod-bridge',
-    },
-  })
+async function discoverGtavWebhookExecutionRoute(baseUrl, command, payload, eventName) {
+  const candidatePaths = ['/commands', '/command', '/execute', '/action', '/trigger', '/s4e-bridge']
 
-  if (!response.ok) {
-    throw new Error(`No pude descargar el catalogo oficial (${response.status}).`)
+  for (const pathname of candidatePaths) {
+    const requestBody = buildGtavWebhookCandidateRequest(pathname, command, payload, eventName)
+    const requestUrl = `${baseUrl}${pathname}`
+
+    try {
+      const response = await fetch(requestUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+      const responseText = await response.text().catch(() => '')
+
+      console.log(
+        `[gtavwebhook] probe POST ${pathname} -> ${response.status}${responseText ? ` ${responseText}` : ''}`,
+      )
+
+      if (response.ok) {
+        return {
+          url: requestUrl,
+          pathname,
+          body: requestBody,
+          status: response.status,
+          responseText,
+        }
+      }
+    } catch (error) {
+      console.log(`[gtavwebhook] probe POST ${pathname} -> ERR ${error.message}`)
+    }
   }
 
-  return response.text()
+  return null
+}
+
+function looksLikeGtavWebhookEvent(messagePayload) {
+  const haystack = [
+    messagePayload?.actionType,
+    messagePayload?.actionName,
+    messagePayload?.gtaChaosEffectId,
+    messagePayload?.gtaChaosEffectName,
+    messagePayload?.gtaWebhookCommand,
+    messagePayload?.gtaWebhookPayload,
+    messagePayload?.commandText,
+    messagePayload?.rawCommandText,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return GTAV_WEBHOOK_EVENT_HINTS.some((hint) => haystack.includes(hint))
+}
+
+function resolveGtaExecutionSystem(messagePayload, chaosModState) {
+  const explicitType = String(messagePayload?.actionType || '').trim().toLowerCase()
+  const exactChaosCatalog = readChaosModExactCatalog(chaosModState?.effectsFilePath)
+  const exactChaosEntry =
+    exactChaosCatalog.find((effect) => effect.id === messagePayload?.gtaChaosEffectId) || null
+  const eventName =
+    messagePayload?.actionName
+    || messagePayload?.gtaChaosEffectName
+    || messagePayload?.gtaChaosEffectId
+    || 'evento-gta'
+
+  if (explicitType === 'gtavwebhook') {
+    return {
+      system: 'gtavwebhook',
+      eventName,
+      chaosEntry: null,
+    }
+  }
+
+  if (explicitType === 'chaosmod') {
+    return {
+      system: 'chaosmod',
+      eventName,
+      chaosEntry: exactChaosEntry,
+    }
+  }
+
+  if (exactChaosEntry) {
+    return {
+      system: 'chaosmod',
+      eventName,
+      chaosEntry: exactChaosEntry,
+    }
+  }
+
+  if (looksLikeGtavWebhookEvent(messagePayload)) {
+    return {
+      system: 'gtavwebhook',
+      eventName,
+      chaosEntry: null,
+    }
+  }
+
+  return {
+    system: 'chaosmod',
+    eventName,
+    chaosEntry: null,
+  }
 }
 
 async function syncChaosModCatalog(serverBaseUrl, dashboardKey, payload) {
@@ -517,322 +1148,66 @@ async function prepareChaosModCatalog(chaosModConfig) {
       catalog: [],
       sourcePath: '',
       effectsFilePath: '',
+      processName: '',
       lastError: '',
     }
   }
 
-  const normalizedModPath = path.resolve(String(chaosModConfig.modPath || '').trim())
-  const effectsFilePath = path.join(normalizedModPath, 'configs', 'effects.ini')
-  const configFilePath = path.join(normalizedModPath, 'configs', 'config.ini')
-
+  const resolvedRuntime = resolveChaosModRuntime(chaosModConfig)
+  const normalizedModPath = resolvedRuntime.modPath
+  const effectsFilePath = resolvedRuntime.effectsFilePath
+  const configFilePath = resolvedRuntime.configFilePath
   if (!existsSync(effectsFilePath)) {
     return {
       catalog: [],
       sourcePath: normalizedModPath,
       effectsFilePath,
+      processName: resolvedRuntime.processName,
       lastError: 'No encontre configs/effects.ini en la carpeta de ChaosMod.',
     }
   }
 
   if (chaosModConfig.autoEnableEffectMenu && existsSync(configFilePath)) {
-    updateIniValue(configFilePath, 'EnableDebugMenu', 1)
+    tryUpdateIniValue(configFilePath, 'EnableDebugMenu', 1, 'config.ini')
   }
 
-  if (chaosModConfig.autoEnableDebugSocket) {
-    ensureFeatureFlagFile(normalizedModPath, CHAOSMOD_DEBUG_SOCKET_FEATURE_FLAG)
-  }
+  console.log(`[chaosmod] runtime elegido (${resolvedRuntime.label}): ${normalizedModPath}`)
+  console.log(`[chaosmod] effects.ini encontrado en: ${effectsFilePath}`)
 
-  const effectsIniText = readFileSync(effectsFilePath, 'utf8')
-  let effectsSourceText = ''
-  let lastError = ''
-
-  try {
-    effectsSourceText = await fetchChaosModEffectsSource()
-  } catch (error) {
-    lastError = `No pude bajar el catalogo oficial; usare nombres de respaldo. ${error.message}`
-  }
+  const effectsIniText = readEffectsIniWithRetry(effectsFilePath)
+  const exactCatalog = buildChaosModCatalogFromEffectsIni(effectsIniText)
 
   return {
-    catalog: buildChaosModCatalog(effectsIniText, effectsSourceText),
+    catalog: exactCatalog,
+    menuCatalog: exactCatalog,
     sourcePath: normalizedModPath,
     effectsFilePath,
-    lastError,
-  }
-}
-
-function getShortestMove(currentIndex, targetIndex, totalItems) {
-  const normalizedTotal = Number(totalItems || 0)
-
-  if (normalizedTotal <= 1 || currentIndex === targetIndex) {
-    return {
-      direction: 'down',
-      count: 0,
-    }
-  }
-
-  const moveDown = (targetIndex - currentIndex + normalizedTotal) % normalizedTotal
-  const moveUp = (currentIndex - targetIndex + normalizedTotal) % normalizedTotal
-
-  if (moveUp < moveDown) {
-    return {
-      direction: 'up',
-      count: moveUp,
-    }
-  }
-
-  return {
-    direction: 'down',
-    count: moveDown,
-  }
-}
-
-function runPowerShellChaosModActivator({
-  direction,
-  keyDelayMs,
-  menuOpenDelayMs,
-  moveCount,
-  processName,
-}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      'powershell',
-      [
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-File',
-        CHAOSMOD_ACTIVATOR_PATH,
-        '-ProcessName',
-        processName,
-        '-Direction',
-        direction,
-        '-MoveCount',
-        String(moveCount),
-        '-OpenDelayMs',
-        String(menuOpenDelayMs),
-        '-KeyDelayMs',
-        String(keyDelayMs),
-      ],
-      {
-        windowsHide: true,
-      },
-    )
-    let stderr = ''
-
-    child.stderr.on('data', (chunk) => {
-      stderr += String(chunk)
-    })
-
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolve()
-        return
-      }
-
-      reject(new Error(stderr.trim() || `El activador de ChaosMod salio con codigo ${code}.`))
-    })
-  })
-}
-
-function runPowerShellChaosModShortcutTrigger({
-  processName,
-  keyCode,
-  isCtrlPressed,
-  isShiftPressed,
-  isAltPressed,
-  reloadConfig,
-  reloadDelayMs,
-  postReloadDelayMs,
-  keyDelayMs,
-}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      'powershell',
-      [
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-File',
-        CHAOSMOD_SHORTCUT_TRIGGER_PATH,
-        '-ProcessName',
-        processName,
-        '-KeyCode',
-        String(keyCode),
-        '-CtrlPressed',
-        isCtrlPressed ? '1' : '0',
-        '-ShiftPressed',
-        isShiftPressed ? '1' : '0',
-        '-AltPressed',
-        isAltPressed ? '1' : '0',
-        '-ReloadConfig',
-        reloadConfig ? '1' : '0',
-        '-ReloadDelayMs',
-        String(reloadDelayMs),
-        '-PostReloadDelayMs',
-        String(postReloadDelayMs),
-        '-KeyDelayMs',
-        String(keyDelayMs),
-      ],
-      {
-        windowsHide: true,
-      },
-    )
-    let stderr = ''
-
-    child.stderr.on('data', (chunk) => {
-      stderr += String(chunk)
-    })
-
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolve()
-        return
-      }
-
-      reject(new Error(stderr.trim() || `El disparador por atajo de ChaosMod salio con codigo ${code}.`))
-    })
-  })
-}
-
-function createChaosModDebugSocketClient(chaosModConfig) {
-  const socketUrl = `ws://127.0.0.1:${Number(chaosModConfig.debugSocketPort || 31819)}`
-  let socket = null
-  let reconnectTimeoutId = null
-  let isStopped = false
-  let hasLoggedFallback = false
-  const state = {
-    connected: false,
+    processName: resolvedRuntime.processName,
     lastError: '',
   }
+}
 
-  function scheduleReconnect() {
-    if (isStopped) {
-      return
-    }
-
-    reconnectTimeoutId = setTimeout(connect, Number(chaosModConfig.debugSocketReconnectDelayMs || 3000))
-  }
-
-  function connect() {
-    socket = new WebSocket(socketUrl)
-
-    socket.on('open', () => {
-      state.connected = true
-      state.lastError = ''
-      hasLoggedFallback = false
-      console.log(`[chaosmod] debug socket conectado en ${socketUrl}`)
-    })
-
-    socket.on('close', () => {
-      state.connected = false
-
-      if (!hasLoggedFallback) {
-        const fallbackMessage = chaosModConfig.allowMenuFallback
-          ? '[chaosmod] debug socket no disponible; usare el menu visual como fallback hasta que recargues el mod.'
-          : '[chaosmod] debug socket no disponible; las acciones de ChaosMod quedaran pausadas hasta que recargues el mod o reinicies GTA.'
-        console.log(fallbackMessage)
-        hasLoggedFallback = true
-      }
-
-      scheduleReconnect()
-    })
-
-    socket.on('error', (error) => {
-      state.lastError = error.message
-      state.connected = false
-      socket.close()
-    })
-  }
-
-  connect()
-
-  return {
-    triggerEffect(effectId) {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(
-          JSON.stringify({
-            command: 'trigger_effect',
-            effect_id: effectId,
-          }),
-        )
-        return true
-      }
-
-      state.connected = false
-      return false
+async function triggerChaosModDirectHttp(effectId) {
+  const response = await fetch('http://localhost:8082/trigger_effect', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Superdupertoken: 'glory to ukraine',
     },
-    isConnected() {
-      return state.connected
-    },
-    getLastError() {
-      return state.lastError
-    },
-    stop() {
-      isStopped = true
-      clearTimeout(reconnectTimeoutId)
-      socket?.close()
-    },
+    body: JSON.stringify({
+      effect_id: effectId,
+      sender: 'StreamToEarn',
+    }),
+  })
+
+  if (!response.ok) {
+    const responseText = await response.text().catch(() => '')
+    throw new Error(
+      `ChaosMod HTTP respondio ${response.status}${responseText ? `: ${responseText}` : ''}`,
+    )
   }
 }
 
-function buildChaosModLocalHttpUrl(chaosModConfig) {
-  const host = String(chaosModConfig.localHttpHost || '127.0.0.1').trim() || '127.0.0.1'
-  const port = Number(chaosModConfig.localHttpPort || 8082)
-  const requestPath = String(chaosModConfig.localHttpPath || '/trigger_effect').trim() || '/trigger_effect'
-  const normalizedPath = requestPath.startsWith('/') ? requestPath : `/${requestPath}`
-
-  return `http://${host}:${port}${normalizedPath}`
-}
-
-function createChaosModLocalHttpClient(chaosModConfig) {
-  const endpointUrl = buildChaosModLocalHttpUrl(chaosModConfig)
-  const tokenHeader = String(chaosModConfig.localHttpTokenHeader || 'Superdupertoken').trim()
-  const tokenValue = String(chaosModConfig.localHttpToken || '').trim()
-  const sender = String(chaosModConfig.localHttpSender || 'StreamToEarn').trim() || 'StreamToEarn'
-  const state = {
-    lastError: '',
-  }
-
-  return {
-    async triggerEffect(effectId) {
-      const response = await fetch(endpointUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(tokenHeader && tokenValue ? { [tokenHeader]: tokenValue } : {}),
-        },
-        body: JSON.stringify({
-          effect_id: effectId,
-          sender,
-        }),
-      })
-
-      state.lastError = ''
-
-      if (!response.ok) {
-        const responseText = await response.text().catch(() => '')
-        throw new Error(
-          `ChaosMod local HTTP respondio ${response.status}${responseText ? `: ${responseText}` : ''}`,
-        )
-      }
-
-      const responseText = await response.text().catch(() => '')
-      return {
-        endpointUrl,
-        responseText,
-      }
-    },
-    getEndpointUrl() {
-      return endpointUrl
-    },
-    getLastError() {
-      return state.lastError
-    },
-    setLastError(errorMessage) {
-      state.lastError = String(errorMessage || '')
-    },
-  }
-}
 
 async function main() {
   const bridgeConfig = readConfigFile()
@@ -844,27 +1219,26 @@ async function main() {
     : null
   const chaosModState = {
     catalog: [],
+    menuCatalog: [],
     sourcePath: '',
     effectsFilePath: '',
-    selectedIndex: bridgeConfig.chaosmod.assumeTopSelectionOnStartup ? 0 : null,
+    processName: bridgeConfig.chaosmod.gtaProcessName,
   }
-  const chaosModDebugSocket =
-    bridgeConfig.chaosmod.enabled && bridgeConfig.chaosmod.preferDirectSocket
-      ? createChaosModDebugSocketClient(bridgeConfig.chaosmod)
-      : null
-  const chaosModLocalHttp =
-    bridgeConfig.chaosmod.enabled && bridgeConfig.chaosmod.preferLocalHttp
-      ? createChaosModLocalHttpClient(bridgeConfig.chaosmod)
-      : null
+  const s4eBridgeWs =
+    bridgeConfig.s4eBridge.enabled ? createS4eBridgeWebSocketServer(bridgeConfig) : null
+  const s4eBridgeHttp =
+    bridgeConfig.s4eBridge.enabled ? createS4eBridgeHttpServer(bridgeConfig) : null
 
   const chaosModCatalogPayload = await prepareChaosModCatalog(bridgeConfig.chaosmod)
   chaosModState.catalog = chaosModCatalogPayload.catalog
+  chaosModState.menuCatalog = chaosModCatalogPayload.menuCatalog
   chaosModState.sourcePath = chaosModCatalogPayload.sourcePath
   chaosModState.effectsFilePath = chaosModCatalogPayload.effectsFilePath
+  chaosModState.processName = chaosModCatalogPayload.processName || bridgeConfig.chaosmod.gtaProcessName
 
   if (chaosModCatalogPayload.catalog.length > 0) {
     console.log(
-      `[chaosmod] catalogo cargado (${chaosModCatalogPayload.catalog.length} efectos) desde ${chaosModCatalogPayload.sourcePath}`,
+      `[chaosmod] catalogo cargado (${chaosModCatalogPayload.catalog.length} efectos) desde ${chaosModCatalogPayload.sourcePath} usando proceso ${chaosModState.processName}`,
     )
   } else if (chaosModCatalogPayload.lastError) {
     console.log(`[chaosmod] ${chaosModCatalogPayload.lastError}`)
@@ -874,6 +1248,7 @@ async function main() {
   const syncPayload = {
     catalog: chaosModCatalogPayload.catalog,
     sourcePath: chaosModCatalogPayload.sourcePath,
+    processName: chaosModState.processName,
     lastError: chaosModCatalogPayload.lastError,
   }
   let catalogSyncInFlight = null
@@ -932,193 +1307,150 @@ async function main() {
     }
   }
 
-  function ensureChaosModShortcut(effectId) {
-    if (!chaosModState.effectsFilePath || !existsSync(chaosModState.effectsFilePath)) {
-      throw new Error('No encontre effects.ini para asignar un atajo de ChaosMod.')
-    }
-
-    const effectsIniText = readFileSync(chaosModState.effectsFilePath, 'utf8')
-    const parsedEntries = parseChaosModEffectsConfig(effectsIniText)
-    const effectEntries = parsedEntries.filter((entry) => entry.kind === 'effect')
-    const targetEntry = effectEntries.find((entry) => entry.id === effectId)
-
-    if (!targetEntry) {
-      throw new Error(`No encontre ${effectId} dentro de effects.ini para asignar el atajo.`)
-    }
-
-    const currentShortcut = {
-      keyCode: Number(targetEntry.configValues[7] || 0),
-      isCtrlPressed: String(targetEntry.configValues[3] || '0') === '1',
-      isShiftPressed: String(targetEntry.configValues[4] || '0') === '1',
-      isAltPressed: String(targetEntry.configValues[5] || '0') === '1',
-    }
-    const currentShortcutSignature = JSON.stringify(currentShortcut)
-    const currentShortcutInUseByOtherEffect = effectEntries.some((entry) => {
-      if (entry.id === effectId) {
-        return false
-      }
-
-      return (
-        JSON.stringify({
-          keyCode: Number(entry.configValues[7] || 0),
-          isCtrlPressed: String(entry.configValues[3] || '0') === '1',
-          isShiftPressed: String(entry.configValues[4] || '0') === '1',
-          isAltPressed: String(entry.configValues[5] || '0') === '1',
-        }) === currentShortcutSignature
-      )
-    })
-
-    if (
-      currentShortcut.keyCode > 0 &&
-      !currentShortcutInUseByOtherEffect &&
-      currentShortcut.keyCode >= 0x70 &&
-      currentShortcut.keyCode <= 0x7b &&
-      !GTA_RESERVED_SHORTCUT_KEYCODES.has(currentShortcut.keyCode)
-    ) {
-      return {
-        ...currentShortcut,
-        shortcutLabel: formatChaosModShortcutLabel(currentShortcut),
-        changed: false,
-      }
-    }
-
-    const usedShortcuts = new Set(
-      effectEntries
-        .filter((entry) => entry.id !== effectId)
-        .map((entry) =>
-          JSON.stringify({
-            keyCode: Number(entry.configValues[7] || 0),
-            isCtrlPressed: String(entry.configValues[3] || '0') === '1',
-            isShiftPressed: String(entry.configValues[4] || '0') === '1',
-            isAltPressed: String(entry.configValues[5] || '0') === '1',
-          }),
-        )
-        .filter((shortcutSignature) => shortcutSignature !== JSON.stringify({
-          keyCode: 0,
-          isCtrlPressed: false,
-          isShiftPressed: false,
-          isAltPressed: false,
-        })),
-    )
-    const nextShortcut = CHAOSMOD_SHORTCUT_POOL.find(
-      (shortcut) => !usedShortcuts.has(JSON.stringify(shortcut)),
-    )
-
-    if (!nextShortcut) {
-      throw new Error(
-        'No encontre un atajo libre de ChaosMod para esta accion. Reduce atajos usados o amplia el pool en el bridge.',
-      )
-    }
-
-    targetEntry.configValues[3] = nextShortcut.isCtrlPressed ? '1' : '0'
-    targetEntry.configValues[4] = nextShortcut.isShiftPressed ? '1' : '0'
-    targetEntry.configValues[5] = nextShortcut.isAltPressed ? '1' : '0'
-    targetEntry.configValues[7] = String(nextShortcut.keyCode)
-    writeFileSync(
-      chaosModState.effectsFilePath,
-      serializeChaosModEffectsConfig(parsedEntries),
-      'utf8',
-    )
-
-    return {
-      ...nextShortcut,
-      shortcutLabel: formatChaosModShortcutLabel(nextShortcut),
-      changed: true,
-    }
-  }
-
   async function executeChaosModEffect(messagePayload) {
     if (!bridgeConfig.chaosmod.enabled) {
-      throw new Error('ChaosMod esta desactivado en bridge-config.json.')
+      throw new Error('ChaosMod desactivado en bridge-config.json.')
     }
 
     if (!messagePayload.gtaChaosEffectId) {
       throw new Error('No llego gtaChaosEffectId en el evento de GTA.')
     }
 
-    if (chaosModLocalHttp) {
-      try {
-        const triggerResult = await chaosModLocalHttp.triggerEffect(messagePayload.gtaChaosEffectId)
-        console.log(
-          `[chaosmod] efecto disparado por HTTP local (${triggerResult.endpointUrl}): ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}${triggerResult.responseText ? ` -> ${triggerResult.responseText}` : ''}`,
-        )
-        return
-      } catch (error) {
-        chaosModLocalHttp.setLastError(error.message)
-        console.error(`[chaosmod] HTTP local no disponible: ${error.message}`)
+    const currentEffectsIniText =
+      chaosModState.effectsFilePath && existsSync(chaosModState.effectsFilePath)
+        ? readEffectsIniWithRetry(chaosModState.effectsFilePath)
+        : ''
+    const exactCatalog = currentEffectsIniText ? buildChaosModCatalogFromEffectsIni(currentEffectsIniText) : []
+    const resolvedSlot = exactCatalog.findIndex((effect) => effect.id === messagePayload.gtaChaosEffectId)
+    const resolvedEntry = resolvedSlot >= 0 ? exactCatalog[resolvedSlot] : null
+    const resolvedName = resolvedEntry?.name || messagePayload.gtaChaosEffectId
+
+    console.log(`[chaosmod] indice: ${resolvedSlot >= 0 ? resolvedSlot : 'n/a'}`)
+    console.log(`[chaosmod] effectId: ${messagePayload.gtaChaosEffectId}`)
+    console.log(`[chaosmod] nombre: ${resolvedName}`)
+
+    if (resolvedSlot < 0) {
+      throw new Error(`No encontre ${messagePayload.gtaChaosEffectId} en effects.ini.`)
+    }
+
+    try {
+      await triggerChaosModDirectHttp(messagePayload.gtaChaosEffectId)
+      console.log('[chaosmod] metodo usado: direct')
+      return 'direct'
+    } catch (directError) {
+      console.error(`[chaosmod] direct fallo: ${directError.message}`)
+      throw new Error(
+        `No pude disparar el efecto exacto ${messagePayload.gtaChaosEffectId} por HTTP directo.`,
+      )
+    }
+  }
+
+async function executeViaWebhook(effectId, payload) {
+  const diagnostic = inspectGtavWebhookRuntime(chaosModState, bridgeConfig)
+  const command =
+    String(payload?.gtaWebhookCommand || effectId || payload?.rawCommandText || '').trim()
+    || 'evento-gta'
+  const eventName =
+    payload?.actionName || payload?.gtaChaosEffectName || command || payload?.gtaMode || 'evento-gta'
+  const configuredUrl = String(
+    payload?.gtavWebhookUrl
+    || runtimeProcess.env.LIVE_CONTROL_GTAV_WEBHOOK_URL
+    || `${diagnostic.probableHttpBaseUrl}/s4e-bridge`,
+  ).trim()
+  const placeholderContext = buildGtavWebhookPlaceholderContext(payload, eventName)
+  const { originalPayload, resolvedPayload: normalizedPayload } = normalizeGtavWebhookPayload(
+    payload?.gtaWebhookPayload || null,
+    placeholderContext,
+  )
+  const resolvedPayload = applyGtavWebhookCommandPayloadFallback(command, normalizedPayload)
+
+  const requestPayload = {
+    actionType: payload?.actionType || 'gtavwebhook',
+    eventName,
+    command,
+    effectId: effectId || null,
+    payload: resolvedPayload,
+    gtaMode: payload?.gtaMode || null,
+  }
+
+    console.log(`[gtavwebhook] payload original: ${JSON.stringify(originalPayload)}`)
+    console.log(`[gtavwebhook] payload resuelto: ${JSON.stringify(resolvedPayload)}`)
+    console.log(`[gtavwebhook] request enviada: ${JSON.stringify(requestPayload)}`)
+
+    if (String(command).trim().toLowerCase() === 'replace_vehicle') {
+      const executorUrl = 'http://127.0.0.1:3095/commands'
+      const executorBody = {
+        command: 'replace_vehicle',
+        actionName: eventName,
+        payload: resolvedPayload,
       }
-    }
 
-    if (chaosModDebugSocket?.triggerEffect(messagePayload.gtaChaosEffectId)) {
-      console.log(
-        `[chaosmod] efecto disparado por debug socket: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}`,
-      )
-      return
-    }
+      console.log(`[gta-executor] request enviada: POST ${executorUrl} ${JSON.stringify(executorBody)}`)
 
-    if (bridgeConfig.chaosmod.preferShortcutFallback) {
-      const shortcutAssignment = ensureChaosModShortcut(messagePayload.gtaChaosEffectId)
-
-      await runPowerShellChaosModShortcutTrigger({
-        processName: bridgeConfig.chaosmod.gtaProcessName,
-        keyCode: shortcutAssignment.keyCode,
-        isCtrlPressed: shortcutAssignment.isCtrlPressed,
-        isShiftPressed: shortcutAssignment.isShiftPressed,
-        isAltPressed: shortcutAssignment.isAltPressed,
-        reloadConfig: shortcutAssignment.changed,
-        reloadDelayMs: Number(bridgeConfig.chaosmod.shortcutReloadDelayMs || 850),
-        postReloadDelayMs: Number(bridgeConfig.chaosmod.shortcutPostReloadDelayMs || 1400),
-        keyDelayMs: Number(bridgeConfig.chaosmod.shortcutKeyDelayMs || 45),
+      const executorResponse = await fetch(executorUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(executorBody),
       })
+      const executorResponseText = await executorResponse.text().catch(() => '')
 
       console.log(
-        `[chaosmod] efecto disparado por atajo ${shortcutAssignment.shortcutLabel}: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}${shortcutAssignment.changed ? ' (recargue el mod para aplicar el atajo)' : ''}`,
+        `[gta-executor] status: ${executorResponse.status}${executorResponseText ? ` body: ${executorResponseText}` : ''}`,
       )
-      return
+
+      if (!executorResponse.ok) {
+        throw new Error(
+          `Executor local respondio ${executorResponse.status}${executorResponseText ? `: ${executorResponseText}` : ''}`,
+        )
+      }
+
+      return 'local-executor-http'
     }
 
-    if (bridgeConfig.chaosmod.preferDirectSocket && !bridgeConfig.chaosmod.allowMenuFallback) {
-      const lastSocketError = chaosModDebugSocket?.getLastError()
-      const lastHttpError = chaosModLocalHttp?.getLastError()
-      throw new Error(
-        `No encontre un canal directo de ChaosMod disponible.${lastHttpError ? ` HTTP local: ${lastHttpError}.` : ''}${lastSocketError ? ` Debug socket: ${lastSocketError}.` : ''} El fallback por atajo esta desactivado.`,
-      )
-    }
-
-    const targetIndex = chaosModState.catalog.findIndex(
-      (effect) => effect.id === messagePayload.gtaChaosEffectId,
+    const discoveredRoute = await discoverGtavWebhookExecutionRoute(
+      diagnostic.probableHttpBaseUrl,
+      command,
+      resolvedPayload,
+      eventName,
     )
+    const finalUrl = discoveredRoute?.url || configuredUrl
+    const finalPathname = discoveredRoute?.pathname || parseUrl(finalUrl).pathname || '/s4e-bridge'
+    const finalBody =
+      discoveredRoute?.body
+      || buildGtavWebhookCandidateRequest(finalPathname, command, resolvedPayload, eventName)
 
-    if (targetIndex === -1) {
-      throw new Error(
-        `No encontre el efecto ${messagePayload.gtaChaosEffectId} dentro del catalogo local de ChaosMod.`,
-      )
+    if (
+      gtavWebhookCommandRequiresPayload(command)
+      && finalBody?.payload
+      && typeof finalBody.payload === 'object'
+      && !Array.isArray(finalBody.payload)
+      && Object.keys(finalBody.payload).length === 0
+    ) {
+      throw new Error(`GTAVWebhook requiere payload para ${command}, pero llego vacio.`)
     }
 
-    if (chaosModState.selectedIndex === null) {
-      throw new Error(
-        'La seleccion actual del menu de ChaosMod no esta sincronizada. Reinicia el bridge o recarga el mod para arrancar desde arriba.',
-      )
-    }
+    console.log(`[gtavwebhook] body final enviado a ${finalPathname}: ${JSON.stringify(finalBody)}`)
 
-    const move = getShortestMove(
-      chaosModState.selectedIndex,
-      targetIndex,
-      chaosModState.catalog.length,
-    )
-
-    await runPowerShellChaosModActivator({
-      processName: bridgeConfig.chaosmod.gtaProcessName,
-      direction: move.direction,
-      moveCount: move.count,
-      menuOpenDelayMs: Number(bridgeConfig.chaosmod.menuOpenDelayMs || 220),
-      keyDelayMs: Number(bridgeConfig.chaosmod.keyDelayMs || 35),
+    const response = await fetch(finalUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(finalBody),
     })
+    const responseText = await response.text().catch(() => '')
 
-    chaosModState.selectedIndex = targetIndex
     console.log(
-      `[chaosmod] efecto disparado: ${messagePayload.gtaChaosEffectName || messagePayload.gtaChaosEffectId}`,
+      `[gtavwebhook] POST ${finalPathname} -> ${response.status}${responseText ? ` ${responseText}` : ''}`,
     )
+
+    if (!response.ok) {
+      throw new Error(`GTAVWebhook respondio ${response.status}${responseText ? `: ${responseText}` : ''}`)
+    }
+
+    return 'http'
   }
 
   async function handleGtaMessage(message) {
@@ -1126,18 +1458,47 @@ async function main() {
       return
     }
 
-    console.log(`[remote:gta] ${message.payload.actionName} -> ${message.payload.commandText || 'sin payload'}`)
+    console.log(`\n${'═'.repeat(80)}`)
+    console.log(`[bridge:gta] 📥 RECIBIÓ EVENTO GTA`)
+    console.log(`[bridge:gta] Acción: ${message.payload.actionName}`)
+    console.log(`[bridge:gta] Effect ID: ${message.payload.gtaChaosEffectId}`)
+    console.log(`[bridge:gta] Effect Name: ${message.payload.gtaChaosEffectName}`)
+    console.log(`[bridge:gta] Mode: ${message.payload.gtaMode}`)
+    console.log(`[bridge:gta] Reenviando a ${gtaServer?.clients.size || 0} clientes GTA locales conectados`)
+    console.log(`${'═'.repeat(80)}\n`)
 
     gtaServer?.clients.forEach((clientSocket) => {
       safeJsonSend(clientSocket, message)
     })
 
-    if (message.payload.gtaMode === 'chaosmod') {
-      try {
-        await executeChaosModEffect(message.payload)
-      } catch (error) {
-        console.error(`[chaosmod] error al activar efecto: ${error.message}`)
+    const executionTarget = resolveGtaExecutionSystem(message.payload, chaosModState)
+    console.log(`[bridge:gta] sistema elegido: ${executionTarget.system}`)
+    console.log(`[bridge:gta] nombre del evento: ${executionTarget.eventName}`)
+    console.log(`[bridge:gta] tipo de acción ejecutada: ${message.payload.actionType || 'legacy'}`)
+    console.log(
+      `[bridge:gta] comando enviado: ${
+        message.payload.gtaWebhookCommand
+        || message.payload.gtaChaosEffectId
+        || message.payload.rawCommandText
+        || 'n/a'
+      }`,
+    )
+
+    try {
+      let finalMethod = 'none'
+
+      if (executionTarget.system === 'chaosmod') {
+        finalMethod = await executeChaosModEffect(message.payload)
+      } else if (executionTarget.system === 'gtavwebhook') {
+        finalMethod = await executeViaWebhook(
+          message.payload.gtaWebhookCommand || message.payload.gtaChaosEffectId || executionTarget.eventName,
+          message.payload,
+        )
       }
+
+      console.log(`[bridge:gta] metodo final: ${finalMethod}`)
+    } catch (error) {
+      console.error(`[${executionTarget.system}] error al activar evento: ${error.message}`)
     }
   }
 
@@ -1167,20 +1528,31 @@ async function main() {
     () => syncChaosModCatalogNow('reconexion remota'),
   )
 
-  console.log(`[bridge] config cargada desde ${CONFIG_PATH}`)
-  console.log(`[bridge] backend publico: ${bridgeConfig.serverBaseUrl}`)
-  if (bridgeConfig.localDashboardBaseUrl) {
-    console.log(`[bridge] panel local: ${bridgeConfig.localDashboardBaseUrl}`)
+  console.log(`\n[bridge] 📋 Configuración cargada:`)
+  console.log(`[bridge] Archivo: ${CONFIG_PATH}`)
+  
+  const isLocalBackend = bridgeConfig.serverBaseUrl.includes('127.0.0.1') || bridgeConfig.serverBaseUrl.includes('localhost')
+  if (isLocalBackend) {
+    console.log(`[bridge] 🟢 Modo DESARROLLO: Conectando a backend local`)
+    console.log(`[bridge]    Backend: ${bridgeConfig.serverBaseUrl}`)
+  } else {
+    console.log(`[bridge] 🔵 Modo PRODUCCIÓN: Conectando a backend remoto`)
+    console.log(`[bridge]    Backend: ${bridgeConfig.serverBaseUrl}`)
   }
-  console.log('[bridge] listo para recibir acciones de Minecraft y GTA')
+  
+  if (bridgeConfig.localDashboardBaseUrl) {
+    console.log(`[bridge] Panel local: ${bridgeConfig.localDashboardBaseUrl}`)
+  }
+  console.log('[bridge] Esperando eventos de Minecraft y GTA...\n')
 
   const shutdown = async () => {
     stopMinecraft()
     stopGta()
-    chaosModDebugSocket?.stop()
     clearInterval(catalogResyncIntervalId)
     minecraftServer?.server.close()
     gtaServer?.server.close()
+    s4eBridgeWs?.close()
+    s4eBridgeHttp?.close()
 
     if (minecraftRcon) {
       try {

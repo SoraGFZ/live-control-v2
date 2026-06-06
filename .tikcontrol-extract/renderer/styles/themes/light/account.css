@@ -1,0 +1,782 @@
+/* ========================================
+   6. ACCOUNT / SETTINGS
+   ======================================== */
+html.modo-claro .cuenta-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .cuenta-card:hover {
+  border-color: rgba(35, 123, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .cuenta-card-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .cuenta-card-info h3 {
+  color: var(--text-white);
+}
+
+/* --- Auth Tabs ? segmented control estilo limpio --- */
+html.modo-claro .auth-tabs {
+  background: #eef1f5;
+  border: 1px solid #dde2ea;
+  padding: 3px;
+  gap: 3px;
+}
+
+html.modo-claro .auth-tab {
+  color: var(--text-muted);
+  background: transparent;
+  font-weight: 500;
+}
+
+html.modo-claro .auth-tab.active {
+  background: #ffffff;
+  color: var(--text-white);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .auth-tab:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-white);
+}
+
+/* --- Status Badges --- */
+html.modo-claro .cuenta-status-badge.connected {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.18);
+}
+
+html.modo-claro .cuenta-status-badge.disconnected {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+/* --- Plan Section --- */
+html.modo-claro .cuenta-plan-compact {
+  background: linear-gradient(135deg, rgba(255, 180, 50, 0.06), rgba(255, 120, 0, 0.03));
+  border-color: rgba(255, 180, 50, 0.12);
+}
+
+/* --- Warning Banner --- */
+html.modo-claro .cuenta-warning-banner {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.12);
+}
+
+html.modo-claro .cuenta-warning-banner .warning-content code {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* --- Divider --- */
+html.modo-claro .cuenta-divider::before,
+html.modo-claro .cuenta-divider::after {
+  background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+}
+
+/* --- Google Button --- */
+html.modo-claro .cuenta-btn-google {
+  background: var(--bg-card);
+  color: var(--text-white);
+  border: 1px solid var(--border-light);
+}
+
+html.modo-claro .cuenta-btn-google:hover {
+  background: var(--bg-elevated);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* --- Card icon backgrounds for light mode --- */
+html.modo-claro .cuenta-card-icon.auth-icon {
+  background: rgba(35, 123, 255, 0.08);
+}
+
+html.modo-claro .cuenta-card-icon.oauth-icon {
+  background: #1a1a1a;
+  color: #f0f0f0;
+}
+
+html.modo-claro .cuenta-card-icon.security-icon {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+html.modo-claro .cuenta-card-icon.tiktok-icon {
+  background: #1a1a1a;
+  color: #f0f0f0;
+}
+
+html.modo-claro .cuenta-card-icon.storage-icon {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+html.modo-claro .cuenta-card-icon.appearance-icon {
+  background: rgba(163, 70, 255, 0.06);
+}
+
+html.modo-claro .cuenta-user-avatar-mini {
+  background: rgba(35, 123, 255, 0.08);
+}
+
+/* --- Select dropdowns (cfg-select and cuenta-select) --- */
+html.modo-claro .cfg-select,
+html.modo-claro .cuenta-select {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text-white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+html.modo-claro .cfg-select:hover,
+html.modo-claro .cuenta-select:hover {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+html.modo-claro .cfg-select option,
+html.modo-claro .cuenta-select option {
+  background: var(--bg-card);
+  color: var(--text-white);
+}
+
+/* --- Input prefix (@ username) --- */
+html.modo-claro .cuenta-input-prefix {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+}
+
+html.modo-claro .cuenta-input-prefix .prefix {
+  color: var(--text-muted);
+}
+
+html.modo-claro .cuenta-input-prefix input {
+  color: var(--text-white);
+}
+
+/* --- Logout button --- */
+html.modo-claro .cuenta-btn-logout {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.15);
+}
+
+/* ========================================
+   7. EXTENDED VIEW OVERRIDES
+   ======================================== */
+
+/* --- Auth / Password (duplicado eliminado ? ver secci?n superior) --- */
+
+html.modo-claro .password-requirements {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .requirement-item {
+  color: var(--text-muted);
+}
+
+/* --- Subscription Modals --- */
+html.modo-claro .subscription-modal .modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .subscription-modal-content {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .plan-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .plan-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .plan-price .amount {
+  color: var(--text-white);
+}
+
+html.modo-claro .plan-features li {
+  color: var(--text-light);
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .sub-modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .sub-modal-content {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .sub-modal-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Forzar fondo claro sobre estilos inline del modal */
+html.modo-claro .sub-modal-content[style] {
+  background: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+html.modo-claro .sub-modal-header h2 {
+  color: var(--text-white);
+}
+
+html.modo-claro .sub-status-title {
+  color: var(--accent-primary);
+}
+
+html.modo-claro .sub-plan-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .sub-plan-card.popular {
+  background: linear-gradient(165deg, rgba(255, 180, 50, 0.06), rgba(255, 120, 0, 0.03));
+}
+
+html.modo-claro .sub-plan-price {
+  color: var(--text-white);
+}
+
+html.modo-claro .sub-plan-period {
+  color: var(--text-muted);
+}
+
+html.modo-claro .sub-cancel-warning {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+html.modo-claro .sub-cancel-warning p {
+  color: var(--text-muted);
+}
+
+html.modo-claro .sub-close-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-light);
+}
+
+html.modo-claro .sub-close-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* --- Login Welcome Modal --- */
+html.modo-claro #login-welcome-modal .modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .login-welcome-content {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .login-welcome-content .modal-close {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .login-welcome-content .modal-close:hover {
+  color: var(--text-white);
+}
+
+html.modo-claro .login-welcome-header h2 {
+  color: var(--text-white);
+}
+
+html.modo-claro .login-welcome-header p {
+  color: var(--text-muted);
+}
+
+html.modo-claro .login-welcome-field input {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .login-welcome-field input::placeholder {
+  color: var(--text-muted);
+}
+
+html.modo-claro .login-welcome-btn-secondary {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .login-welcome-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+html.modo-claro .login-welcome-divider::before,
+html.modo-claro .login-welcome-divider::after {
+  background: var(--border-light);
+}
+
+html.modo-claro .login-welcome-btn-google {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .login-welcome-btn-google:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+html.modo-claro .login-welcome-footer {
+  border-top-color: var(--border-subtle);
+}
+
+/* --- Header extras --- */
+html.modo-claro .profile-custom-wrap .pcw-label {
+  color: var(--text-light);
+}
+
+html.modo-claro .profile-custom-wrap .pcw-dropdown {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .profile-custom-wrap .pcw-option {
+  color: var(--text-muted);
+}
+
+html.modo-claro .profile-custom-wrap .pcw-option:hover {
+  color: var(--text-white);
+}
+
+html.modo-claro .profile-menu-dropdown {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .profile-menu-item {
+  color: var(--text-light);
+}
+
+html.modo-claro .profile-menu-item:hover {
+  color: var(--text-white);
+}
+
+html.modo-claro .mobile-sidebar {
+  background: var(--bg-card);
+}
+
+html.modo-claro .mobile-sidebar-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .mobile-sidebar-header .brand {
+  color: var(--text-white);
+}
+
+/* --- Selector de idioma (corner y sidebar) --- */
+
+/* Trigger en el corner inferior izquierdo */
+html.modo-claro .corner-info .language-dropdown-trigger {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.modo-claro .corner-info .language-dropdown-trigger:hover {
+  border-color: rgba(35, 123, 255, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(35, 123, 255, 0.12) !important;
+}
+
+/* Trigger en el sidebar (general) */
+html.modo-claro .language-dropdown-trigger {
+  background: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .language-dropdown-trigger:hover {
+  border-color: rgba(35, 123, 255, 0.40) !important;
+  box-shadow: 0 4px 16px rgba(35, 123, 255, 0.10) !important;
+}
+
+/* Flecha del dropdown */
+html.modo-claro .language-dropdown-trigger .dropdown-arrow {
+  color: var(--text-muted) !important;
+}
+
+/* Menu desplegable */
+html.modo-claro .language-dropdown-menu {
+  background: #ffffff !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Items del menu */
+html.modo-claro .language-dropdown-item {
+  color: #374151 !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .language-dropdown-item::before {
+  background: linear-gradient(90deg, rgba(35, 123, 255, 0.08), rgba(163, 70, 255, 0.06)) !important;
+}
+
+html.modo-claro .language-dropdown-item:hover {
+  color: #1a1d23 !important;
+}
+
+html.modo-claro .language-dropdown-item.active {
+  background: rgba(35, 123, 255, 0.08) !important;
+  border-color: rgba(35, 123, 255, 0.20) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* --- Inline style overrides for elements with hardcoded dark inline styles --- */
+html.modo-claro .cz-status-offline {
+  color: var(--text-white);
+}
+
+/* --- Support FAB --- */
+html.modo-claro #support-fab {
+  box-shadow: 0 4px 16px rgba(3, 108, 248, 0.25), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+html.modo-claro #support-fab:hover {
+  box-shadow: 0 6px 24px rgba(3, 108, 248, 0.35), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ???????????????????????????????????????????????????????????
+   Modal de Cerrar Sesi?n (logout-notification)
+   ??????????????????????????????????????????????????????????? */
+
+html.modo-claro .logout-notification-modal {
+    background: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+html.modo-claro .logout-notification-title {
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .logout-notification-message {
+    color: var(--text-muted) !important;
+}
+
+html.modo-claro .logout-notification-btn.secondary {
+    background: var(--bg-elevated) !important;
+    color: var(--text-white) !important;
+    border: 1px solid var(--border-light) !important;
+}
+
+html.modo-claro .logout-notification-btn.secondary:hover {
+    background: var(--bg-main) !important;
+}
+
+/* ???????????????????????????????????????????????????????????
+   Modal 2FA (setup y disable) ? modo claro
+   ??????????????????????????????????????????????????????????? */
+
+/* ?? Contenedor interno del modal ?? */
+html.modo-claro #tfa-setup-overlay > div,
+html.modo-claro #tfa-disable-overlay > div {
+    background: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ?? T?tulos ?? */
+html.modo-claro #tfa-setup-overlay h3,
+html.modo-claro #tfa-setup-overlay h4,
+html.modo-claro #tfa-disable-overlay h3 {
+    color: var(--text-white) !important;
+}
+
+/* ?? Textos / labels ?? */
+html.modo-claro #tfa-setup-overlay p,
+html.modo-claro #tfa-setup-overlay label,
+html.modo-claro #tfa-disable-overlay p {
+    color: var(--text-muted) !important;
+}
+
+/* ?? Mensajes de error (mantener rojo) ?? */
+html.modo-claro #tfa-error-msg,
+html.modo-claro #tfa-disable-error {
+    color: #dc2626 !important;
+}
+
+/* ?? Bot?n cerrar ?? */
+html.modo-claro #close-tfa-modal {
+    color: var(--text-muted) !important;
+}
+
+html.modo-claro #close-tfa-modal:hover {
+    color: var(--text-white) !important;
+}
+
+/* ?? Caja del c?digo manual (background sutil) ?? */
+html.modo-claro #tfa-setup-overlay #tfa-step-1 > div:nth-child(3) {
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+/* ?? Input del c?digo 6 d?gitos (setup) ?? */
+html.modo-claro #tfa-verify-code {
+    background: var(--bg-main) !important;
+    border-color: rgba(35, 123, 255, 0.35) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro #tfa-verify-code::placeholder {
+    color: var(--text-muted) !important;
+}
+
+html.modo-claro #tfa-verify-code:focus {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.12) !important;
+}
+
+/* ?? Input c?digo desactivar 2FA ?? */
+html.modo-claro #tfa-disable-code {
+    background: var(--bg-main) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro #tfa-disable-code::placeholder {
+    color: var(--text-muted) !important;
+}
+
+html.modo-claro #tfa-disable-code:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* ?? Caja de c?digos de backup (amber ? mantener tono, ajustar texto) ?? */
+html.modo-claro #tfa-step-2 [style*="rgba(251,191,36"] span,
+html.modo-claro #tfa-step-2 [style*="rgba(251, 191, 36"] span {
+    color: var(--text-white) !important;
+}
+
+/* ?? C?digo manual (azul ? est? bien, solo ajustar si hace falta) ?? */
+html.modo-claro #tfa-setup-overlay code {
+    color: var(--accent-primary) !important;
+}
+
+/* ???????????????????????????????????????????????????????????
+   Modal Premium de Pago (showPurchaseModal) ? modo claro
+   ??????????????????????????????????????????????????????????? */
+
+/* Backdrop */
+html.modo-claro .premium-modal-overlay[style] {
+    background: rgba(0, 0, 0, 0.45) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+/* Contenedor del modal */
+html.modo-claro .sub-modal-content[style] {
+    background: #ffffff !important;
+    border: 1px solid rgba(35, 123, 255, 0.12) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Bot?n X de cierre (inline styles) */
+html.modo-claro .sub-modal-content > button[style] {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: #6b7280 !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+html.modo-claro .sub-modal-content > button[style]:hover {
+    background: rgba(0, 0, 0, 0.09) !important;
+    color: #1a1d23 !important;
+}
+
+/* -- Cabecera del modal -- */
+html.modo-claro .premium-header {
+    border-bottom-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .premium-header p {
+    color: #6b7280 !important;
+}
+
+/* El titulo h2 tiene gradiente dorado ? funciona bien en blanco, lo mantenemos */
+
+/* -- Caja de beneficios -- */
+html.modo-claro .benefits-box {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.06), rgba(59, 130, 246, 0.04)) !important;
+    border-color: rgba(34, 197, 94, 0.25) !important;
+}
+
+html.modo-claro .benefits-title {
+    color: #16a34a !important;
+}
+
+html.modo-claro .benefit-item {
+    color: #374151 !important;
+}
+
+/* -- Banner de descuento de agencia -- */
+html.modo-claro .agency-discount-banner {
+    background: linear-gradient(135deg, rgba(122, 92, 255, 0.08), rgba(34, 197, 94, 0.06)) !important;
+    border-color: rgba(122, 92, 255, 0.25) !important;
+}
+
+/* -- Tarjetas de planes -- */
+html.modo-claro .plan-card-new {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html.modo-claro .plan-card-new:hover {
+    background: rgba(35, 123, 255, 0.04) !important;
+    border-color: rgba(35, 123, 255, 0.30) !important;
+}
+
+html.modo-claro .plan-card-new.featured {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.07), rgba(16, 185, 129, 0.04)) !important;
+    border-color: #16a34a !important;
+}
+
+html.modo-claro .plan-card-new.featured:hover {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.10), rgba(16, 185, 129, 0.07)) !important;
+    border-color: #15803d !important;
+}
+
+/* Precio principal */
+html.modo-claro .plan-price {
+    color: #1a1d23 !important;
+}
+
+/* Facturaci?n y subtextos */
+html.modo-claro .plan-billing {
+    color: #6b7280 !important;
+}
+
+/* Total */
+html.modo-claro .plan-total {
+    color: #16a34a !important;
+}
+
+/* Nombre del plan (no featured) */
+html.modo-claro .plan-card-new:not(.featured) .plan-name {
+    color: #2563eb !important;
+}
+
+/* Nombre del plan (featured) */
+html.modo-claro .plan-card-new.featured .plan-name {
+    color: #16a34a !important;
+}
+
+/* -- Footer de pago seguro -- */
+html.modo-claro .secure-footer {
+    color: #6b7280 !important;
+}
+
+/* -- Bot?n "Cerrar" del modal -- */
+html.modo-claro .premium-modal-overlay .modal-close-btn {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.10) !important;
+    color: #6b7280 !important;
+}
+
+html.modo-claro .premium-modal-overlay .modal-close-btn:hover {
+    background: rgba(0, 0, 0, 0.08) !important;
+    color: #1a1d23 !important;
+    border-color: rgba(0, 0, 0, 0.18) !important;
+}
+
+/* ???????????????????????????????????????????????????????????
+   Modal Gestionar Premium (showManagementModal) ? modo claro
+   ??????????????????????????????????????????????????????????? */
+
+/* Cabecera: resetear gradiente blanco->teal que no se lee en fondo blanco */
+html.modo-claro .sub-modal-header h2 {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: unset !important;
+    background-clip: unset !important;
+    color: #1a1d23 !important;
+}
+
+/* Status card: fondo azul muy suave */
+html.modo-claro .sub-status-card {
+    background: linear-gradient(135deg, rgba(35, 123, 255, 0.05) 0%, rgba(47, 255, 227, 0.03) 100%) !important;
+    border-color: rgba(35, 123, 255, 0.18) !important;
+}
+
+/* Titulo "Premium Activo" */
+html.modo-claro .sub-status-title {
+    color: #0d9488 !important;
+}
+
+/* Descripcion debajo del titulo */
+html.modo-claro .sub-status-desc {
+    color: #4b5563 !important;
+}
+
+/* Items de features: texto teal invisible sobre blanco */
+html.modo-claro .sub-feature {
+    color: #0f766e !important;
+    background: rgba(13, 148, 136, 0.08) !important;
+    border: 1px solid rgba(13, 148, 136, 0.15) !important;
+}
+
+/* Titulo "Cambiar plan": #fff invisible */
+html.modo-claro .sub-section-title {
+    color: #1a1d23 !important;
+}
+
+/* Tarjetas de plan (en gestion, no en compra) */
+html.modo-claro .sub-plan-card {
+    background: #f8fafc !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.modo-claro .sub-plan-card:hover {
+    background: rgba(35, 123, 255, 0.04) !important;
+    border-color: rgba(35, 123, 255, 0.30) !important;
+    box-shadow: 0 8px 24px rgba(35, 123, 255, 0.10) !important;
+}
+
+html.modo-claro .sub-plan-card.popular {
+    background: linear-gradient(165deg, rgba(255, 180, 50, 0.07), rgba(255, 120, 0, 0.04)) !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+/* Precio: #fff invisible */
+html.modo-claro .sub-plan-price {
+    color: #1a1d23 !important;
+}
+
+/* Periodo */
+html.modo-claro .sub-plan-period {
+    color: #6b7280 !important;
+}
+
+/* Separador seccion cancelar: borde rgba(255,255,255,0.08) invisible */
+html.modo-claro .sub-cancel-section {
+    border-top-color: var(--border-subtle) !important;
+}
+
+/* Footer del modal */
+html.modo-claro .sub-modal-footer {
+    border-top-color: var(--border-subtle) !important;
+}
+

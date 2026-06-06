@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Sora', 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -21,13 +21,19 @@ body,
 
 body {
   margin: 0;
-  background: #081018;
+  background: #07060d;
 }
 
 html[data-route='overlay'],
 body[data-route='overlay'],
 body[data-route='overlay'] #root {
   background: transparent;
+}
+
+body[data-route='overlay'] .overlay-idle,
+body[data-route='overlay'] .leaderboard-empty {
+  color: #f4fbff;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.88);
 }
 
 button,

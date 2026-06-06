@@ -1,0 +1,345 @@
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   TTS: Vista completa (#view-tts) â€” modo claro
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+
+/* Fondo de la vista */
+html.modo-claro #view-tts {
+  background: var(--bg-main) !important;
+}
+
+/* Card principal */
+html.modo-claro #view-tts .tts-card {
+  background: #ffffff !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Cabecera de la card */
+html.modo-claro #view-tts .tts-card .card-header {
+  background: linear-gradient(135deg, rgba(35, 123, 255, 0.06) 0%, rgba(35, 123, 255, 0.02) 100%) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+/* TÃ­tulo en la cabecera */
+html.modo-claro #view-tts .tts-card .card-header .title span {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: var(--text-white) !important;
+  background-clip: unset !important;
+  color: var(--text-white) !important;
+}
+
+/* Chip ACTIVADO */
+html.modo-claro #view-tts .tts-card .card-header .chip {
+  background: rgba(35, 123, 255, 0.06) !important;
+  border-color: rgba(35, 123, 255, 0.2) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* Indicador de autoguardado */
+html.modo-claro #view-tts .tts-autosave-indicator {
+  background: rgba(16, 185, 129, 0.06) !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+/* Secciones (cards internas) */
+html.modo-claro #view-tts .tts-section {
+  background: #ffffff !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: none !important;
+}
+html.modo-claro #view-tts .tts-section::before {
+  display: none !important;
+}
+html.modo-claro #view-tts .tts-section:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* TÃ­tulos de secciÃ³n */
+html.modo-claro #view-tts .tts-sec-title {
+  color: var(--text-white) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+/* Inputs, selects y textareas */
+html.modo-claro #view-tts.view select,
+html.modo-claro #view-tts.view input[type="text"],
+html.modo-claro #view-tts.view input[type="number"],
+html.modo-claro #view-tts.view textarea {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+html.modo-claro #view-tts.view select:focus,
+html.modo-claro #view-tts.view input[type="text"]:focus,
+html.modo-claro #view-tts.view input[type="number"]:focus,
+html.modo-claro #view-tts.view textarea:focus {
+  background: #ffffff !important;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.10) !important;
+}
+
+/* Checkboxes personalizados */
+html.modo-claro #view-tts .chk {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-light) !important;
+}
+html.modo-claro #view-tts .chk:hover {
+  background: rgba(35, 123, 255, 0.04) !important;
+  border-color: rgba(35, 123, 255, 0.2) !important;
+}
+
+/* Sliders de velocidad/tono/volumen */
+html.modo-claro #view-tts .tts-range {
+  background: #f9fafb !important;
+  border-color: var(--border-subtle) !important;
+}
+html.modo-claro #view-tts .tts-range:hover {
+  background: #f3f4f6 !important;
+  border-color: rgba(35, 123, 255, 0.2) !important;
+}
+html.modo-claro #view-tts .tts-range label {
+  color: var(--text-light) !important;
+}
+html.modo-claro #view-tts .tts-range input[type="range"] {
+  background: rgba(35, 123, 255, 0.12) !important;
+}
+html.modo-claro #view-tts .tts-range-val {
+  color: var(--accent-primary) !important;
+  background: rgba(35, 123, 255, 0.08) !important;
+}
+
+/* Chips de whitelist/banned */
+html.modo-claro #view-tts .chips .chip {
+  background: rgba(35, 123, 255, 0.07) !important;
+  border-color: rgba(35, 123, 255, 0.18) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* Barra de filtros de voces */
+html.modo-claro #view-tts .tts-filters-bar {
+  background: #f9fafb !important;
+  border-color: var(--border-subtle) !important;
+}
+html.modo-claro #view-tts .tts-filter-select {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+html.modo-claro #view-tts .tts-filter-label {
+  color: var(--text-muted) !important;
+}
+html.modo-claro #view-tts .tts-count-badge {
+  background: rgba(35, 123, 255, 0.07) !important;
+  border-color: rgba(35, 123, 255, 0.18) !important;
+  color: var(--accent-primary) !important;
+}
+
+html.modo-claro #view-tts .tts-voice-header {
+  color: var(--text-muted) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+html.modo-claro #view-tts .tts-voice-header.selected {
+  color: #059669 !important;
+}
+
+/* Lista de voces */
+html.modo-claro #view-tts #tts-voices-list,
+html.modo-claro #view-tts #creator-voices-list {
+  background: #f9fafb !important;
+}
+html.modo-claro #view-tts .tts-voice-row {
+  background: #ffffff !important;
+  border-color: transparent !important;
+}
+html.modo-claro #view-tts .tts-voice-row:hover {
+  background: rgba(35, 123, 255, 0.04) !important;
+  border-color: rgba(35, 123, 255, 0.12) !important;
+}
+html.modo-claro #view-tts .tts-voice-row.selected {
+  background: rgba(35, 123, 255, 0.06) !important;
+  border-color: rgba(35, 123, 255, 0.18) !important;
+}
+html.modo-claro #view-tts .tts-voice-row .voice-label {
+  color: var(--text-light) !important;
+}
+html.modo-claro #view-tts .tts-voice-row .star-btn {
+  background: rgba(251, 191, 36, 0.07) !important;
+  border-color: rgba(251, 191, 36, 0.18) !important;
+  color: rgba(161, 120, 5, 0.6) !important;
+}
+html.modo-claro #view-tts .tts-voice-row .star-btn.active {
+  background: rgba(251, 191, 36, 0.15) !important;
+  border-color: #d4a017 !important;
+  color: #d4a017 !important;
+}
+
+/* Barra de acciones (texto de prueba + botÃ³n) */
+html.modo-claro #view-tts .tts-actions {
+  border-top: none !important;
+}
+html.modo-claro #view-tts .tts-actions .btn {
+  color: #fff !important;
+}
+
+/* BotÃ³n Probar â€” forzar azul sÃ³lido (anula el .btn-ghost genÃ©rico) */
+html.modo-claro #view-tts .tts-actions #tts-test {
+  background: linear-gradient(135deg, #237BFF, #0F5ACC) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 20px rgba(35, 123, 255, 0.3) !important;
+}
+html.modo-claro #view-tts .tts-actions #tts-test:hover {
+  box-shadow: 0 8px 30px rgba(35, 123, 255, 0.45) !important;
+  transform: translateY(-2px) !important;
+}
+
+
+
+/* BotÃ³n ghost */
+html.modo-claro #view-tts .btn-ghost {
+  background: rgba(35, 123, 255, 0.06) !important;
+  border-color: rgba(35, 123, 255, 0.18) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* Sub-tabs General / Creadores */
+html.modo-claro #view-tts .tts-subtabs {
+  background: #f3f4f6 !important;
+  border-color: var(--border-subtle) !important;
+}
+html.modo-claro #view-tts .tts-subtab-btn {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+}
+html.modo-claro #view-tts .tts-subtab-btn:hover {
+  background: rgba(35, 123, 255, 0.06) !important;
+  color: var(--accent-primary) !important;
+}
+html.modo-claro #view-tts .tts-subtab-btn.active {
+  background: linear-gradient(135deg, rgba(35, 123, 255, 0.12), rgba(15, 90, 204, 0.08)) !important;
+  color: var(--accent-primary) !important;
+  border-color: rgba(35, 123, 255, 0.25) !important;
+  box-shadow: 0 2px 8px rgba(35, 123, 255, 0.12) !important;
+}
+
+/* SecciÃ³n creadores */
+html.modo-claro #view-tts .creators-section {
+  background: none !important;
+  border: none !important;
+}
+html.modo-claro #view-tts .creator-add-form {
+  background: none !important;
+  border: none !important;
+}
+html.modo-claro #view-tts .creator-add-form .creator-field label {
+  color: var(--text-muted) !important;
+}
+html.modo-claro #view-tts .creator-row {
+  background: #ffffff !important;
+  border-color: var(--border-subtle) !important;
+}
+html.modo-claro #view-tts .creator-row:hover {
+  background: rgba(35, 123, 255, 0.03) !important;
+  border-color: rgba(35, 123, 255, 0.15) !important;
+}
+html.modo-claro #view-tts .creator-row .creator-username {
+  color: var(--text-white) !important;
+}
+html.modo-claro #view-tts .creator-row .creator-voice-name {
+  color: var(--text-muted) !important;
+}
+
+/* Selector de tipo de voz (tabs mini) */
+html.modo-claro #view-tts .voice-type-tabs {
+  background: #f3f4f6 !important;
+}
+html.modo-claro #view-tts .voice-type-tab {
+  color: var(--text-muted) !important;
+}
+html.modo-claro #view-tts .voice-type-tab.active {
+  background: rgba(35, 123, 255, 0.12) !important;
+  color: var(--accent-primary) !important;
+}
+html.modo-claro #view-tts .voice-type-tab:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Input de bÃºsqueda FakeYou */
+html.modo-claro #view-tts #fakeyou-search-container input {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+html.modo-claro #view-tts #fakeyou-search-container input:focus {
+  border-color: rgba(34, 197, 94, 0.45) !important;
+}
+
+/* VacÃ­o de creadores */
+html.modo-claro #view-tts .creators-empty {
+  color: var(--text-muted) !important;
+}
+
+/* ---- TTS: tambiÃ©n overrides legacy sin #view-tts ---- */
+html.modo-claro .tts-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .tts-section {
+  background: #ffffff;
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .tts-sec-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .chk {
+  background: #ffffff;
+  border-color: var(--border-light);
+}
+
+html.modo-claro .tts-range {
+  background: #f9fafb;
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .tts-filters-bar {
+  background: #f9fafb;
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro #tts-voices-list,
+html.modo-claro #creator-voices-list {
+  background: #f9fafb;
+}
+
+html.modo-claro .tts-voice-row {
+  background: #ffffff;
+}
+
+html.modo-claro .tts-actions .btn {
+  color: #fff;
+}
+
+
+/* ── Premium overlay (creadores) ── */
+html.modo-claro #view-tts .creators-premium-overlay.locked::after {
+    background: linear-gradient(135deg, rgba(255, 251, 230, 0.93), rgba(255, 244, 198, 0.90));
+    backdrop-filter: blur(4px);
+}
+
+html.modo-claro #view-tts .creators-premium-lock .lock-text {
+    background: linear-gradient(135deg, #92400e, #b45309);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html.modo-claro #view-tts .creators-premium-lock .lock-sub {
+    color: #6b7280;
+}

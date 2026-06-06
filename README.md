@@ -179,29 +179,37 @@ Con Railway, el overlay y el panel ya viven en internet. Para que **Minecraft o 
 
 ## ChaosMod para GTA V
 
-Si tienes ChaosMod instalado en `C:\Program Files\Epic Games\GTAV\chaosmod`, el bridge local intenta leer:
+Si tienes ChaosMod instalado en `C:\Program Files\Epic Games\GTAVEnhanced\chaosmod` (o GTAV estandar), el bridge local:
 
-- `configs/effects.ini`
-- `configs/config.ini`
+- Lee `effects.ini` para construir el catalogo sincronizado con el panel.
+- Dispara efectos **directamente via HTTP** (puerto 8082) usando el endpoint compatible con StreamToEarn / ChaosMod built-in trigger. Esto es **silencioso** (sin menu visible, sin delay de teclas).
 
-### Lo que hace
+### Metodo actual (preferido y silencioso)
 
-- Sincroniza el catalogo de efectos con el panel.
-- Si detecta la edicion `StreamToEarn.io`, intenta primero el endpoint local `http://127.0.0.1:8082/trigger_effect` con el mismo header que usa la app oficial.
-- Intenta habilitar el debug socket creando `chaosmod/.enabledebugsocket`.
-- Si el HTTP local no responde, prioriza el disparo directo por socket hacia ChaosMod para evitar animaciones visibles y errores de seleccion.
-- Si ese socket no aparece, usa un atajo nativo por efecto para dispararlo de forma exacta.
-- Puede usar el menu interno del mod como fallback solo si activas `allowMenuFallback`.
+- `POST http://localhost:8082/trigger_effect` con el `effect_id`.
+- No requiere atajos, no abre menus, respuesta casi instantanea.
+- Funciona con ChaosMod Enhanced + integraciones S2E, y muchas builds modernas que exponen el trigger HTTP.
 
-### Importante
+### Config en bridge-config.json (chaosmod)
 
-- La primera vez conviene recargar el mod o reiniciar el juego para que ChaosMod detecte `.enabledebugsocket`.
-- En esta edicion, el canal mas fiable suele ser el HTTP local del propio mod; por eso el bridge ya lo prueba antes que socket y atajos.
-- La primera vez que uses un efecto por atajo, el bridge puede reasignar un shortcut en `effects.ini` y recargar el mod una sola vez para aplicarlo.
-- Si el debug socket no abre, el bridge ahora falla de forma segura por defecto en vez de navegar el menu visual y disparar otro efecto.
-- Si aun asi quieres el comportamiento viejo, puedes poner `"allowMenuFallback": true` en `bridge-config.json`.
-- Solo en ese modo fallback, el bridge usa `EnableDebugMenu=1`, asume que el selector arranca arriba y puede desincronizarse si mueves el menu a mano.
-- Si quieres replicar la accion predefinida de Stream To Earn para cambiar el vehiculo actual, usa el efecto `misc_replacevehicle` (`Replace Current Vehicle`).
+```json
+"chaosmod": {
+  "enabled": true,
+  "modPath": "C:\\Program Files\\Epic Games\\GTAVEnhanced\\chaosmod",
+  "gtaProcessName": "GTA5_Enhanced"
+}
+```
+
+Los campos viejos `preferShortcutTrigger`, `allowMenuFallback`, delays de menu/atajo siguen en config por compatibilidad pero actualmente el bridge prioriza el disparo HTTP directo.
+
+### Notas
+
+- Asegúrate que ChaosMod esté cargado en GTA y que el HTTP trigger esté disponible (algunas versiones lo exponen solo con ciertas flags o builds).
+- El catalogo se sincroniza automaticamente al bridge y al panel.
+- Si el HTTP directo falla, el efecto no se ejecuta (no hay fallback automatico a atajos en la version actual; se puede extender si es necesario para tu setup).
+- Para replicar "cambiar vehiculo" como StreamToEarn: usa el efecto `misc_replacevehicle`.
+
+**Documentacion legacy (socket/atajos/menu)**: Hay varios .md antiguos en la raiz sobre debug socket (31819) y atajos. El codigo actual usa HTTP directo 8082 como metodo principal silencioso. Esos docs estan obsoletos pero se mantienen por referencia historica.
 
 ## Proteccion basica
 

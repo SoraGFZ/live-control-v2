@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TikControl</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      -webkit-app-region: drag;
+    }
+    .splash-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1a 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+    .loading-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      color: white;
+    }
+    .loading-fallback.visible {
+      display: flex;
+    }
+    .logo {
+      font-size: 48px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #237BFF 0%, #A346FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid #237BFF;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="splash-container">
+    <video id="splash-video" autoplay muted playsinline>
+      <!-- Source will be set dynamically -->
+    </video>
+    <div id="loading-fallback" class="loading-fallback">
+      <div class="logo">
+        <img src="./logo.png" alt="TikControl Logo" style="width: 100px; height: 100px; object-fit: contain;">
+      </div>
+      <div class="brand">TikControl</div>
+      <div class="loader"></div>
+    </div>
+  </div>
+  <script>
+    const video = document.getElementById('splash-video');
+    const fallback = document.getElementById('loading-fallback');
+    
+    // Get video path from URL params
+    const params = new URLSearchParams(window.location.search);
+    const videoPath = params.get('video');
+    
+    if (videoPath) {
+      video.src = videoPath;
+      video.load();
+    } else {
+      video.style.display = 'none';
+      fallback.classList.add('visible');
+    }
+    
+    video.addEventListener('error', () => {
+      console.error('Video error:', video.error);
+      video.style.display = 'none';
+      fallback.classList.add('visible');
+    });
+    
+    video.addEventListener('loadeddata', () => {
+      // [log cleaned]
+    });
+    
+    // Fallback si el video tarda mucho
+    setTimeout(() => {
+      if (video.readyState < 2) {
+        video.style.display = 'none';
+        fallback.classList.add('visible');
+      }
+    }, 3000);
+  </script>
+</body>
+</html>

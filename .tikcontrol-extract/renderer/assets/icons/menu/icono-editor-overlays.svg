@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Editor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 60">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #036cf8;
+        stroke-miterlimit: 10;
+        stroke-width: 2.5px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M6.95,21.69h51.89v29.25c0,2.76-2.24,5-5,5H11.95c-2.76,0-5-2.24-5-5v-29.25h0Z"/>
+  <path class="cls-1" d="M10.75,7.61h41.89c2.76,0,5,2.24,5,5v3.82H5.75v-3.82c0-2.76,2.24-5,5-5Z" transform="translate(-1.58 5.56) rotate(-9.78)"/>
+  <path class="cls-1" d="M26.7,31.29v14.77c0,.76.8,1.25,1.48.9l14.04-7.26c.72-.37.73-1.41.01-1.79l-14.04-7.51c-.67-.36-1.49.13-1.49.89Z"/>
+</svg>

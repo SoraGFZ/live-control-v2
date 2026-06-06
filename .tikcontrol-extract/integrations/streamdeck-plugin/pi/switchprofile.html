@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Switch Profile</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 8px;
+      margin: 0;
+      background: transparent;
+    }
+    .sdpi-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sdpi-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sdpi-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+    }
+    select, input {
+      padding: 6px 8px;
+      border: 1px solid #3d3d3d;
+      background: #2d2d2d;
+      color: #d4d4d4;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: #0e639c;
+    }
+    .loading {
+      color: #999;
+      font-size: 11px;
+      text-align: center;
+      padding: 8px;
+    }
+    .error {
+      color: #f48771;
+      font-size: 11px;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sdpi-wrapper">
+    <div class="sdpi-item">
+      <div class="sdpi-item-label">Profile</div>
+      <select id="profileSelect">
+        <option value="">Loading profiles...</option>
+      </select>
+      <div id="error" class="error" style="display:none;"></div>
+    </div>
+    <div class="sdpi-item">
+      <button id="refreshBtn" style="width: 100%; padding: 8px; background: #0e639c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+        🔄 Refresh Profiles
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let globalSettings = {};
+    let profiles = [];
+
+    // Connect to Stream Deck
+    function connectElgatoStreamDeckSocket(inPort, inUUID, inMessageType, inApplicationInfo, inActionInfo) {
+      const websocket = new WebSocket('ws://127.0.0.1:' + inPort);
+      const actionInfo = JSON.parse(inActionInfo || '{}');
+      const context = inUUID;
+
+      console.log('[Switch Profile PI] Conectando...', { port: inPort, uuid: inUUID, actionInfo });
+
+      // Parse settings
+      if (actionInfo.payload && actionInfo.payload.settings) {
+        globalSettings = actionInfo.payload.settings;
+        console.log('[Switch Profile PI] Settings cargados:', globalSettings);
+      }
+
+      websocket.onopen = function () {
+        console.log('[Switch Profile PI] Conectado al Stream Deck');
+        // Register property inspector
+        const registerEvent = {
+          event: 'registerPropertyInspector',
+          uuid: context
+        };
+        websocket.send(JSON.stringify(registerEvent));
+        
+        loadProfiles();
+      };
+
+      websocket.onerror = function (error) {
+        console.error('[Switch Profile PI] WebSocket error:', error);
+        showError('Connection error');
+      };
+
+      websocket.onclose = function () {
+        console.log('[Switch Profile PI] Desconectado');
+      };
+
+      websocket.onmessage = function (evt) {
+        try {
+          const jsonObj = JSON.parse(evt.data);
+          console.log('[Switch Profile PI] Mensaje recibido:', jsonObj);
+        } catch (e) {
+          console.error('[Switch Profile PI] Error parseando mensaje:', e);
+        }
+      };
+
+      // Save settings to Stream Deck
+      function saveSettings(settings) {
+        globalSettings = { ...globalSettings, ...settings };
+        const setSettingsEvent = {
+          event: 'setSettings',
+          context: context,
+          payload: globalSettings
+        };
+        websocket.send(JSON.stringify(setSettingsEvent));
+        console.log('[Switch Profile PI] Settings guardados:', globalSettings);
+      }
+
+      // Load profiles from TikControl
+      async function loadProfiles() {
+        const select = document.getElementById('profileSelect');
+        const errorDiv = document.getElementById('error');
+        
+        try {
+          console.log('[Switch Profile PI] Solicitando perfiles...');
+          
+          // Connect to TikControl WebSocket
+          const tikcontrolWs = new WebSocket('ws://127.0.0.1:9091');
+          
+          tikcontrolWs.onopen = function() {
+            console.log('[Switch Profile PI] ✅ Conectado a TikControl WebSocket');
+            // Request profiles list
+            const request = { type: 'get_profiles_list' };
+            console.log('[Switch Profile PI] 📤 Enviando solicitud:', request);
+            tikcontrolWs.send(JSON.stringify(request));
+            
+            // Timeout para detectar si no hay respuesta
+            setTimeout(() => {
+              if (profiles.length === 0) {
+                console.warn('[Switch Profile PI] ⏱️ Timeout: No se recibió respuesta de perfiles en 5s');
+                showError('Timeout waiting for profiles');
+                select.innerHTML = '<option value="">Timeout - Try again</option>';
+              }
+            }, 5000);
+          };
+          
+          tikcontrolWs.onmessage = function(evt) {
+            try {
+              const data = JSON.parse(evt.data);
+              console.log('[Switch Profile PI] Respuesta de TikControl:', data);
+              
+              if (data.type === 'profiles_list') {
+                profiles = data.data || [];
+                console.log('[Switch Profile PI] Perfiles recibidos:', profiles);
+                
+                // Populate select
+                select.innerHTML = '';
+                
+                if (profiles.length === 0) {
+                  const option = document.createElement('option');
+                  option.value = '';
+                  option.textContent = 'No profiles found';
+                  select.appendChild(option);
+                } else {
+                  // Add empty option
+                  const emptyOption = document.createElement('option');
+                  emptyOption.value = '';
+                  emptyOption.textContent = 'Select a profile...';
+                  select.appendChild(emptyOption);
+                  
+                  profiles.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile.id;
+                    option.textContent = profile.name + (profile.isActive ? ' (Active)' : '');
+                    if (profile.id === globalSettings.profileId) {
+                      option.selected = true;
+                    }
+                    select.appendChild(option);
+                  });
+                }
+                
+                errorDiv.style.display = 'none';
+                tikcontrolWs.close();
+              }
+            } catch (e) {
+              console.error('[Switch Profile PI] Error procesando respuesta:', e);
+              showError('Error loading profiles');
+            }
+          };
+          
+          tikcontrolWs.onerror = function(error) {
+            console.error('[Switch Profile PI] ❌ Error WebSocket:', error);
+            showError('Cannot connect to TikControl (port 9091)');
+            select.innerHTML = '<option value="">TikControl not connected</option>';
+          };
+          
+          tikcontrolWs.onclose = function(evt) {
+            console.log('[Switch Profile PI] 🔌 WebSocket cerrado:', evt.code, evt.reason);
+            if (profiles.length === 0) {
+              showError('Connection closed before receiving data');
+            }
+          };
+          
+        } catch (error) {
+          console.error('[Switch Profile PI] Error cargando perfiles:', error);
+          showError('Error: ' + error.message);
+          select.innerHTML = '<option value="">Error loading profiles</option>';
+        }
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById('error');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+      }
+
+      // Event listeners
+      document.getElementById('profileSelect').addEventListener('change', function(e) {
+        const profileId = e.target.value;
+        const profile = profiles.find(p => p.id === profileId);
+        
+        console.log('[Switch Profile PI] Perfil seleccionado:', { profileId, profile });
+        
+        saveSettings({
+          profileId: profileId,
+          profileName: profile ? profile.name : ''
+        });
+      });
+      
+      // Botón de refresh
+      document.getElementById('refreshBtn').addEventListener('click', function() {
+        console.log('[Switch Profile PI] 🔄 Refrescando lista de perfiles...');
+        const select = document.getElementById('profileSelect');
+        select.innerHTML = '<option value="">Loading...</option>';
+        profiles = [];
+        loadProfiles();
+      });
+    }
+  </script>
+</body>
+</html>
+

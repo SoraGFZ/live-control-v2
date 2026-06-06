@@ -1,0 +1,579 @@
+/* --- ACTIONS / ALERTS --- */
+html.modo-claro .actions-toolbar,
+html.modo-claro .ev-toolbar {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* Iconos de Acciones, Eventos y Pantallas: blanco y negro en modo claro */
+html.modo-claro #view-acciones .card .title.with-icon .icon {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #1a1d23;
+}
+
+html.modo-claro #view-acciones .card .title.with-icon .icon svg {
+  stroke: currentColor;
+}
+
+/* ── Tab-intro banners — modo claro (fondo claro, texto oscuro) ── */
+html.modo-claro .tab-intro-banner {
+  background: linear-gradient(145deg, #f0f4fc 0%, #eaf0f8 48%, #f2f6ff 100%);
+  border-color: rgba(35, 123, 255, 0.16);
+  box-shadow:
+    0 0 0 1px rgba(35, 123, 255, 0.05) inset,
+    0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .tab-intro-banner-bg {
+  background:
+    radial-gradient(ellipse 80% 50% at 12% 20%, rgba(35, 123, 255, 0.05), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 88% 80%, rgba(15, 90, 204, 0.04), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(35, 123, 255, 0.03), transparent 45%);
+}
+
+html.modo-claro .tab-intro-icon-box {
+  background: linear-gradient(135deg, #237BFF, #0F5ACC);
+  border-color: rgba(35, 123, 255, 0.35);
+  box-shadow: 0 2px 8px rgba(35, 123, 255, 0.2);
+  color: #fff;
+}
+
+html.modo-claro .tab-intro-icon-svg {
+  filter: brightness(0) invert(1);
+  opacity: 1;
+}
+
+html.modo-claro .tab-intro-title,
+html.modo-claro .tab-intro-title--split {
+  color: var(--text-white);
+}
+
+html.modo-claro .tab-intro-title-accent {
+  background: linear-gradient(180deg, var(--accent-primary) 0%, #0a5fd4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--accent-primary);
+}
+
+html.modo-claro .tab-intro-desc {
+  color: var(--text-muted);
+}
+
+html.modo-claro .tab-intro-desc .tab-intro-brand {
+  color: inherit;
+}
+
+html.modo-claro .tab-intro-desc strong {
+  color: var(--text-white);
+}
+
+html.modo-claro .tab-intro-desc .tab-intro-ul {
+  color: #1a1a2e;
+}
+
+html.modo-claro .tab-intro-btn {
+  background: rgba(35, 123, 255, 0.08);
+  color: var(--text-muted);
+}
+
+html.modo-claro .tab-intro-btn:hover {
+  background: rgba(35, 123, 255, 0.14);
+  color: var(--text-white);
+  box-shadow: 0 0 8px rgba(35, 123, 255, 0.12);
+}
+
+html.modo-claro .tab-intro-chip {
+  color: var(--text-white);
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.18);
+  box-shadow: 0 0 8px rgba(35, 123, 255, 0.05);
+}
+
+html.modo-claro .tab-intro-arrow {
+  color: rgba(35, 123, 255, 0.5);
+  filter: none;
+}
+
+/* Batch info badge - neutro en modo claro */
+html.modo-claro #actions-batch-info,
+html.modo-claro #events-batch-info {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--text-muted);
+}
+
+html.modo-claro #actions-batch-info [data-count],
+html.modo-claro #events-batch-info [data-count] {
+  color: var(--text-white);
+}
+
+/* Card header hint text */
+html.modo-claro .card-header .actions {
+  color: var(--text-muted);
+}
+
+/* Table headers */
+html.modo-claro .tbl-actions thead th,
+html.modo-claro .tbl-events thead th {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+  border-bottom-color: var(--border-subtle);
+}
+
+/* Table body */
+html.modo-claro .tbl-actions tbody td,
+html.modo-claro .tbl-events tbody td {
+  background: transparent;
+  border-bottom-color: var(--border-subtle);
+  color: var(--text-white);
+}
+
+html.modo-claro .tbl-actions tbody tr:hover td,
+html.modo-claro .tbl-events tbody tr:hover td {
+  background: rgba(35, 123, 255, 0.04);
+}
+
+/* Table inputs */
+html.modo-claro body .card .tbl-actions input,
+html.modo-claro body .card .tbl-actions select,
+html.modo-claro body .card .tbl-events input,
+html.modo-claro body .card .tbl-events select {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+/* OPS buttons */
+html.modo-claro .ae-ops-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .ae-ops-btn:hover {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.25);
+  color: var(--accent-primary);
+}
+
+html.modo-claro .ae-ops-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+html.modo-claro .ae-ops-btn.test:hover {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.2);
+  color: #16a34a;
+}
+
+/* Chips */
+html.modo-claro .chip--muted {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .ae-adv-chip-v2 {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .ae-adv-chip-v2.active {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.25);
+  color: var(--accent-primary);
+}
+
+/* Pantallas (Screens) Cards */
+html.modo-claro .pantalla-card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+html.modo-claro .pantalla-card-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .pantalla-card-badge {
+  color: var(--text-muted);
+}
+
+html.modo-claro .pantalla-card-input {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-light);
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ACTION EDITOR MODAL â€” MODO CLARO
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* Overlay y contenedor */
+html.modo-claro .ae-modal-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .ae-modal-container {
+  /* Variables scoped al modal â€” todo blanco limpio */
+  --bg-card:     #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-hover:    #eff0f3;
+  --input-bg:    #f3f4f6;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-light:  rgba(0, 0, 0, 0.13);
+
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  color: var(--text-white);
+}
+
+html.modo-claro .ae-modal-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .ae-modal-footer {
+  border-top-color: var(--border-subtle);
+}
+
+/* Inputs y selects principales del editor */
+html.modo-claro .ae-input,
+html.modo-claro .ae-select,
+html.modo-claro .ae-select-with-icon,
+html.modo-claro .ae-name-input {
+  background: var(--input-bg);
+  border-color: var(--border-light);
+  color: var(--text-white);
+  box-shadow: none;
+}
+
+html.modo-claro .ae-input:focus,
+html.modo-claro .ae-select:focus,
+html.modo-claro .ae-select-with-icon:focus,
+html.modo-claro .ae-name-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.12);
+}
+
+html.modo-claro .ae-input::placeholder,
+html.modo-claro .ae-name-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Custom select del editor de acciones en modo claro */
+html.modo-claro .act-grid-3 .cs-trigger,
+html.modo-claro .act-grid-2 .cs-trigger,
+html.modo-claro .action-editor-modal .cs-trigger {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #1a1d23 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+html.modo-claro .act-grid-3 .cs-trigger:hover,
+html.modo-claro .act-grid-2 .cs-trigger:hover,
+html.modo-claro .action-editor-modal .cs-trigger:hover {
+  border-color: rgba(35, 123, 255, 0.30) !important;
+  box-shadow: 0 2px 8px rgba(35, 123, 255, 0.08) !important;
+}
+
+/* Icono dentro de mc-input-wrap: sin fondo, solo color de trazo */
+html.modo-claro .mc-input-wrap svg.icon,
+html.modo-claro .mc-input-wrap .icon {
+  fill: var(--text-muted) !important;
+  color: var(--text-muted) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Labels de wrapField (ae-field-label) y groupLabel (ae-group-label) */
+html.modo-claro .ae-field-label {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ae-group-label {
+  color: var(--text-light);
+  border-bottom-color: var(--border-subtle);
+}
+
+/* Opciones avanzadas (paneles OBS, Streamerbotâ€¦) */
+html.modo-claro .advanced-option-label {
+  color: var(--text-light);
+}
+
+html.modo-claro .advanced-control-section {
+  background: transparent;
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .advanced-section-title {
+  color: var(--accent-primary);
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .advanced-option-field select,
+html.modo-claro .advanced-option-field input {
+  background: var(--input-bg);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .obs-auto-switch-card {
+  background: linear-gradient(180deg, rgba(35, 123, 255, 0.06), rgba(255, 255, 255, 0.72));
+  border-color: rgba(35, 123, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+html.modo-claro .obs-auto-switch-title,
+html.modo-claro .obs-auto-switch-field-label {
+  color: var(--text-light);
+}
+
+html.modo-claro .obs-auto-switch-hint {
+  color: var(--text-muted);
+}
+
+html.modo-claro .obs-auto-switch-details {
+  border-top-color: var(--border-subtle);
+}
+
+/* Event action chips */
+html.modo-claro .ev-act-chip {
+  background: rgba(35, 123, 255, 0.04);
+  border-color: rgba(35, 123, 255, 0.12);
+}
+
+html.modo-claro .ev-act-label {
+  color: var(--text-light);
+}
+
+html.modo-claro .ev-act-del,
+html.modo-claro .ev-rand-del {
+  color: var(--text-muted);
+}
+
+/* â”€â”€ ACTION EDITOR MODAL â€” estilos del compactActionCSS â”€â”€ */
+
+/* Bloques / secciones del formulario */
+html.modo-claro .act-block {
+  background: transparent;
+  border-top-color: var(--border-subtle);
+  box-shadow: none;
+}
+
+html.modo-claro .act-block::before {
+  display: none;
+}
+
+html.modo-claro .act-h {
+  color: var(--accent-primary);
+}
+
+html.modo-claro .act-h::before {
+  box-shadow: 0 0 6px rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro .act-range-val {
+  color: var(--accent-primary);
+}
+
+html.modo-claro .act-hint {
+  color: var(--text-muted);
+}
+
+/* AcordeÃ³n â€” separadores */
+html.modo-claro .accordion-item {
+  background: transparent;
+  border-top-color: var(--border-subtle);
+}
+
+html.modo-claro .accordion-item.active > .accordion-header {
+  border-color: rgba(35, 123, 255, 0.2);
+  background: rgba(35, 123, 255, 0.03);
+}
+
+html.modo-claro .accordion-header:hover {
+  background: rgba(35, 123, 255, 0.03);
+}
+
+/* TÃ­tulo de acordeÃ³n (era #e2edf5 blanco, invisible en modo claro) */
+html.modo-claro .accordion-title {
+  color: var(--text-white);
+}
+
+/* Badge envolvente del icono: cuadrado redondeado azul (estÃ¡ndar app) */
+html.modo-claro .accordion-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #237BFF, #0F5ACC);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+/* Icono SVG dentro del badge: forzar blanco con filter */
+html.modo-claro .accordion-icon-badge svg {
+  filter: brightness(0) invert(1);
+  opacity: 1 !important;
+  width: 16px;
+  height: 16px;
+}
+
+/* Checkbox del acordeÃ³n */
+html.modo-claro .accordion-check input[type=checkbox] {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+html.modo-claro .accordion-check input[type=checkbox]:hover {
+  border-color: rgba(35, 123, 255, 0.5);
+}
+
+/* BotÃ³n toggle (chevron) */
+html.modo-claro .accordion-toggle {
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.15);
+  color: var(--accent-primary);
+}
+
+html.modo-claro .accordion-toggle:hover {
+  background: rgba(35, 123, 255, 0.12);
+}
+
+/* Contenido abierto del acordeÃ³n */
+html.modo-claro .accordion-inner {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* Campos avanzados dentro del acordeÃ³n (adv-field) */
+html.modo-claro .adv-field label {
+  color: var(--text-muted);
+}
+
+html.modo-claro .adv-field input,
+html.modo-claro .adv-field select,
+html.modo-claro .adv-field textarea {
+  background: var(--input-bg);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .adv-field input[type="range"] {
+  background: rgba(35, 123, 255, 0.12);
+  border: none;
+}
+
+html.modo-claro .adv-field input:focus,
+html.modo-claro .adv-field select:focus,
+html.modo-claro .adv-field textarea:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.1);
+}
+
+html.modo-claro .adv-preview {
+  background: rgba(35, 123, 255, 0.03);
+  border-color: rgba(35, 123, 255, 0.15);
+}
+
+html.modo-claro .adv-hint {
+  color: var(--text-muted);
+}
+
+/* Flags del formulario (fade, queueâ€¦) */
+html.modo-claro .act-flags label {
+  color: var(--text-light);
+}
+
+/* Panel de alertas â€” mc-field-group */
+html.modo-claro .mc-field-group label {
+  color: var(--text-muted);
+}
+
+/* Fuentes â€” mc-font */
+html.modo-claro .mc-font-row.sizes label {
+  color: var(--text-muted);
+}
+
+/* Flags en paneles internos (mc-flag) */
+html.modo-claro .mc-flag {
+  color: var(--text-light);
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+}
+
+html.modo-claro .mc-flag:hover {
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.2);
+  color: var(--text-white);
+}
+
+html.modo-claro .mc-flag input[type="checkbox"] {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+/* Texto auxiliar pequeÃ±o (mc-small) */
+html.modo-claro .mc-small {
+  color: var(--text-muted);
+}
+
+/* Hint de campos genÃ©rico (ae-field-hint) */
+html.modo-claro .ae-field-hint {
+  color: var(--text-muted);
+}
+
+/* Cobertura genÃ©rica alta especificidad para inputs dentro del editor */
+html.modo-claro .act-modal-layout-single input[type="text"],
+html.modo-claro .act-modal-layout-single input[type="number"],
+html.modo-claro .act-modal-layout-single select,
+html.modo-claro .act-modal-layout-single textarea {
+  background: var(--input-bg);
+  border-color: var(--border-light);
+  color: var(--text-white);
+  box-shadow: none;
+}
+
+html.modo-claro .act-modal-layout-single input::placeholder,
+html.modo-claro .act-modal-layout-single textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Video source tabs */
+html.modo-claro .vid-source-tab {
+  background: transparent;
+  color: var(--text-muted);
+  border-bottom-color: transparent;
+}
+
+html.modo-claro .vid-source-tab.active {
+  background: rgba(35, 123, 255, 0.06);
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+/* ---- ACTION EDITOR (bloque duplicado consolidado) ---- */
+html.modo-claro .ae-ops-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-light);
+}
+
+html.modo-claro .ev-act-chip {
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.15);
+}
+
+html.modo-claro .ev-act-label {
+  color: var(--text-light);
+}
+
+html.modo-claro .ev-act-del,
+html.modo-claro .ev-rand-del {
+  color: var(--text-muted);
+}
+

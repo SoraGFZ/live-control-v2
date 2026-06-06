@@ -1,0 +1,758 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Rotator</title>
+    
+    <!--  Vue.js 3 desde CDN (solo 50KB comprimido) -->
+    <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+    <script src="core/font-loader.js?v=20260526-storage-token-fix"></script>
+    <script src="tikcontrol-widget-base.js?v=20260526-storage-token-fix"></script>
+<script src="https://unpkg.com/vue@3.5.21/dist/vue.global.prod.js"></script>
+    
+    <!--  Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- âœ¨ Animate.css para animaciones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-width: 100vw;
+        }
+
+        .social-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0.375rem;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-icon i {
+            font-size: 1.25rem;
+        }
+
+        .social-username {
+            font-weight: 600;
+            font-size: 1.125rem;
+            font-family: var(--custom-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif);
+        }
+
+        .follow-button {
+            border-radius: 8px;
+            padding: 0.375rem 0.75rem;
+            color: white;
+            gap: 0.375rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .follow-button:hover {
+            transform: scale(1.05);
+        }
+
+        .follow-button i {
+            font-size: 0.875rem;
+            padding-top: 1px;
+        }
+
+        /*  Animaciones personalizadas */
+        /* Fade */
+        .fade-enter {
+            animation: fadeIn 0.5s ease-in;
+        }
+        .fade-exit {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
+        }
+
+        /* Slide */
+        .slide-enter {
+            animation: slideInRight 0.6s ease-out;
+        }
+        .slide-exit {
+            animation: slideOutLeft 0.6s ease-in forwards;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideOutLeft {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+
+        /* Zoom */
+        .zoom-enter {
+            animation: zoomIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .zoom-exit {
+            animation: zoomOut 0.5s ease-in forwards;
+        }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes zoomOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.5); }
+        }
+
+        /* Rotate */
+        .rotate-enter {
+            animation: rotateIn 0.7s ease-out;
+        }
+        .rotate-exit {
+            animation: rotateOut 0.7s ease-in forwards;
+        }
+        @keyframes rotateIn {
+            from { opacity: 0; transform: rotate(-180deg) scale(0.5); }
+            to { opacity: 1; transform: rotate(0) scale(1); }
+        }
+        @keyframes rotateOut {
+            from { opacity: 1; transform: rotate(0) scale(1); }
+            to { opacity: 0; transform: rotate(180deg) scale(0.5); }
+        }
+
+        /* Flip */
+        .flip-enter {
+            animation: flipIn 0.6s ease-out;
+        }
+        .flip-exit {
+            animation: flipOut 0.6s ease-in forwards;
+        }
+        @keyframes flipIn {
+            from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+            to { opacity: 1; transform: perspective(400px) rotateY(0); }
+        }
+        @keyframes flipOut {
+            from { opacity: 1; transform: perspective(400px) rotateY(0); }
+            to { opacity: 0; transform: perspective(400px) rotateY(-90deg); }
+        }
+
+        /* Swing */
+        .swing-enter {
+            animation: swingIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .swing-exit {
+            animation: swingOut 0.6s ease-in forwards;
+        }
+        @keyframes swingIn {
+            0% { opacity: 0; transform: translateY(-100%) rotate(-10deg); }
+            60% { transform: translateY(0) rotate(5deg); }
+            100% { opacity: 1; transform: translateY(0) rotate(0); }
+        }
+        @keyframes swingOut {
+            0% { opacity: 1; transform: translateY(0) rotate(0); }
+            100% { opacity: 0; transform: translateY(100%) rotate(10deg); }
+        }
+
+        /* Elastic */
+        .elastic-enter {
+            animation: elasticIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .elastic-exit {
+            animation: elasticOut 0.6s ease-in forwards;
+        }
+        @keyframes elasticIn {
+            0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+            50% { transform: scale(1.2) rotate(0deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes elasticOut {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0) rotate(180deg); }
+        }
+
+        /* Roll */
+        .roll-enter {
+            animation: rollIn 0.8s ease-out;
+        }
+        .roll-exit {
+            animation: rollOut 0.8s ease-in forwards;
+        }
+        @keyframes rollIn {
+            from { opacity: 0; transform: translateX(-100%) rotate(-360deg); }
+            to { opacity: 1; transform: translateX(0) rotate(0); }
+        }
+        @keyframes rollOut {
+            from { opacity: 1; transform: translateX(0) rotate(0); }
+            to { opacity: 0; transform: translateX(100%) rotate(360deg); }
+        }
+
+        /* Drop */
+        .drop-enter {
+            animation: dropIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .drop-exit {
+            animation: dropOut 0.5s ease-in forwards;
+        }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-500px) scaleY(2); }
+            to { opacity: 1; transform: translateY(0) scaleY(1); }
+        }
+        @keyframes dropOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(500px); }
+        }
+
+        /* Pulse */
+        .pulse-enter {
+            animation: pulseIn 0.6s ease-out;
+        }
+        .pulse-exit {
+            animation: pulseOut 0.6s ease-in forwards;
+        }
+        @keyframes pulseIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pulseOut {
+            0% { opacity: 1; transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { opacity: 0; transform: scale(0.3); }
+        }
+
+        /* Wobble */
+        .wobble-enter {
+            animation: wobbleIn 0.8s ease-out;
+        }
+        .wobble-exit {
+            animation: wobbleOut 0.6s ease-in forwards;
+        }
+        @keyframes wobbleIn {
+            0% { opacity: 0; transform: translateX(-50px) rotate(-5deg); }
+            25% { transform: translateX(25px) rotate(3deg); }
+            50% { transform: translateX(-15px) rotate(-2deg); }
+            75% { transform: translateX(10px) rotate(1deg); }
+            100% { opacity: 1; transform: translateX(0) rotate(0); }
+        }
+        @keyframes wobbleOut {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5) rotate(-45deg); }
+        }
+
+        /* Spiral */
+        .spiral-enter {
+            animation: spiralIn 0.9s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .spiral-exit {
+            animation: spiralOut 0.7s ease-in forwards;
+        }
+        @keyframes spiralIn {
+            from { opacity: 0; transform: translate(-100px, -100px) rotate(-720deg) scale(0); }
+            to { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+        }
+        @keyframes spiralOut {
+            from { opacity: 1; transform: translate(0, 0) rotate(0) scale(1); }
+            to { opacity: 0; transform: translate(100px, 100px) rotate(720deg) scale(0); }
+        }
+
+        /* Jello */
+        .jello-enter {
+            animation: jelloIn 0.9s ease-out;
+        }
+        .jello-exit {
+            animation: jelloOut 0.6s ease-in forwards;
+        }
+        @keyframes jelloIn {
+            0% { opacity: 0; transform: scale(0.1); }
+            11.1% { transform: scale(0.9) skew(-12.5deg, -12.5deg); }
+            22.2% { transform: scale(1.1) skew(6.25deg, 6.25deg); }
+            33.3% { transform: scale(0.95) skew(-3.125deg, -3.125deg); }
+            44.4% { transform: scale(1.05) skew(1.5625deg, 1.5625deg); }
+            55.5% { transform: scale(0.98) skew(-0.78125deg, -0.78125deg); }
+            66.6% { transform: scale(1.02) skew(0.390625deg, 0.390625deg); }
+            77.7% { transform: scale(0.99) skew(-0.1953125deg, -0.1953125deg); }
+            100% { opacity: 1; transform: scale(1) skew(0, 0); }
+        }
+        @keyframes jelloOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0) rotate(45deg); }
+        }
+
+        /* Splash */
+        .splash-enter {
+            animation: splashIn 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .splash-exit {
+            animation: splashOut 0.5s ease-in forwards;
+        }
+        @keyframes splashIn {
+            0% { opacity: 0; transform: scale(0) translateY(100px); }
+            50% { transform: scale(1.3) translateY(-20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes splashOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(1.5) translateY(-100px); }
+        }
+
+        /*  NUEVAS ANIMACIONES ÃšNICAS  */
+
+        /* Glitch - Efecto de distorsiÃ³n digital */
+        .glitch-enter {
+            animation: glitchIn 0.6s ease-out;
+        }
+        .glitch-exit {
+            animation: glitchOut 0.5s ease-in forwards;
+        }
+        @keyframes glitchIn {
+            0% { opacity: 0; transform: translate(100px, 0); clip-path: inset(0 0 100% 0); }
+            20% { transform: translate(-30px, 5px); clip-path: inset(0 0 70% 0); }
+            40% { transform: translate(20px, -5px); clip-path: inset(0 0 40% 0); }
+            60% { transform: translate(-10px, 3px); clip-path: inset(0 0 10% 0); }
+            80% { transform: translate(5px, -2px); clip-path: inset(0 0 0 0); }
+            100% { opacity: 1; transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+        }
+        @keyframes glitchOut {
+            0% { opacity: 1; transform: translate(0, 0); }
+            20% { transform: translate(-15px, 3px); }
+            40% { transform: translate(10px, -3px); }
+            60% { transform: translate(-5px, 2px); opacity: 0.8; }
+            100% { opacity: 0; transform: translate(80px, 0) scale(0.5); }
+        }
+
+        /* Morph - TransformaciÃ³n suave con forma */
+        .morph-enter {
+            animation: morphIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .morph-exit {
+            animation: morphOut 0.6s ease-in forwards;
+        }
+        @keyframes morphIn {
+            0% { opacity: 0; transform: scale(0.3) rotate(0deg); border-radius: 50%; }
+            50% { transform: scale(1.2) rotate(180deg); border-radius: 30%; }
+            100% { opacity: 1; transform: scale(1) rotate(360deg); border-radius: 0%; }
+        }
+        @keyframes morphOut {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); border-radius: 0%; }
+            50% { transform: scale(1.2) rotate(-180deg); border-radius: 40%; }
+            100% { opacity: 0; transform: scale(0.1) rotate(-360deg); border-radius: 50%; }
+        }
+
+        /* Tornado - Giro 3D como tornado */
+        .tornado-enter {
+            animation: tornadoIn 0.9s ease-out;
+        }
+        .tornado-exit {
+            animation: tornadoOut 0.7s ease-in forwards;
+        }
+        @keyframes tornadoIn {
+            0% { opacity: 0; transform: perspective(800px) rotateY(1080deg) translateZ(-500px) scale(0.1); }
+            60% { transform: perspective(800px) rotateY(360deg) translateZ(50px) scale(1.1); }
+            100% { opacity: 1; transform: perspective(800px) rotateY(0deg) translateZ(0) scale(1); }
+        }
+        @keyframes tornadoOut {
+            0% { opacity: 1; transform: perspective(800px) rotateY(0deg) translateZ(0) scale(1); }
+            40% { transform: perspective(800px) rotateY(-360deg) translateZ(50px) scale(1.1); }
+            100% { opacity: 0; transform: perspective(800px) rotateY(-1080deg) translateZ(-500px) scale(0.1); }
+        }
+
+        /* Matrix - Efecto Matrix con mÃºltiples copias */
+        .matrix-enter {
+            animation: matrixIn 0.7s ease-out;
+        }
+        .matrix-exit {
+            animation: matrixOut 0.5s ease-in forwards;
+        }
+        @keyframes matrixIn {
+            0% { opacity: 0; transform: translateY(-100%) scale(0.5); filter: blur(10px) hue-rotate(120deg); }
+            25% { opacity: 0.5; transform: translateY(-50%) scale(0.7); filter: blur(5px) hue-rotate(60deg); }
+            50% { opacity: 0.7; transform: translateY(-20%) scale(0.9); filter: blur(2px) hue-rotate(30deg); }
+            100% { opacity: 1; transform: translateY(0%) scale(1); filter: blur(0) hue-rotate(0deg); }
+        }
+        @keyframes matrixOut {
+            0% { opacity: 1; transform: translateY(0%) scale(1); filter: blur(0); }
+            100% { opacity: 0; transform: translateY(100%) scale(0.5); filter: blur(10px) hue-rotate(-120deg); }
+        }
+
+        /* Origami - Plegado como papel */
+        .origami-enter {
+            animation: origamiIn 0.8s ease-out;
+        }
+        .origami-exit {
+            animation: origamiOut 0.6s ease-in forwards;
+        }
+        @keyframes origamiIn {
+            0% { opacity: 0; transform: perspective(1000px) rotateX(-90deg) rotateY(45deg) scale(0.5); transform-origin: top center; }
+            50% { transform: perspective(1000px) rotateX(-45deg) rotateY(22deg) scale(0.8); }
+            100% { opacity: 1; transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1); }
+        }
+        @keyframes origamiOut {
+            0% { opacity: 1; transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1); transform-origin: bottom center; }
+            50% { transform: perspective(1000px) rotateX(45deg) rotateY(-22deg) scale(0.8); }
+            100% { opacity: 0; transform: perspective(1000px) rotateX(90deg) rotateY(-45deg) scale(0.5); }
+        }
+
+        /* Liquid - Efecto lÃ­quido fluido */
+        .liquid-enter {
+            animation: liquidIn 0.9s ease-out;
+        }
+        .liquid-exit {
+            animation: liquidOut 0.7s ease-in forwards;
+        }
+        @keyframes liquidIn {
+            0% { opacity: 0; transform: translateY(-100px) scaleY(0.1) scaleX(2); border-radius: 50% 50% 50% 50%; }
+            30% { transform: translateY(-30px) scaleY(1.5) scaleX(0.8); border-radius: 50% 50% 40% 40%; }
+            50% { transform: translateY(10px) scaleY(0.8) scaleX(1.2); border-radius: 40% 40% 50% 50%; }
+            70% { transform: translateY(-5px) scaleY(1.1) scaleX(0.9); border-radius: 45% 45% 45% 45%; }
+            100% { opacity: 1; transform: translateY(0) scaleY(1) scaleX(1); border-radius: 0% 0% 0% 0%; }
+        }
+        @keyframes liquidOut {
+            0% { opacity: 1; transform: translateY(0) scaleY(1) scaleX(1); border-radius: 0% 0% 0% 0%; }
+            30% { transform: translateY(5px) scaleY(1.2) scaleX(0.8); border-radius: 40% 40% 40% 40%; }
+            100% { opacity: 0; transform: translateY(100px) scaleY(0.1) scaleX(2); border-radius: 50% 50% 0% 0%; }
+        }
+
+        /* Shatter - FragmentaciÃ³n */
+        .shatter-enter {
+            animation: shatterIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .shatter-exit {
+            animation: shatterOut 0.6s ease-in forwards;
+        }
+        @keyframes shatterIn {
+            0% { opacity: 0; transform: scale(0.5) rotate(0deg); filter: blur(20px); clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+            50% { transform: scale(1.2) rotate(180deg); filter: blur(5px); clip-path: polygon(20% 0%, 80% 0%, 100% 50%, 80% 100%, 20% 100%, 0% 50%); }
+            100% { opacity: 1; transform: scale(1) rotate(360deg); filter: blur(0); clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+        }
+        @keyframes shatterOut {
+            0% { opacity: 1; transform: scale(1); filter: blur(0); }
+            100% { opacity: 0; transform: scale(1.5) rotate(45deg); filter: blur(20px); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+        }
+
+        /* Wave - OndulaciÃ³n como ola */
+        .wave-enter {
+            animation: waveIn 0.8s ease-out;
+        }
+        .wave-exit {
+            animation: waveOut 0.6s ease-in forwards;
+        }
+        @keyframes waveIn {
+            0% { opacity: 0; transform: translateX(-100%) rotateZ(-20deg) scaleY(0.3); }
+            30% { transform: translateX(-30%) rotateZ(-10deg) scaleY(1.2); }
+            60% { transform: translateX(10%) rotateZ(5deg) scaleY(0.9); }
+            100% { opacity: 1; transform: translateX(0%) rotateZ(0deg) scaleY(1); }
+        }
+        @keyframes waveOut {
+            0% { opacity: 1; transform: translateX(0%) rotateZ(0deg) scaleY(1); }
+            40% { transform: translateX(10%) rotateZ(-5deg) scaleY(1.2); }
+            100% { opacity: 0; transform: translateX(100%) rotateZ(20deg) scaleY(0.3); }
+        }
+
+        /* Vortex - VÃ³rtice remolino */
+        .vortex-enter {
+            animation: vortexIn 1s ease-out;
+        }
+        .vortex-exit {
+            animation: vortexOut 0.7s ease-in forwards;
+        }
+        @keyframes vortexIn {
+            0% { opacity: 0; transform: rotate(720deg) scale(0.1) translateX(-200px); filter: blur(10px); }
+            60% { transform: rotate(360deg) scale(1.1) translateX(20px); filter: blur(2px); }
+            100% { opacity: 1; transform: rotate(0deg) scale(1) translateX(0); filter: blur(0); }
+        }
+        @keyframes vortexOut {
+            0% { opacity: 1; transform: rotate(0deg) scale(1) translateX(0); filter: blur(0); }
+            40% { transform: rotate(-180deg) scale(1.1) translateX(-20px); filter: blur(2px); }
+            100% { opacity: 0; transform: rotate(-720deg) scale(0.1) translateX(200px); filter: blur(10px); }
+        }
+
+        /* Prism - Efecto prismÃ¡tico */
+        .prism-enter {
+            animation: prismIn 0.8s ease-out;
+        }
+        .prism-exit {
+            animation: prismOut 0.6s ease-in forwards;
+        }
+        @keyframes prismIn {
+            0% { opacity: 0; transform: perspective(600px) rotateY(90deg) scale(0.5); filter: hue-rotate(180deg) saturate(3); }
+            50% { transform: perspective(600px) rotateY(45deg) scale(1.1); filter: hue-rotate(90deg) saturate(2); }
+            100% { opacity: 1; transform: perspective(600px) rotateY(0deg) scale(1); filter: hue-rotate(0deg) saturate(1); }
+        }
+        @keyframes prismOut {
+            0% { opacity: 1; transform: perspective(600px) rotateY(0deg) scale(1); filter: hue-rotate(0deg) saturate(1); }
+            50% { transform: perspective(600px) rotateY(-45deg) scale(1.1); filter: hue-rotate(-90deg) saturate(2); }
+            100% { opacity: 0; transform: perspective(600px) rotateY(-90deg) scale(0.5); filter: hue-rotate(-180deg) saturate(3); }
+        }
+
+        /* Quantum - Teletransporte cuÃ¡ntico */
+        .quantum-enter {
+            animation: quantumIn 0.7s ease-out;
+        }
+        .quantum-exit {
+            animation: quantumOut 0.5s ease-in forwards;
+        }
+        @keyframes quantumIn {
+            0% { opacity: 0; transform: scale(0) rotateZ(720deg); filter: blur(20px) brightness(3); }
+            50% { opacity: 0.5; transform: scale(1.5) rotateZ(360deg); filter: blur(5px) brightness(2); }
+            100% { opacity: 1; transform: scale(1) rotateZ(0deg); filter: blur(0) brightness(1); }
+        }
+        @keyframes quantumOut {
+            0% { opacity: 1; transform: scale(1) rotateZ(0deg); filter: blur(0) brightness(1); }
+            50% { opacity: 0.5; transform: scale(1.5) rotateZ(-360deg); filter: blur(5px) brightness(2); }
+            100% { opacity: 0; transform: scale(0) rotateZ(-720deg); filter: blur(20px) brightness(3); }
+        }
+
+        /* Smoke - DispersiÃ³n como humo */
+        .smoke-enter {
+            animation: smokeIn 0.9s ease-out;
+        }
+        .smoke-exit {
+            animation: smokeOut 0.7s ease-in forwards;
+        }
+        @keyframes smokeIn {
+            0% { opacity: 0; transform: translateY(50px) scale(0.5) rotate(0deg); filter: blur(20px); }
+            30% { opacity: 0.3; transform: translateY(30px) scale(0.7) rotate(90deg); filter: blur(15px); }
+            60% { opacity: 0.6; transform: translateY(10px) scale(0.9) rotate(180deg); filter: blur(8px); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(360deg); filter: blur(0); }
+        }
+        @keyframes smokeOut {
+            0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); filter: blur(0); }
+            40% { opacity: 0.6; transform: translateY(-10px) scale(1.1) rotate(-90deg); filter: blur(8px); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.5) rotate(-180deg); filter: blur(20px); }
+        }
+
+        /* Portal - Entrada/salida por portal */
+        .portal-enter {
+            animation: portalIn 0.8s ease-out;
+        }
+        .portal-exit {
+            animation: portalOut 0.6s ease-in forwards;
+        }
+        @keyframes portalIn {
+            0% { opacity: 0; transform: scale(0) rotateZ(1080deg); filter: brightness(5) blur(15px); border-radius: 50%; }
+            50% { opacity: 0.8; transform: scale(1.3) rotateZ(540deg); filter: brightness(2) blur(5px); border-radius: 30%; }
+            100% { opacity: 1; transform: scale(1) rotateZ(0deg); filter: brightness(1) blur(0); border-radius: 0%; }
+        }
+        @keyframes portalOut {
+            0% { opacity: 1; transform: scale(1) rotateZ(0deg); filter: brightness(1) blur(0); border-radius: 0%; }
+            50% { opacity: 0.8; transform: scale(1.3) rotateZ(-540deg); filter: brightness(2) blur(5px); border-radius: 30%; }
+            100% { opacity: 0; transform: scale(0) rotateZ(-1080deg); filter: brightness(5) blur(15px); border-radius: 50%; }
+        }
+
+        /* Kaleidoscope - Efecto caleidoscopio */
+        .kaleidoscope-enter {
+            animation: kaleidoscopeIn 0.9s ease-out;
+        }
+        .kaleidoscope-exit {
+            animation: kaleidoscopeOut 0.7s ease-in forwards;
+        }
+        @keyframes kaleidoscopeIn {
+            0% { opacity: 0; transform: scale(0.1) rotate(0deg); filter: hue-rotate(360deg) saturate(5); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+            33% { transform: scale(0.5) rotate(120deg); filter: hue-rotate(240deg) saturate(4); clip-path: polygon(30% 0%, 100% 30%, 70% 100%, 0% 70%); }
+            66% { transform: scale(0.8) rotate(240deg); filter: hue-rotate(120deg) saturate(2); clip-path: polygon(20% 0%, 100% 20%, 80% 100%, 0% 80%); }
+            100% { opacity: 1; transform: scale(1) rotate(360deg); filter: hue-rotate(0deg) saturate(1); clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+        }
+        @keyframes kaleidoscopeOut {
+            0% { opacity: 1; transform: scale(1) rotate(0deg); filter: hue-rotate(0deg) saturate(1); }
+            100% { opacity: 0; transform: scale(0.1) rotate(-360deg); filter: hue-rotate(-360deg) saturate(5); clip-path: polygon(50% 50%, 50% 50%, 50% 50%); }
+        }
+
+        /* Neon - Efecto neÃ³n brillante */
+        .neon-enter {
+            animation: neonIn 0.7s ease-out;
+        }
+        .neon-exit {
+            animation: neonOut 0.5s ease-in forwards;
+        }
+        @keyframes neonIn {
+            0% { opacity: 0; transform: scale(0.5) translateX(-100px); filter: brightness(0) blur(10px); text-shadow: none; }
+            40% { opacity: 0.5; transform: scale(1.2) translateX(20px); filter: brightness(3) blur(5px); text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
+            100% { opacity: 1; transform: scale(1) translateX(0); filter: brightness(1) blur(0); text-shadow: 0 0 10px rgba(0,255,0,0.5); }
+        }
+        @keyframes neonOut {
+            0% { opacity: 1; transform: scale(1); filter: brightness(1) blur(0); }
+            60% { transform: scale(1.2); filter: brightness(3) blur(5px); text-shadow: 0 0 30px #ff0000, 0 0 50px #ff0000; }
+            100% { opacity: 0; transform: scale(0.5) translateX(100px); filter: brightness(0) blur(10px); text-shadow: none; }
+        }
+
+        /* Hologram - Efecto holograma */
+        .hologram-enter {
+            animation: hologramIn 0.8s ease-out;
+        }
+        .hologram-exit {
+            animation: hologramOut 0.6s ease-in forwards;
+        }
+        @keyframes hologramIn {
+            0% { opacity: 0; transform: perspective(600px) translateZ(-300px) rotateX(45deg); filter: brightness(2) contrast(2); }
+            20% { opacity: 0.3; }
+            40% { opacity: 0.1; }
+            60% { opacity: 0.5; }
+            80% { opacity: 0.2; }
+            100% { opacity: 1; transform: perspective(600px) translateZ(0) rotateX(0deg); filter: brightness(1) contrast(1); }
+        }
+        @keyframes hologramOut {
+            0% { opacity: 1; transform: perspective(600px) translateZ(0) rotateX(0deg); filter: brightness(1); }
+            20% { opacity: 0.7; }
+            40% { opacity: 0.3; }
+            60% { opacity: 0.8; }
+            80% { opacity: 0.4; }
+            100% { opacity: 0; transform: perspective(600px) translateZ(-300px) rotateX(-45deg); filter: brightness(0); }
+        }
+
+        /* Typewriter - ApariciÃ³n por partes */
+        .typewriter-enter {
+            animation: typewriterIn 0.8s steps(20, end);
+        }
+        .typewriter-exit {
+            animation: typewriterOut 0.5s ease-in forwards;
+        }
+        @keyframes typewriterIn {
+            0% { opacity: 0; clip-path: inset(0 100% 0 0); transform: translateX(-20px); }
+            100% { opacity: 1; clip-path: inset(0 0 0 0); transform: translateX(0); }
+        }
+        @keyframes typewriterOut {
+            0% { opacity: 1; clip-path: inset(0 0 0 0); }
+            100% { opacity: 0; clip-path: inset(0 0 0 100%); transform: translateX(20px); }
+        }
+
+        /* Curtain - Cortina teatral */
+        .curtain-enter {
+            animation: curtainIn 0.9s ease-out;
+        }
+        .curtain-exit {
+            animation: curtainOut 0.7s ease-in forwards;
+        }
+        @keyframes curtainIn {
+            0% { opacity: 0; clip-path: inset(0 50% 0 50%); transform: scaleY(0.5); }
+            50% { opacity: 0.7; clip-path: inset(0 25% 0 25%); transform: scaleY(1.1); }
+            100% { opacity: 1; clip-path: inset(0 0 0 0); transform: scaleY(1); }
+        }
+        @keyframes curtainOut {
+            0% { opacity: 1; clip-path: inset(0 0 0 0); transform: scaleY(1); }
+            50% { opacity: 0.7; clip-path: inset(0 25% 0 25%); transform: scaleY(1.1); }
+            100% { opacity: 0; clip-path: inset(0 50% 0 50%); transform: scaleY(0.5); }
+        }
+
+        /* Pixel - Efecto pixelado */
+        .pixel-enter {
+            animation: pixelIn 0.7s steps(10, end);
+        }
+        .pixel-exit {
+            animation: pixelOut 0.5s steps(10, end) forwards;
+        }
+        @keyframes pixelIn {
+            0% { opacity: 0; transform: scale(0.3); filter: blur(20px) contrast(0.5); }
+            50% { filter: blur(10px) contrast(1.5); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0) contrast(1); }
+        }
+        @keyframes pixelOut {
+            0% { opacity: 1; transform: scale(1); filter: blur(0); }
+            50% { filter: blur(10px) contrast(1.5); }
+            100% { opacity: 0; transform: scale(1.5); filter: blur(20px) contrast(0.5); }
+        }
+
+        /* Magnetize - Efecto magnÃ©tico */
+        .magnetize-enter {
+            animation: magnetizeIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .magnetize-exit {
+            animation: magnetizeOut 0.6s ease-in forwards;
+        }
+        @keyframes magnetizeIn {
+            0% { opacity: 0; transform: translateX(-300px) scaleX(3) scaleY(0.3); filter: blur(10px); }
+            60% { transform: translateX(20px) scaleX(0.8) scaleY(1.2); filter: blur(2px); }
+            100% { opacity: 1; transform: translateX(0) scaleX(1) scaleY(1); filter: blur(0); }
+        }
+        @keyframes magnetizeOut {
+            0% { opacity: 1; transform: translateX(0) scaleX(1) scaleY(1); filter: blur(0); }
+            40% { transform: translateX(-20px) scaleX(1.2) scaleY(0.8); filter: blur(2px); }
+            100% { opacity: 0; transform: translateX(300px) scaleX(3) scaleY(0.3); filter: blur(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <!--  Social Media Card Component -->
+            <div 
+                v-if="currentSocial"
+                :key="currentIndex"
+                :class="['social-card', animationClass]"
+                :style="{ background: settings.backgroundColor }"
+            >
+                <!-- Icono de la red social -->
+                <div 
+                    class="social-icon"
+                    :style="{ background: platformConfig[currentSocial.platform].gradient || platformConfig[currentSocial.platform].color }"
+                >
+                    <i 
+                        :class="platformConfig[currentSocial.platform].icon"
+                        :style="{ color: platformConfig[currentSocial.platform].iconColor }"
+                    ></i>
+                </div>
+
+                <!-- Username -->
+                <span 
+                    class="social-username"
+                    :style="{ color: settings.fontColor }"
+                >
+                    {{ currentSocial.username }}
+                </span>
+
+                <!-- BotÃ³n Follow -->
+                <div 
+                    class="follow-button"
+                    :style="{ 
+                        background: platformConfig[currentSocial.platform].color,
+                        color: platformConfig[currentSocial.platform].iconColor 
+                    }"
+                >
+                    <i class="fa-solid fa-heart"></i>
+                    <span>Follow</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+  <!-- font-loader y tikcontrol-widget-base.js?v=20260526-storage-token-fix ya estÃ¡n cargados en el head;
+       sin esto OBS descargaba el JS dos veces y, aunque el guard
+       __TikControlWidgetBaseLoaded evitaba doble ejecuciÃ³n, generaba
+       trÃ¡fico inÃºtil y MutationObserver/FontFace duplicados. -->
+<script src="social-media-rotator.js"></script>
+</body>
+</html>
+
+
+

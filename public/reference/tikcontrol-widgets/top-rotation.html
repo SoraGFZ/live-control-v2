@@ -1,0 +1,1662 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Rotation - TikControl</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- TikControl Widget System -->
+  <link rel="stylesheet" href="tikcontrol-widget.css">
+
+  <style>
+    :root {
+      --tc-primary: #00d9ff;
+      --tc-accent: #00d9ff;
+      --tc-title-color: #ffffff;
+      --tc-text-color: #ffffff;
+      --tc-value-color: #00d9ff;
+      --tc-top1-color: #ffd700;
+      --tc-top2-color: #c0c0c0;
+      --tc-top3-color: #cd7f32;
+      --tc-font-size: 22px;
+      --tc-title-size: 34px;
+      --tc-stroke-color: #000000;
+      --tc-stroke-width: 2px;
+    }
+
+    /* Por defecto: TRANSPARENTE (para OBS) */
+    .tc-widget {
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Con fondo activado: gradiente oscuro */
+    .tc-widget.has-bg {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 40, 0.9) 100%);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .tc-title {
+      font-size: var(--tc-title-size);
+      color: var(--tc-title-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tc-title-icon {
+      font-size: 1.2em;
+    }
+
+    .tc-row {
+      font-size: var(--tc-font-size);
+      gap: 14px;
+      min-height: 68px;
+      padding: 12px 16px;
+    }
+
+    .tc-list {
+      gap: 10px;
+    }
+
+    .tc-pos {
+      min-width: 38px;
+      height: 38px;
+      font-size: 1.05em;
+    }
+
+    .tc-avatar,
+    .tc-avatar-fallback {
+      width: 56px;
+      height: 56px;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .tc-name {
+      font-weight: 800;
+      font-size: 1em;
+      line-height: 1.12;
+    }
+
+    .tc-username {
+      font-size: 0.72em;
+      line-height: 1.15;
+    }
+
+    .tc-value {
+      min-width: 96px;
+      font-size: 1.05em;
+      line-height: 1;
+    }
+
+    .tc-name,
+    .tc-username {
+      color: var(--tc-text-color);
+    }
+
+    .tc-value {
+      color: var(--tc-value-color);
+    }
+
+    /* Colores del Podio */
+    .tc-row.top-1 {
+      border-left-color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-pos {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-name {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-2 {
+      border-left-color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-pos {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-name {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-3 {
+      border-left-color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-pos {
+      color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-name {
+      color: var(--tc-top3-color);
+    }
+
+    /* Efectos de texto */
+    .tc-effect-glow {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+
+    .tc-effect-neon {
+      text-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 40px currentColor;
+      animation: neon-flicker 2s infinite alternate;
+    }
+
+    @keyframes neon-flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .tc-effect-rainbow {
+      background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0080ff, #8000ff);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-shift 3s linear infinite;
+    }
+
+    @keyframes rainbow-shift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    /* Contorno de texto */
+    .tc-stroke {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* Contorno GLOBAL */
+    .tc-widget.stroke-enabled .tc-title,
+    .tc-widget.stroke-enabled .tc-pos,
+    .tc-widget.stroke-enabled .tc-name,
+    .tc-widget.stroke-enabled .tc-username,
+    .tc-widget.stroke-enabled .tc-value {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* Corona SVG para #1 â€” centrada ENCIMA DEL AVATAR.
+       Offset normal (flex): padding-left(14) + pos(32) + gap(12) + avatar/2(20) = 78px */
+    .tc-row.top-1.has-crown {
+      margin-top: 22px;
+      position: relative;
+    }
+
+    .tc-row.top-1.has-crown::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      left: 78px;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 18px;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='%23ffd700' stroke='%23b8860b' stroke-width='0.7' stroke-linejoin='round'%3E%3Cpath d='M2 17l2-12 5 5 3-7 3 7 5-5 2 12z'/%3E%3Ccircle cx='4' cy='5' r='1.2' fill='%23fff'/%3E%3Ccircle cx='12' cy='3' r='1.2' fill='%23fff'/%3E%3Ccircle cx='20' cy='5' r='1.2' fill='%23fff'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 10;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
+    }
+
+    @keyframes crown-bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-3px); }
+    }
+
+    .tc-pos {
+      position: relative;
+    }
+
+    /* Animaciones */
+    .tc-anim-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .tc-anim-bounce {
+      animation: bounce 1s ease infinite;
+    }
+
+    .tc-anim-wiggle {
+      animation: wiggle 0.5s ease-in-out infinite;
+    }
+
+    .tc-anim-glow {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    .tc-anim-spin {
+      animation: tc-spin 1.3s linear infinite;
+    }
+
+    .tc-anim-heartbeat {
+      animation: heartbeat 1.2s ease-in-out infinite;
+    }
+
+    .tc-anim-float {
+      animation: float 2.6s ease-in-out infinite;
+    }
+
+    .tc-anim-shake {
+      animation: shake 0.45s ease-in-out infinite;
+    }
+
+    @keyframes tc-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+
+    @keyframes glow-pulse {
+      0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
+      50% { filter: drop-shadow(0 0 15px currentColor); }
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14% { transform: scale(1.18); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.12); }
+      70% { transform: scale(1); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-2px); }
+      40% { transform: translateX(2px); }
+      60% { transform: translateX(-1px); }
+      80% { transform: translateX(1px); }
+    }
+    /* Marcos de avatar para rankings. El pack actual solo incluye Top 1;
+       al anadir top2-top5 basta con publicar los PNG y registrar la ruta. */
+    .tc-avatar-frame {
+      position: relative;
+      width: 78px;
+      aspect-ratio: var(--top-frame-aspect, 1) / 1;
+      flex: 0 0 78px;
+      display: block;
+      align-self: center;
+    }
+
+    .tc-avatar-frame .tc-avatar,
+    .tc-avatar-frame .tc-avatar-fallback {
+      position: absolute;
+      left: var(--top-frame-avatar-left, 50%);
+      top: var(--top-frame-avatar-top, 50%);
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      border: 0;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .tc-avatar-frame-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tc-widget.compact .tc-avatar-frame {
+      grid-area: avatar;
+      width: 48px;
+      flex-basis: 48px;
+      align-self: center;
+      justify-self: center;
+    }
+
+    .tc-widget.compact .tc-avatar-frame .tc-avatar,
+    .tc-widget.compact .tc-avatar-frame .tc-avatar-fallback {
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      font-size: 12px;
+    }
+
+    .tc-avatar.hidden {
+      display: none;
+    }
+
+    .tc-row.hide-names .tc-info {
+      display: none;
+    }
+
+    /* @username oculto (nickname sigue visible) */
+    .tc-row.hide-username .tc-username {
+      display: none;
+    }
+
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       MODO COMPACTO â€” filas mÃ¡s delgadas (â‰ˆ32px), 1 lÃ­nea, avatar
+       pequeÃ±o. Pedido para que quepan varios tops en pantalla sin que
+       ocupen tanto espacio vertical.
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    /* Compacto con CSS Grid: pos / avatar ocupan 2 filas verticalmente,
+       nick en fila 1 de la columna "info", valor en fila 2 de esa columna.
+       AsÃ­ el valor SIEMPRE queda bajo el nick sin depender de flex-wrap y
+       sin mezclarse con la fila de abajo. */
+    .tc-widget.compact .tc-row {
+      display: grid;
+      grid-template-columns: 20px 30px 1fr;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "pos avatar info"
+        "pos avatar value";
+      column-gap: 8px;
+      row-gap: 0;
+      padding: 4px 10px;
+      min-height: 0;
+      align-items: center;
+    }
+
+    .tc-widget.compact .tc-pos {
+      grid-area: pos;
+      align-self: center;
+      justify-self: center;
+      min-width: 0;
+      height: auto;
+      font-size: 13px;
+    }
+
+    .tc-widget.compact .tc-avatar,
+    .tc-widget.compact .tc-avatar-fallback {
+      grid-area: avatar;
+      align-self: center;
+      justify-self: center;
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .tc-widget.compact .tc-info {
+      grid-area: info;
+      align-self: end;
+      min-width: 0;
+      gap: 0;
+    }
+
+    .tc-widget.compact .tc-name {
+      font-size: 0.9em;
+      line-height: 1.15;
+      /* Espacio para que el stroke/contorno del primer glyph no se
+         recorte con overflow:hidden (necesario cuando la fuente custom
+         tiene left-bearing negativo o hay stroke-width > 0). */
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-username {
+      font-size: 9px;
+      line-height: 1.1;
+      margin-top: 0;
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-value {
+      grid-area: value;
+      align-self: start;
+      justify-self: start;
+      text-align: left;
+      min-width: 0;
+      font-size: 0.8em;
+      line-height: 1.1;
+      font-weight: 700;
+      margin: 0;
+      padding-left: 4px;
+    }
+
+    /* SeparaciÃ³n clara entre filas para que el valor no se mezcle
+       visualmente con el siguiente usuario. */
+    .tc-widget.compact .tc-list {
+      gap: 6px;
+    }
+
+    /* Si el @username estÃ¡ oculto en compacto, el valor pega bajo el nick
+       (sin hueco del username). */
+    .tc-widget.compact .tc-row.hide-username .tc-info {
+      align-self: center;
+    }
+
+    /* Si el nickname COMPLETO estÃ¡ oculto en compacto, colapsamos a una
+       sola fila: valor se queda al lado del avatar. */
+    .tc-widget.compact .tc-row.hide-names {
+      grid-template-rows: auto;
+      grid-template-areas: "pos avatar value";
+    }
+
+    .tc-widget.compact .tc-row.hide-names .tc-value {
+      align-self: center;
+      justify-self: start;
+    }
+
+    .tc-widget.compact .tc-row.top-1.has-crown {
+      margin-top: 18px;
+    }
+
+    /* Compact (grid): padding-left(10) + pos(20) + gap(8) + avatar/2(15) = 53px */
+    .tc-widget.compact .tc-row.top-1.has-crown::before {
+      left: 53px;
+      top: -16px;
+      width: 18px;
+      height: 14px;
+    }
+
+    /* Iconos SVG por tipo de top (reemplazan heartcoincommentstar).
+       Render idÃ©ntico en cualquier dispositivo sin depender de fuentes
+       de emoji. El render cambia la clase .heart/.coin/.comment/.star
+       segÃºn el top actual. */
+    .tc-icon.heart,
+    .tc-title-icon.heart {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%224%22%20y1%3D%223%22%20x2%3D%2219%22%20y2%3D%2221%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23ff9ab0%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23ff315c%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b90f32%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%228%22%20cy%3D%227%22%20r%3D%228%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.95%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.22%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M12%2021.35S3%2016.05%202.25%209.65C1.82%205.92%204.18%203.1%207.35%203.1c1.9%200%203.42.88%204.65%202.55%201.23-1.67%202.75-2.55%204.65-2.55%203.17%200%205.53%202.82%205.1%206.55C21%2016.05%2012%2021.35%2012%2021.35Z%22%20fill%3D%22url(%23g)%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.55%22%20stroke-width%3D%22.8%22%2F%3E%3Cpath%20d%3D%22M4.1%208.7c.2-2.05%201.55-3.5%203.34-3.5%201.18%200%202.05.46%203.02%201.48-2.42-.2-4.72.72-6.36%202.02Z%22%20fill%3D%22url(%23s)%22%2F%3E%3Cpath%20d%3D%22M12%2021.35S3%2016.05%202.25%209.65C1.82%205.92%204.18%203.1%207.35%203.1c1.9%200%203.42.88%204.65%202.55%201.23-1.67%202.75-2.55%204.65-2.55%203.17%200%205.53%202.82%205.1%206.55C21%2016.05%2012%2021.35%2012%2021.35Z%22%20fill%3D%22none%22%20stroke%3D%22%238a0623%22%20stroke-width%3D%221.15%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+    }
+    .tc-icon.coin,
+    .tc-title-icon.coin {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22g%22%20cx%3D%228%22%20cy%3D%226%22%20r%3D%2215%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff6a9%22%2F%3E%3Cstop%20offset%3D%22.36%22%20stop-color%3D%22%23ffd335%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23f59e0b%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23a85f05%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22edge%22%20x1%3D%225%22%20y1%3D%224%22%20x2%3D%2219%22%20y2%3D%2220%22%3E%3Cstop%20stop-color%3D%22%23fff3a3%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238a4b00%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%2210%22%20fill%3D%22url(%23g)%22%20stroke%3D%22url(%23edge)%22%20stroke-width%3D%221.4%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%227%22%20fill%3D%22none%22%20stroke%3D%22%23fff2a3%22%20stroke-opacity%3D%22.55%22%20stroke-width%3D%221.2%22%2F%3E%3Cpath%20d%3D%22M12%207.2v9.6M9.65%2010.25c0-1.25%201.05-2.05%202.52-2.05%201.22%200%202.08.46%202.58%201.22M14.55%2013.85c0%201.26-1.03%202-2.52%202-1.3%200-2.28-.48-2.8-1.26M9.65%2010.25c0%201.17.98%201.55%202.45%201.83%201.52.3%202.45.68%202.45%201.77%22%20fill%3D%22none%22%20stroke%3D%22%237a4300%22%20stroke-width%3D%221.55%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M6.2%208.6c1.05-2.08%203.1-3.38%205.52-3.38%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.65%22%20stroke-width%3D%221.4%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+    }
+    .tc-icon.comment,
+    .tc-title-icon.comment {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%224%22%20y1%3D%223%22%20x2%3D%2220%22%20y2%3D%2220%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%239cf7ff%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%2322d3ee%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231d4ed8%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%227%22%20cy%3D%226%22%20r%3D%2211%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.85%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M3%205.6A2.6%202.6%200%200%201%205.6%203h12.8A2.6%202.6%200%200%201%2021%205.6v8.95a2.6%202.6%200%200%201-2.6%202.6h-5.25L7.6%2021.25v-4.1h-2A2.6%202.6%200%200%201%203%2014.55Z%22%20fill%3D%22url(%23g)%22%20stroke%3D%22%230b3f91%22%20stroke-width%3D%221.1%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M4.6%207.2A2.45%202.45%200%200%201%207.05%204.75h8.6%22%20fill%3D%22none%22%20stroke%3D%22url(%23s)%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%228.6%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2215.4%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E");
+    }
+    .tc-icon.star,
+    .tc-title-icon.star {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22g%22%20cx%3D%229%22%20cy%3D%226%22%20r%3D%2216%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff9b1%22%2F%3E%3Cstop%20offset%3D%22.38%22%20stop-color%3D%22%23facc15%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23f59e0b%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2392400e%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22shine%22%20x1%3D%226%22%20y1%3D%224%22%20x2%3D%2217%22%20y2%3D%2218%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.9%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M12%202.15%2015.05%208.3l6.8.98-4.92%204.78%201.16%206.76L12%2017.62l-6.09%203.2%201.16-6.76-4.92-4.78%206.8-.98Z%22%20fill%3D%22url(%23g)%22%20stroke%3D%22%237c2d12%22%20stroke-width%3D%221.15%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M12%204.65%2014%208.7l4.45.65-3.22%203.13.76%204.42L12%2014.8l-3.99%202.1.76-4.42-3.22-3.13L10%208.7Z%22%20fill%3D%22url(%23shine)%22%20opacity%3D%22.65%22%2F%3E%3C%2Fsvg%3E");
+    }
+    .tc-icon.heart, .tc-icon.coin, .tc-icon.comment, .tc-icon.star,
+    .tc-title-icon.heart, .tc-title-icon.coin, .tc-title-icon.comment, .tc-title-icon.star {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: inline-block;
+      vertical-align: -0.15em;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px var(--tc-value-color));
+    }
+    /* Medidas fijas en rem para que no dependan del font-size del
+       contenedor (que puede ser 0 en compact o con otros widgets). */
+    .tc-icon.heart, .tc-icon.coin, .tc-icon.comment, .tc-icon.star {
+      width: 1.45rem;
+      height: 1.45rem;
+    }
+    .tc-title-icon.heart, .tc-title-icon.coin, .tc-title-icon.comment, .tc-title-icon.star {
+      width: 1.55rem;
+      height: 1.55rem;
+    }
+
+    .tc-title-icon.heart {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px rgba(255, 49, 92, 0.9));
+    }
+
+    .tc-title-icon.coin {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px rgba(250, 204, 21, 0.92));
+    }
+
+    .tc-title-icon.comment {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px rgba(34, 211, 238, 0.9));
+    }
+
+    .tc-title-icon.star {
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px rgba(250, 204, 21, 0.9));
+    }
+
+    /* Medallas SVG â€” usan SVG estable. */
+    .tc-row.top-1 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23facc15' stroke='%23a16207' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23a16207' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23f59e0b'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-2 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23e5e7eb' stroke='%236b7280' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%236b7280' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%239ca3af'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-3 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23d97706' stroke='%2378350f' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2378350f' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%2392400e'/%3E%3C/svg%3E");
+    }
+    .tc-pos.medal {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: transparent;
+      font-size: 0;
+      user-select: none;
+      min-width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35));
+    }
+    .tc-widget.compact .tc-pos.medal {
+      min-width: 20px;
+      height: 30px;
+    }
+
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       ANIMACIONES DE TRANSICIÃ“N ENTRE TOPS
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    
+    .tc-list {
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .tc-list.fade-out {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    .tc-list.fade-in {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Indicador de rotaciÃ³n */
+    .tc-rotation-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 8px;
+    }
+
+    .tc-rotation-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .tc-rotation-dot.active {
+      background: var(--tc-accent);
+      transform: scale(1.3);
+      box-shadow: 0 0 8px var(--tc-accent);
+    }
+
+    /* Barra de progreso */
+    .tc-progress-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .tc-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--tc-accent), var(--tc-primary));
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* Loading state */
+    .tc-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      opacity: 0.5;
+    }
+
+    .tc-loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--tc-value-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tc-widget" id="widget">
+    <div class="tc-title" id="title">
+      <span class="tc-title-icon" id="titleIcon"></span>
+      <span id="titleText">TOP ROTATION</span>
+    </div>
+    <div class="tc-list" id="list">
+      <div class="tc-loading">
+        <div class="tc-loading-spinner"></div>
+        <div style="margin-top:10px;font-size:12px">Conectando...</div>
+      </div>
+    </div>
+    <div class="tc-rotation-indicator" id="rotationIndicator"></div>
+    <div class="tc-progress-bar" id="progressBar">
+      <div class="tc-progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- TikControl Widget System -->
+  <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+  <script src="core/font-loader.js?v=1.0.29-cache7"></script>
+  <script src="core/tikcontrol-widget.js?v=1.0.18"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // DEFINICIÃ“N DE LOS 4 TOPS
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      const TOPS = {
+        likes: {
+          key: 'likes',
+          title: 'TOP LIKES',
+          iconClass: 'heart',
+          valueKey: 'likes',
+          event: 'like',
+          color: '#ff4d6d'
+        },
+        donors: {
+          key: 'donors',
+          title: 'TOP DONADORES',
+          iconClass: 'coin',
+          valueKey: 'diamonds',
+          event: 'gift-solo',
+          color: '#00d9ff'
+        },
+        comments: {
+          key: 'comments',
+          title: 'TOP COMENTARIOS',
+          iconClass: 'comment',
+          valueKey: 'comments',
+          event: 'chat',
+          color: '#66d9ff'
+        },
+        points: {
+          key: 'points',
+          title: 'TOP PUNTOS',
+          iconClass: 'star',
+          valueKey: 'points',
+          event: 'points:data',
+          color: '#fbbf24'
+        }
+      };
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // ESTADO DEL WIDGET
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      const state = {
+        // Datos por cada top
+        data: {
+          likes: new Map(),
+          donors: new Map(),
+          comments: new Map(),
+          points: []
+        },
+        // ConfiguraciÃ³n de rotaciÃ³n
+        enabledTops: ['likes', 'donors', 'comments', 'points'], // CuÃ¡les mostrar
+        rotationInterval: 10, // Segundos entre cada rotaciÃ³n
+        currentTopIndex: 0,
+        // TÃ­tulo personalizado por top (opcional)
+        customTitles: {},
+        // ConfiguraciÃ³n visual
+        title: 'TOP ROTATION',
+        showTitle: true,
+        titleSize: 34,
+        titleColor: '#ffffff',
+        textColor: '#ffffff',
+        valueColor: '#00d9ff',
+        fontSize: 22,
+        fontFamily: '',
+        fontUrl: '',
+        rows: 5,
+        nameMaxLen: 20,
+        showAvatars: true,
+        avatarFrameStyle: 'classic',
+        showNicknames: true,
+        showUsername: true,
+        compactMode: false,
+        showCrown: false,
+        showBg: false,
+        showRowBg: true,
+        colorTop1: '#ffd700',
+        colorTop2: '#c0c0c0',
+        colorTop3: '#cd7f32',
+        animIcon: 'none',
+        animTop1: 'none',
+        titleEffect: 'none',
+        effectText: 'none',
+        showMedals: false,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 2,
+        showIndicator: true,
+        showProgress: true,
+        // Estado interno
+        connected: false,
+        rotationTimer: null,
+        progressTimer: null,
+        progressValue: 0
+      };
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // ELEMENTOS DOM
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      const widgetEl = document.getElementById('widget');
+      const titleEl = document.getElementById('title');
+      const titleTextEl = document.getElementById('titleText');
+      const titleIconEl = document.getElementById('titleIcon');
+      const listEl = document.getElementById('list');
+      const indicatorEl = document.getElementById('rotationIndicator');
+      const progressBarEl = document.getElementById('progressBar');
+      const progressFillEl = document.getElementById('progressFill');
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // INICIALIZAR TIKCONTROL
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.init('top-rotation', {
+        persistent: false,
+        sessionBased: true
+      });
+
+      const DEFAULT_TOPS = ['likes', 'donors', 'comments', 'points'];
+      const PERSIST_DEBOUNCE_MS = 5000;
+      let _saveTimer = null;
+
+      function sanitizeEnabledTops(value) {
+        const raw = Array.isArray(value) ? value : DEFAULT_TOPS;
+        const seen = new Set();
+        const result = [];
+
+        raw.forEach((key) => {
+          if (typeof key !== 'string') return;
+          const normalized = key.trim();
+          if (!TOPS[normalized] || seen.has(normalized)) return;
+          seen.add(normalized);
+          result.push(normalized);
+        });
+
+        return result.length > 0 ? result : ['likes'];
+      }
+
+      function toBoundedInt(value, fallback, min, max) {
+        const parsed = Number.parseInt(value, 10);
+        if (!Number.isFinite(parsed)) return fallback;
+        return Math.min(max, Math.max(min, parsed));
+      }
+
+      function toFiniteNumber(value, fallback = 0) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+      }
+
+      function toPositiveNumber(value, fallback = 1) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+      }
+
+      function normalizeConfigState() {
+        state.enabledTops = sanitizeEnabledTops(state.enabledTops);
+        state.rotationInterval = toBoundedInt(state.rotationInterval, 10, 3, 60);
+        state.titleSize = toBoundedInt(state.titleSize, 34, 8, 96);
+        state.fontSize = toBoundedInt(state.fontSize, 22, 8, 72);
+        state.rows = toBoundedInt(state.rows, 5, 1, 20);
+        state.nameMaxLen = toBoundedInt(state.nameMaxLen, 20, 5, 80);
+        state.strokeWidth = toBoundedInt(state.strokeWidth, 2, 0, 10);
+
+        if (!Number.isFinite(state.currentTopIndex) || state.currentTopIndex < 0) {
+          state.currentTopIndex = 0;
+        }
+        state.currentTopIndex = Math.floor(state.currentTopIndex) % state.enabledTops.length;
+      }
+
+      function normalizeUserData(user) {
+        if (!user || typeof user !== 'object') return null;
+        const normalized = { ...user };
+        const avatarUrl = extractAvatarUrl(normalized, normalized);
+
+        if (avatarUrl) {
+          normalized.avatar = proxyAvatar(avatarUrl);
+        } else if (typeof normalized.avatar === 'string' && normalized.avatar) {
+          normalized.avatar = proxyAvatar(normalized.avatar);
+        } else if (typeof normalized.avatar !== 'string') {
+          normalized.avatar = '';
+        }
+
+        if (typeof normalized.profilePictureUrl === 'string') {
+          normalized.profilePictureUrl = proxyAvatar(normalized.profilePictureUrl);
+        }
+        if (normalized.likes !== undefined) normalized.likes = toFiniteNumber(normalized.likes, 0);
+        if (normalized.diamonds !== undefined) normalized.diamonds = toFiniteNumber(normalized.diamonds, 0);
+        if (normalized.comments !== undefined) normalized.comments = toFiniteNumber(normalized.comments, 0);
+        if (normalized.points !== undefined) normalized.points = toFiniteNumber(normalized.points, 0);
+
+        return normalized;
+      }
+
+      function normalizePointUsers(users) {
+        if (!Array.isArray(users)) return [];
+        return users
+          .map(normalizeUserData)
+          .filter(Boolean)
+          .sort((a, b) => toFiniteNumber(b.points, 0) - toFiniteNumber(a.points, 0));
+      }
+
+      function getTopEntries(topKey) {
+        if (topKey === 'points') {
+          return normalizePointUsers(state.data.points).slice(0, state.rows);
+        }
+
+        const top = TOPS[topKey];
+        const dataMap = state.data[topKey];
+        if (!top || !(dataMap instanceof Map)) return [];
+
+        return Array.from(dataMap.entries())
+          .filter(([, user]) => user && typeof user === 'object')
+          .map(([id, user]) => ({ uniqueId: id, ...user }))
+          .sort((a, b) => toFiniteNumber(b[top.valueKey], 0) - toFiniteNumber(a[top.valueKey], 0))
+          .slice(0, state.rows);
+      }
+
+      function hasTopData(topKey) {
+        return getTopEntries(topKey).length > 0;
+      }
+
+      function ensureDataBackedTop() {
+        normalizeConfigState();
+        const currentKey = state.enabledTops[state.currentTopIndex];
+        if (!hasTopData(currentKey)) {
+          const firstWithData = state.enabledTops.findIndex(hasTopData);
+          if (firstWithData >= 0) state.currentTopIndex = firstWithData;
+        }
+        return state.enabledTops[state.currentTopIndex] || 'likes';
+      }
+
+      function shouldRenderAfterUpdate(updatedTopKey) {
+        const currentKey = getCurrentTopKey();
+        return currentKey === updatedTopKey || !hasTopData(currentKey);
+      }
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // CONFIGURACIÃ“N
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.onConfig((config) => {
+        // Log de config eliminado
+
+        // ConfiguraciÃ³n de rotaciÃ³n
+        if (config.enabledTops !== undefined) {
+          state.enabledTops = sanitizeEnabledTops(config.enabledTops);
+        }
+        if (config.rotationInterval !== undefined) state.rotationInterval = toBoundedInt(config.rotationInterval, state.rotationInterval, 3, 60);
+        if (config.customTitles !== undefined) state.customTitles = (config.customTitles && typeof config.customTitles === 'object' && !Array.isArray(config.customTitles)) ? config.customTitles : {};
+
+        // Opciones visuales
+        if (config.showTitle !== undefined) state.showTitle = config.showTitle;
+        if (config.titleSize !== undefined) state.titleSize = toBoundedInt(config.titleSize, state.titleSize, 8, 96);
+        if (config.titleColor !== undefined) state.titleColor = config.titleColor;
+        if (config.textColor !== undefined) state.textColor = config.textColor;
+        if (config.valueColor !== undefined) state.valueColor = config.valueColor;
+        if (config.fontSize !== undefined) state.fontSize = toBoundedInt(config.fontSize, state.fontSize, 8, 72);
+        if (config.fontFamily !== undefined) state.fontFamily = config.fontFamily;
+        if (config.fontUrl !== undefined) state.fontUrl = config.fontUrl;
+        if (config.rows !== undefined) state.rows = toBoundedInt(config.rows, state.rows, 1, 20);
+        if (config.maxDisplay !== undefined) state.rows = toBoundedInt(config.maxDisplay, state.rows, 1, 20);
+        if (config.nameMaxLen !== undefined) state.nameMaxLen = toBoundedInt(config.nameMaxLen, state.nameMaxLen, 5, 80);
+        if (config.showAvatars !== undefined) state.showAvatars = config.showAvatars;
+        if (config.avatarFrameStyle !== undefined) state.avatarFrameStyle = config.avatarFrameStyle || 'none';
+        if (config.showNicknames !== undefined) state.showNicknames = config.showNicknames;
+        if (config.showUsername !== undefined) state.showUsername = config.showUsername;
+        if (config.compactMode !== undefined) state.compactMode = config.compactMode;
+        if (config.showCrown !== undefined) state.showCrown = config.showCrown;
+        if (config.showBg !== undefined) state.showBg = config.showBg;
+        if (config.showRowBg !== undefined) state.showRowBg = config.showRowBg;
+        if (config.colorTop1 !== undefined) state.colorTop1 = config.colorTop1;
+        if (config.colorTop2 !== undefined) state.colorTop2 = config.colorTop2;
+        if (config.colorTop3 !== undefined) state.colorTop3 = config.colorTop3;
+        if (config.animIcon !== undefined) state.animIcon = config.animIcon;
+        if (config.animTop1 !== undefined) state.animTop1 = config.animTop1;
+        if (config.titleEffect !== undefined) state.titleEffect = config.titleEffect;
+        if (config.effectText !== undefined) state.effectText = config.effectText;
+        if (config.showMedals !== undefined) state.showMedals = config.showMedals;
+        if (config.strokeEnabled !== undefined) state.strokeEnabled = config.strokeEnabled;
+        if (config.strokeColor !== undefined) state.strokeColor = config.strokeColor;
+        if (config.strokeWidth !== undefined) state.strokeWidth = toBoundedInt(config.strokeWidth, state.strokeWidth, 0, 10);
+        if (config.showIndicator !== undefined) state.showIndicator = config.showIndicator;
+        if (config.showProgress !== undefined) state.showProgress = config.showProgress;
+
+        normalizeConfigState();
+
+        // Cargar fuente personalizada
+        if (state.fontFamily && state.fontUrl) {
+          loadCustomFont(state.fontFamily, state.fontUrl);
+        }
+
+        applyStyles();
+        updateIndicator();
+        restartRotation();
+        render();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // DATOS PERSISTENTES
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.onData((data) => {
+        // Log de data eliminado
+        if (!data || typeof data !== 'object') {
+          state.connected = true;
+          render();
+          return;
+        }
+
+        if (data.likes && typeof data.likes === 'object') {
+          state.data.likes.clear();
+          Object.entries(data.likes).forEach(([id, user]) => {
+            const normalized = normalizeUserData(user);
+            if (normalized) state.data.likes.set(id, normalized);
+          });
+        }
+        if (data.donors && typeof data.donors === 'object') {
+          state.data.donors.clear();
+          Object.entries(data.donors).forEach(([id, user]) => {
+            const normalized = normalizeUserData(user);
+            if (normalized) state.data.donors.set(id, normalized);
+          });
+        }
+        if (data.comments && typeof data.comments === 'object') {
+          state.data.comments.clear();
+          Object.entries(data.comments).forEach(([id, user]) => {
+            const normalized = normalizeUserData(user);
+            if (normalized) state.data.comments.set(id, normalized);
+          });
+        }
+        if (data.points && Array.isArray(data.points)) {
+          state.data.points = normalizePointUsers(data.points);
+        }
+
+        state.connected = true;
+        render();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // EVENTOS DE TIKTOK - LIKES
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // OK Helper para extraer avatar - ESTRUCTURA REAL DE TIKTOK
+      // user.profilePicture.url es un ARRAY, no string
+      function extractAvatarUrl(user, data) {
+        // Prioridad 1: profilePictureUrl directo (string)
+        if (user?.profilePictureUrl && typeof user.profilePictureUrl === 'string') {
+          return user.profilePictureUrl;
+        }
+        // Prioridad 2: data.profilePictureUrl (string)
+        if (data?.profilePictureUrl && typeof data.profilePictureUrl === 'string') {
+          return data.profilePictureUrl;
+        }
+        // Prioridad 3: user.profilePicture.url (ARRAY - formato real TikTok!)
+        if (user?.profilePicture && typeof user.profilePicture === 'object') {
+          if (Array.isArray(user.profilePicture.url) && user.profilePicture.url.length > 0) {
+            return user.profilePicture.url[0];
+          } else if (typeof user.profilePicture.url === 'string') {
+            return user.profilePicture.url;
+          } else if (Array.isArray(user.profilePicture.urls) && user.profilePicture.urls.length > 0) {
+            return user.profilePicture.urls[0];
+          }
+        }
+        // Prioridad 4: avatarThumb o avatarMedium
+        const avatarObj = user?.avatarThumb || user?.avatarMedium;
+        if (avatarObj) {
+          if (typeof avatarObj === 'object') {
+            if (Array.isArray(avatarObj.url) && avatarObj.url.length > 0) {
+              return avatarObj.url[0];
+            } else if (typeof avatarObj.url === 'string') {
+              return avatarObj.url;
+            } else if (Array.isArray(avatarObj.urls) && avatarObj.urls.length > 0) {
+              return avatarObj.urls[0];
+            }
+          } else if (typeof avatarObj === 'string') {
+            return avatarObj;
+          }
+        }
+        // Prioridad 5: avatarUrl directo
+        if (user?.avatarUrl && typeof user.avatarUrl === 'string') {
+          return user.avatarUrl;
+        }
+        return '';
+      }
+
+      TikControl.on('like', (data) => {
+        const user = data.user || data;
+        const uniqueId = user.uniqueId || data.uniqueId;
+        if (!uniqueId) return;
+
+        const avatarUrl = extractAvatarUrl(user, data);
+
+        const existing = state.data.likes.get(uniqueId) || {
+          nickname: user.nickname || uniqueId,
+          avatar: proxyAvatar(avatarUrl),
+          likes: 0
+        };
+
+        existing.likes += toPositiveNumber(data.increment ?? data.likeCount, 1);
+        existing.lastUpdate = Date.now();
+        if (user.nickname) existing.nickname = user.nickname;
+        if (avatarUrl) existing.avatar = proxyAvatar(avatarUrl);
+
+        state.data.likes.set(uniqueId, existing);
+        state.connected = true;
+        saveData();
+        if (shouldRenderAfterUpdate('likes')) scheduleRender();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // EVENTOS DE TIKTOK - DONADORES (REGALOS)
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.on('gift-solo', (data) => {
+        const gift = data.gift || data.giftDetails || {};
+        const user = data.user || {};
+        const uniqueId = user.uniqueId || data.uniqueId;
+        if (!uniqueId) return;
+
+        const avatarUrl = extractAvatarUrl(user, data);
+        const avatar = proxyAvatar(avatarUrl);
+
+        let diamondCount = toPositiveNumber(data.diamondCount ?? data.diamond_count ?? gift.diamond_count ?? gift.diamondCount ?? gift.diamonds, 1);
+
+        const existing = state.data.donors.get(uniqueId) || {
+          nickname: user.nickname || uniqueId,
+          avatar: avatar,
+          diamonds: 0
+        };
+
+        existing.diamonds += diamondCount;
+        existing.lastUpdate = Date.now();
+        if (user.nickname) existing.nickname = user.nickname;
+        if (avatar) existing.avatar = avatar;
+
+        state.data.donors.set(uniqueId, existing);
+        state.connected = true;
+        saveData();
+        if (shouldRenderAfterUpdate('donors')) scheduleRender();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // EVENTOS DE TIKTOK - COMENTARIOS
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.on('chat', (data) => {
+        const user = data.user || data;
+        const uniqueId = user.uniqueId || data.uniqueId;
+        if (!uniqueId) return;
+
+        const avatarUrl = extractAvatarUrl(user, data);
+
+        const existing = state.data.comments.get(uniqueId) || {
+          nickname: user.nickname || uniqueId,
+          avatar: proxyAvatar(avatarUrl),
+          comments: 0
+        };
+
+        existing.comments += 1;
+        existing.lastUpdate = Date.now();
+        if (user.nickname) existing.nickname = user.nickname;
+        if (avatarUrl) existing.avatar = proxyAvatar(avatarUrl);
+
+        state.data.comments.set(uniqueId, existing);
+        state.connected = true;
+        saveData();
+        if (shouldRenderAfterUpdate('comments')) scheduleRender();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // EVENTOS DE PUNTOS (desde AWS)
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      let _pointsChunks = [];
+
+      TikControl.on('points:data', (data) => {
+        if (data.users && Array.isArray(data.users)) {
+          if (data.totalChunks > 1) {
+            _pointsChunks.push(...data.users);
+            if (data.isComplete) {
+              state.data.points = normalizePointUsers(_pointsChunks);
+              _pointsChunks = [];
+              state.connected = true;
+              if (shouldRenderAfterUpdate('points')) scheduleRender();
+            }
+          } else {
+            state.data.points = normalizePointUsers(data.users);
+            state.connected = true;
+            if (shouldRenderAfterUpdate('points')) scheduleRender();
+          }
+        }
+      });
+
+      TikControl.on('points:loaded', (data) => {
+        if (data.users && Array.isArray(data.users)) {
+          state.data.points = normalizePointUsers(data.users);
+          state.connected = true;
+          if (shouldRenderAfterUpdate('points')) scheduleRender();
+        }
+      });
+
+      // Solicitar puntos al conectar
+      TikControl.on('connect', () => {
+        // Log de conexiÃ³n eliminado
+        state.connected = true;
+
+        // Solicitar datos de puntos
+        if (TikControl._instance?.socket?.readyState === WebSocket.OPEN) {
+          TikControl._instance.socket.send(JSON.stringify({
+            type: 'points:load',
+            uid: TikControl.getUserId(),
+            source: 'widget'
+          }));
+        }
+
+        render();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // RESET
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.on('reset', () => {
+        clearSessionData();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // PROBAR EN OVERLAY (botÃ³n del editor)
+      // Inyecta usuarios test en los 4 tops a la vez (5s) y restaura.
+      // El test no debe contaminar el ranking real del live.
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      let _topRotationTestRestoreTimer = null;
+      TikControl.on('widget:test', (d) => {
+        if (!d || d.widget !== 'top-rotation' || d.type !== 'TOP_ROTATION_TEST') return;
+        if (_topRotationTestRestoreTimer) clearTimeout(_topRotationTestRestoreTimer);
+        // Guardar copia profunda del state actual
+        const prevLikes = new Map();    state.data.likes.forEach((v, k) => prevLikes.set(k, v));
+        const prevDonors = new Map();   state.data.donors.forEach((v, k) => prevDonors.set(k, v));
+        const prevComments = new Map(); state.data.comments.forEach((v, k) => prevComments.set(k, v));
+        const prevPoints = state.data.points.slice();
+
+        const fakeAvatar = 'https://tikcontrol.live/assets/xCousito.png';
+        const now = Date.now();
+        const fakeUsers = [
+          { uniqueId: 'test_alpha', nickname: 'TestAlpha' },
+          { uniqueId: 'test_beta',  nickname: 'TestBeta'  },
+          { uniqueId: 'test_gamma', nickname: 'TestGamma' },
+          { uniqueId: 'test_delta', nickname: 'TestDelta' },
+          { uniqueId: 'test_omega', nickname: 'TestOmega' }
+        ];
+        const likeValues    = [850, 620, 410, 230, 95];
+        const diamondValues = [4500, 2800, 1500, 720, 250];
+        const commentValues = [42, 31, 18, 9, 4];
+        const pointValues   = [9800, 6200, 3100, 1450, 540];
+
+        fakeUsers.forEach((u, i) => {
+          state.data.likes.set(u.uniqueId, {
+            nickname: u.nickname, avatar: fakeAvatar,
+            likes: likeValues[i], lastUpdate: now
+          });
+          state.data.donors.set(u.uniqueId, {
+            nickname: u.nickname, avatar: fakeAvatar,
+            diamonds: diamondValues[i], lastUpdate: now
+          });
+          state.data.comments.set(u.uniqueId, {
+            nickname: u.nickname, avatar: fakeAvatar,
+            comments: commentValues[i], lastUpdate: now
+          });
+        });
+        state.data.points = fakeUsers.map((u, i) => ({
+          uniqueId: u.uniqueId, nickname: u.nickname,
+          avatar: fakeAvatar, points: pointValues[i]
+        }));
+        render();
+
+        _topRotationTestRestoreTimer = setTimeout(() => {
+          state.data.likes = prevLikes;
+          state.data.donors = prevDonors;
+          state.data.comments = prevComments;
+          state.data.points = prevPoints;
+          render();
+          _topRotationTestRestoreTimer = null;
+        }, 5000);
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // FUNCIONES DE ROTACIÃ“N
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      function getCurrentTopKey() {
+        normalizeConfigState();
+        return state.enabledTops[state.currentTopIndex % state.enabledTops.length];
+      }
+
+      function getCurrentTop() {
+        return TOPS[getCurrentTopKey()];
+      }
+
+      function getNextTopIndex() {
+        normalizeConfigState();
+        const hasAnyData = state.enabledTops.some(hasTopData);
+        for (let offset = 1; offset <= state.enabledTops.length; offset++) {
+          const nextIndex = (state.currentTopIndex + offset) % state.enabledTops.length;
+          if (!hasAnyData || hasTopData(state.enabledTops[nextIndex])) {
+            return nextIndex;
+          }
+        }
+        return state.currentTopIndex;
+      }
+
+      function rotateToNext() {
+        normalizeConfigState();
+        if (state.enabledTops.length <= 1) return;
+
+        // Fade out
+        listEl.classList.add('fade-out');
+
+        setTimeout(() => {
+          state.currentTopIndex = getNextTopIndex();
+          updateIndicator();
+          render();
+
+          // Fade in
+          listEl.classList.remove('fade-out');
+          listEl.classList.add('fade-in');
+
+          setTimeout(() => {
+            listEl.classList.remove('fade-in');
+          }, 400);
+        }, 400);
+      }
+
+      function restartRotation() {
+        normalizeConfigState();
+
+        // Limpiar timers anteriores
+        if (state.rotationTimer) clearInterval(state.rotationTimer);
+        if (state.progressTimer) clearInterval(state.progressTimer);
+        state.rotationTimer = null;
+        state.progressTimer = null;
+        state.progressValue = 0;
+        if (progressFillEl) progressFillEl.style.width = '0%';
+
+        // Solo rotar si hay mÃ¡s de un top habilitado
+        if (state.enabledTops.length > 1) {
+          // Timer de rotaciÃ³n
+          state.rotationTimer = setInterval(rotateToNext, state.rotationInterval * 1000);
+
+          // Timer de progreso (actualizar cada 100ms)
+          state.progressValue = 0;
+          state.progressTimer = setInterval(() => {
+            state.progressValue += (100 / (state.rotationInterval * 10));
+            if (state.progressValue >= 100) state.progressValue = 0;
+            if (progressFillEl) progressFillEl.style.width = state.progressValue + '%';
+          }, 100);
+        }
+      }
+
+      function updateIndicator() {
+        normalizeConfigState();
+
+        // Progress bar: SIEMPRE se evalÃºa, independiente de showIndicator.
+        // Antes habÃ­a un return temprano si !showIndicator que dejaba la
+        // barra de progreso visible aunque el user la hubiera desactivado.
+        if (progressBarEl) {
+          progressBarEl.style.display = (state.showProgress && state.enabledTops.length > 1) ? 'block' : 'none';
+        }
+
+        if (!state.showIndicator || state.enabledTops.length <= 1) {
+          indicatorEl.style.display = 'none';
+          return;
+        }
+
+        indicatorEl.style.display = 'flex';
+        indicatorEl.innerHTML = state.enabledTops.map((key, idx) => {
+          const top = TOPS[key];
+          if (!top) return '';
+          const isActive = idx === state.currentTopIndex;
+          return `<div class="tc-rotation-dot ${isActive ? 'active' : ''}"
+                       title="${top.title}"
+                       style="${isActive ? `background: ${top.color}; box-shadow: 0 0 8px ${top.color};` : ''}"></div>`;
+        }).join('');
+      }
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // FUNCIONES DE RENDER
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // PROXY DE AVATARES - Evita el bloqueo 403 de TikTok
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // Regex: extrae `tos-xxxx-avt-NNNN/HASH` de cualquier URL TikTok
+      // con template `~tplv-`. Ese path ES el mUri.
+      var _TPLV_RE = /\/\/[^/]*tiktokcdn[^/]*\.com\/([^~?]+)~tplv-/i;
+
+      function proxyAvatar(url) {
+        if (!url) return '';
+        // Anti-doble-proxy: desenvolver URLs ya pasadas por weserv.
+        if (url.indexOf('images.weserv.nl') !== -1) {
+          try {
+            var inner = new URL(url).searchParams.get('url');
+            if (inner) url = decodeURIComponent(inner);
+          } catch (_) {}
+        }
+        // URLs TikTok con template â†’ estable de Akamai (cache 1 aÃ±o).
+        var m = url.match(_TPLV_RE);
+        if (m) {
+          return 'https://p16-common.tiktokcdn-us.com/' + m[1] + '~tplv-tiktokx-cropcenter:100:100.webp';
+        }
+        if (url.includes('tiktokcdn') || url.includes('tiktok.com')) {
+          return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + '&default=1';
+        }
+        return url;
+      }
+
+      const SYSTEM_FONTS = ['Arial', 'Verdana', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New', 'Comic Sans MS', 'Impact'];
+
+      function loadCustomFont(fontFamily, fontUrl) {
+        if (!fontFamily) return;
+        if (window.__tcLoadFont) {
+          var cssVal = window.__tcLoadFont(fontFamily, fontUrl);
+          if (cssVal) {
+            document.documentElement.style.setProperty('--tc-font', cssVal);
+            document.body.style.fontFamily = cssVal;
+            render();
+          }
+        } else {
+          var clean = fontFamily.includes('.') ? fontFamily.split('.')[0].replace(/_/g, ' ') : fontFamily;
+          var val = '"' + clean + '", sans-serif';
+          document.documentElement.style.setProperty('--tc-font', val);
+          document.body.style.fontFamily = val;
+        }
+      }
+
+      function applyStyles() {
+        const root = document.documentElement;
+        const currentTop = getCurrentTop();
+
+        root.style.setProperty('--tc-title-size', `${state.titleSize}px`);
+        root.style.setProperty('--tc-title-color', state.titleColor);
+        root.style.setProperty('--tc-text-color', state.textColor);
+        root.style.setProperty('--tc-value-color', currentTop?.color || state.valueColor);
+        root.style.setProperty('--tc-font-size', `${state.fontSize}px`);
+        root.style.setProperty('--tc-top1-color', state.colorTop1);
+        root.style.setProperty('--tc-top2-color', state.colorTop2);
+        root.style.setProperty('--tc-top3-color', state.colorTop3);
+        root.style.setProperty('--tc-stroke-color', state.strokeColor);
+        root.style.setProperty('--tc-stroke-width', `${state.strokeWidth}px`);
+        root.style.setProperty('--tc-accent', currentTop?.color || '#00d9ff');
+        root.style.setProperty('--tc-primary', currentTop?.color || '#00d9ff');
+
+        widgetEl.classList.toggle('has-bg', state.showBg);
+
+        // Modo compacto: reduce tamaÃ±o de avatar + padding + @username.
+        widgetEl.classList.toggle('compact', !!state.compactMode);
+
+        widgetEl.classList.toggle('stroke-enabled', state.strokeEnabled);
+
+        // TÃ­tulo dinÃ¡mico segÃºn el top actual
+        const customTitle = state.customTitles[currentTop?.key];
+        titleTextEl.textContent = customTitle || currentTop?.title || 'TOP ROTATION';
+        // Icono SVG via clase CSS (render idÃ©ntico en cualquier dispositivo).
+        // Reset + aplicamos la clase del top actual.
+        titleIconEl.className = 'tc-title-icon';
+        titleIconEl.textContent = '';
+        if (currentTop?.iconClass) {
+          titleIconEl.classList.add(currentTop.iconClass);
+        }
+
+        // Efecto del tÃ­tulo
+        let titleClasses = ['tc-title'];
+        if (state.titleEffect && state.titleEffect !== 'none') {
+          titleClasses.push(`tc-effect-${state.titleEffect}`);
+        }
+        if (state.strokeEnabled) titleClasses.push('tc-stroke');
+        titleEl.className = titleClasses.join(' ');
+        titleEl.style.display = state.showTitle === false ? 'none' : '';
+        titleEl.style.fontSize = `${state.titleSize}px`;
+
+        if (state.titleEffect !== 'rainbow') {
+          titleEl.style.color = state.titleColor;
+        }
+      }
+
+      // Coalesce many render() calls â€” cuando llegan rÃ¡fagas de likes/
+      // regalos/chats, cada evento pedÃ­a un re-render completo de innerHTML
+      // â†’ parpadeo constante. Se agrupan en un solo render trailing-edge
+      // cada 300ms, que es mÃ¡s rÃ¡pido que lo que el ojo percibe y elimina
+      // el flash al rebuild.
+      let _renderScheduled = false;
+      function scheduleRender(){
+        if (_renderScheduled) return;
+        _renderScheduled = true;
+        setTimeout(() => { _renderScheduled = false; render(); }, 300);
+      }
+
+      function render() {
+        ensureDataBackedTop();
+        applyStyles(); // Actualizar estilos segÃºn el top actual
+
+        const currentTop = getCurrentTop();
+        const topKey = getCurrentTopKey();
+        const sorted = getTopEntries(topKey);
+
+        if (sorted.length === 0) {
+          if (!state.connected) {
+            listEl.innerHTML = `
+              <div class="tc-loading">
+                <div class="tc-loading-spinner"></div>
+                <div style="margin-top:10px;font-size:12px">Conectando...</div>
+              </div>
+            `;
+          } else {
+            listEl.innerHTML = `
+              <div class="tc-empty">
+                <div class="tc-empty-icon"><span class="tc-title-icon ${currentTop?.iconClass || 'star'}"></span></div>
+                <div class="tc-empty-text">Sin datos...</div>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        listEl.innerHTML = sorted.map((user, index) => {
+          const pos = index + 1;
+          const medal = state.showMedals && pos <= 3 ? '' : pos;
+
+          let rowClasses = ['tc-row'];
+          if (pos <= 3) rowClasses.push(`top-${pos}`);
+          if (pos === 1 && state.showCrown) rowClasses.push('has-crown');
+          if (pos === 1 && state.animTop1 && state.animTop1 !== 'none') rowClasses.push(`tc-anim-${state.animTop1}`);
+          if (!state.showNicknames) rowClasses.push('hide-names');
+          if (!state.showUsername) rowClasses.push('hide-username');
+          if (!state.showRowBg) rowClasses.push('no-bg');
+
+          let valueClasses = ['tc-value'];
+          if (state.effectText && state.effectText !== 'none') valueClasses.push(`tc-effect-${state.effectText}`);
+
+          let posClasses = ['tc-pos'];
+          if (state.showMedals && pos <= 3) posClasses.push('medal');
+
+          const nickname = user.nickname || user.uniqueId || 'Usuario';
+          let displayName = nickname;
+          if (displayName.length > state.nameMaxLen) displayName = displayName.substring(0, state.nameMaxLen) + '...';
+
+          let iconClass = 'tc-icon';
+          if (state.animIcon && state.animIcon !== 'none') iconClass += ` tc-anim-${state.animIcon}`;
+
+          const avatar = proxyAvatar(user.avatar || user.profilePictureUrl || '');
+          const valueKey = currentTop?.valueKey || 'value';
+          const value = toFiniteNumber(user[valueKey] ?? user.points, 0);
+          const avatarHtml = renderTopAvatar({ avatar, initial: nickname || '?', gradient: `linear-gradient(135deg,${currentTop?.color || '#667eea'} 0%,#333 100%)`, pos });
+
+
+
+          return `
+            <div class="${rowClasses.join(' ')}" data-user="${user.uniqueId || ''}">
+              <div class="${posClasses.join(' ')}">${medal}</div>
+              ${state.showAvatars ? avatarHtml : ''}
+              ${state.showNicknames ? `
+                <div class="tc-info">
+                  <div class="tc-name">${escapeHtml(displayName)}</div>
+                  <div class="tc-username">@${escapeHtml(user.uniqueId || '')}</div>
+                </div>
+              ` : ''}
+              <div class="${valueClasses.join(' ')}">
+                ${formatNumber(value)} <span class="${iconClass} ${currentTop?.iconClass || 'star'}"></span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function buildDataToSave() {
+        return {
+          likes: Object.fromEntries(state.data.likes),
+          donors: Object.fromEntries(state.data.donors),
+          comments: Object.fromEntries(state.data.comments)
+          // points no se guarda localmente, viene de AWS
+        };
+      }
+
+      function saveDataNow() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
+        TikControl.saveData(buildDataToSave());
+      }
+
+      function saveData() {
+        if (_saveTimer) return;
+        _saveTimer = setTimeout(() => {
+          _saveTimer = null;
+          TikControl.saveData(buildDataToSave());
+        }, PERSIST_DEBOUNCE_MS);
+      }
+
+      function clearSessionData() {
+        if (_saveTimer) {
+          clearTimeout(_saveTimer);
+          _saveTimer = null;
+        }
+        state.data.likes.clear();
+        state.data.donors.clear();
+        state.data.comments.clear();
+        try { TikControl.saveData({ likes: {}, donors: {}, comments: {} }); } catch (_) {}
+        state.currentTopIndex = 0;
+        state.progressValue = 0;
+        if (progressFillEl) progressFillEl.style.width = '0%';
+        updateIndicator();
+        render();
+      }
+
+      try { TikControl.on('liveStart', clearSessionData); } catch (_) {}
+      try { TikControl.on('live:start', clearSessionData); } catch (_) {}
+      try { TikControl.on('liveEnd', clearSessionData); } catch (_) {}
+      try { TikControl.on('live:end', clearSessionData); } catch (_) {}
+      window.addEventListener('beforeunload', () => {
+        try {
+          if (_saveTimer) saveDataNow();
+        } catch (_) {}
+      });
+      const TOP_AVATAR_FRAME_PACK = {
+        classic: {
+          1: {
+            src: 'top-frames/podium-classic/top1.png',
+            aspect: 157 / 168,
+            avatar: { left: '49.7%', top: '48.5%', size: '55%' }
+          }
+        }
+      };
+
+      function widgetAssetUrl(assetPath) {
+        return '/widgets/' + assetPath.replace(/^\/+/, '');
+      }
+
+      function getTopAvatarFrame(pos) {
+        const style = state.avatarFrameStyle || 'none';
+        if (style === 'none') return null;
+        const pack = TOP_AVATAR_FRAME_PACK[style] || {};
+        return pack[pos] || null;
+      }
+
+      function renderTopAvatar({ avatar, initial, gradient, pos }) {
+        const frame = getTopAvatarFrame(pos);
+        const safeInitial = escapeHtml((initial || '?').charAt(0).toUpperCase());
+        const safeAvatar = avatar ? escapeHtml(avatar) : '';
+        const fallbackBase = 'background:' + gradient + ';color:#fff;font-weight:700;align-items:center;justify-content:center;';
+        const hiddenFallbackStyle = frame ? 'display:none;' + fallbackBase : 'display:none;border-radius:50%;' + fallbackBase;
+        const visibleFallbackStyle = frame ? 'display:flex;' + fallbackBase : 'display:flex;border-radius:50%;' + fallbackBase;
+        const avatarMarkup = safeAvatar
+          ? '<img class="tc-avatar" src="' + safeAvatar + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=&#39;&#39;;this.style.display=&#39;none&#39;;this.nextElementSibling&&this.nextElementSibling.classList.contains(&#39;tc-avatar-fallback&#39;)&&(this.nextElementSibling.style.display=&#39;flex&#39;)"><div class="tc-avatar-fallback" style="' + hiddenFallbackStyle + '">' + safeInitial + '</div>'
+          : '<div class="tc-avatar-fallback" style="' + visibleFallbackStyle + '">' + safeInitial + '</div>';
+
+        if (!frame) return avatarMarkup;
+        const style = [
+          '--top-frame-aspect:' + (frame.aspect || 1),
+          '--top-frame-avatar-left:' + (frame.avatar && frame.avatar.left ? frame.avatar.left : '50%'),
+          '--top-frame-avatar-top:' + (frame.avatar && frame.avatar.top ? frame.avatar.top : '50%'),
+          '--top-frame-avatar-size:' + (frame.avatar && frame.avatar.size ? frame.avatar.size : '55%')
+        ].join(';');
+        return '<div class="tc-avatar-frame top-frame-' + pos + '" style="' + style + '">' + avatarMarkup + '<img class="tc-avatar-frame-img" src="' + widgetAssetUrl(frame.src) + '" alt="" loading="lazy"></div>';
+      }
+
+      function formatNumber(num) {
+        return String(Math.floor(Number(num) || 0));
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+      }
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // INICIALIZACIÃ“N
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      applyStyles();
+      updateIndicator();
+      restartRotation();
+      render();
+
+      // Timeout de fallback
+      setTimeout(() => {
+        if (!state.connected) {
+          state.connected = true;
+          render();
+        }
+      }, 10000);
+
+    })();
+  </script>
+</body>
+
+</html>
+
+

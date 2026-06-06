@@ -1,0 +1,305 @@
+.leaderboard-screen {
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  align-content: start;
+}
+
+.leaderboard-stage {
+  width: min(420px, 100%);
+}
+
+.leaderboard-card {
+  --leaderboard-accent: #ffffff;
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.12), transparent 38%),
+    linear-gradient(160deg, rgba(12, 18, 28, 0.92), rgba(6, 10, 16, 0.96));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.leaderboard-card.likes-theme {
+  --leaderboard-accent: #ff6b9d;
+  border-color: color-mix(in srgb, var(--leaderboard-accent) 42%, transparent);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--leaderboard-accent) 28%, transparent), transparent 40%),
+    linear-gradient(160deg, rgba(42, 10, 28, 0.94), rgba(10, 8, 14, 0.96));
+}
+
+.leaderboard-card.gifts-theme {
+  --leaderboard-accent: #ffc457;
+  border-color: color-mix(in srgb, var(--leaderboard-accent) 42%, transparent);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--leaderboard-accent) 26%, transparent), transparent 40%),
+    linear-gradient(160deg, rgba(38, 24, 8, 0.94), rgba(10, 10, 12, 0.96));
+}
+
+.leaderboard-card.compact {
+  width: 100%;
+}
+
+.leaderboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.leaderboard-kicker {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.leaderboard-title {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.leaderboard-list {
+  display: grid;
+  gap: 10px;
+}
+
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 34px 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.leaderboard-row.rank-1 {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.leaderboard-rank {
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.leaderboard-avatar,
+.leaderboard-avatar-fallback {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.leaderboard-avatar-fallback {
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.leaderboard-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leaderboard-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-copy span {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.leaderboard-metric {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.leaderboard-metric-value {
+  font-size: 1.02rem;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.leaderboard-metric-suffix {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.leaderboard-total-chip {
+  border-color: color-mix(in srgb, var(--leaderboard-accent) 35%, transparent);
+}
+
+.leaderboard-icon-stack {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  min-width: 28px;
+  height: 18px;
+}
+
+.leaderboard-icon-stack.hearts {
+  color: var(--leaderboard-accent);
+}
+
+.leaderboard-icon-stack.coins {
+  color: #ffd76a;
+}
+
+.leaderboard-heart-icon,
+.leaderboard-coin-icon {
+  position: absolute;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.leaderboard-heart-icon.heart-1 {
+  right: 0;
+  top: -1px;
+}
+
+.leaderboard-heart-icon.heart-2 {
+  right: 10px;
+  top: 2px;
+  opacity: 0.88;
+}
+
+.leaderboard-heart-icon.heart-3 {
+  right: 18px;
+  top: 5px;
+  opacity: 0.72;
+}
+
+.leaderboard-coin-icon.coin-1 {
+  right: 0;
+  top: 0;
+}
+
+.leaderboard-coin-icon.coin-2 {
+  right: 9px;
+  top: 3px;
+  opacity: 0.82;
+}
+
+.leaderboard-row.rank-1 .leaderboard-rank {
+  color: var(--leaderboard-accent);
+}
+
+.leaderboard-widget-toggles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.leaderboard-widget-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.88rem;
+}
+
+.leaderboard-widget-toggle input {
+  accent-color: var(--leaderboard-accent, #ff6b9d);
+}
+
+.leaderboard-empty {
+  padding: 18px 12px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.62);
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+.live-hub-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.live-hub-hero {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 42%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(8, 12, 18, 0.98));
+}
+
+.live-hub-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.live-hub-status-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.live-hub-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.live-hub-widget-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.live-hub-preview-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.live-hub-events-list {
+  display: grid;
+  gap: 8px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.live-hub-event-row {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}

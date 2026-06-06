@@ -8,9 +8,19 @@ export default defineConfig([
   globalIgnores([
     'dist',
     'release/**',
-    'storage/streamtoearn-app/**',
-    'storage/streamtoearn-portable/**',
+    '.tikcontrol-extract/**',
+    'storage/**',
+    'public/reference/**',
+    'public/goals/**',
+    'public/widgets/**',
+    'data/**',
   ]),
+  {
+    files: ['server/**/*.{js,mjs,cjs}', 'electron/**/*.{js,cjs}', 'bridge/**/*.{js,mjs,cjs}'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   {
     files: ['**/*.{js,jsx}'],
     extends: [

@@ -1,0 +1,94 @@
+.view-integraciones-lcs {
+  display: grid;
+  gap: 18px;
+}
+
+.integraciones-premium-banner {
+  border-radius: 14px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.08), rgba(35, 123, 255, 0.08));
+  padding: 14px 16px;
+}
+
+.integraciones-premium-banner .tab-intro-banner-inner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.integraciones-premium-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(250, 204, 21, 0.15);
+  color: #fcd34d;
+}
+
+.integraciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.integracion-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-left: 3px solid rgba(35, 123, 255, 0.35);
+}
+
+.integracion-autoconnect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.integracion-autoconnect input {
+  accent-color: #237bff;
+}
+
+.integracion-card[data-ig='obs'] {
+  border-left-color: #a855f7;
+}
+
+.integracion-card[data-ig='streamerbot'] {
+  border-left-color: #3b82f6;
+}
+
+.integracion-card[data-ig='streamdeck'] {
+  border-left-color: #22c55e;
+}
+
+.integracion-card[data-ig='gaming'] {
+  border-left-color: #7a5cff;
+}
+
+.integracion-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.integracion-card-head h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 1rem;
+}
+
+.integraciones-feedback {
+  color: #86efac;
+}
+
+.integraciones-advanced {
+  padding: 14px 16px;
+}
+
+.integraciones-advanced summary {
+  cursor: pointer;
+  font-weight: 600;
+}

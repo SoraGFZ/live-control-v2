@@ -1,0 +1,217 @@
+/* ═══════════════════════════════════════════════════════════
+   SPOTIFY — TEMA CLARO
+   ═══════════════════════════════════════════════════════════ */
+
+/* Vista base */
+html.modo-claro #view-spotify.view {
+    background:
+        radial-gradient(ellipse at top left, rgba(29, 185, 84, 0.05) 0%, transparent 40%),
+        radial-gradient(ellipse at bottom right, rgba(29, 185, 84, 0.03) 0%, transparent 40%),
+        var(--bg-main);
+}
+
+/* Tarjetas principales */
+html.modo-claro #view-spotify.view .spotify-card {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro #view-spotify.view .spotify-card:hover {
+    box-shadow: 0 4px 20px rgba(29, 185, 84, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Info box (warning) */
+html.modo-claro #view-spotify .info-box {
+    color: #b45309;
+}
+
+html.modo-claro #view-spotify .info-box strong {
+    color: #92400e;
+}
+
+/* Secciones de configuración */
+html.modo-claro #view-spotify .config-section {
+    border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro #view-spotify .config-label {
+    color: var(--text-muted);
+}
+
+/* Inputs y selects */
+html.modo-claro #view-spotify.view input,
+html.modo-claro #view-spotify.view select {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify.view input:focus,
+html.modo-claro #view-spotify.view select:focus {
+    background: #ffffff;
+    border-color: #1DB954;
+    box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.15);
+}
+
+html.modo-claro #view-spotify.view input:hover,
+html.modo-claro #view-spotify.view select:hover {
+    border-color: rgba(29, 185, 84, 0.5);
+}
+
+html.modo-claro #view-spotify.view input[readonly] {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+}
+
+/* Botón desactivado */
+html.modo-claro #view-spotify.view .btn:disabled {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+}
+
+/* Now Playing */
+html.modo-claro #view-spotify .now-playing .track-name {
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify .now-playing .track-artist {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .now-playing img {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 3px rgba(29, 185, 84, 0.2);
+}
+
+/* Barra de progreso */
+html.modo-claro #view-spotify .progress-bar {
+    background: rgba(0, 0, 0, 0.06);
+    box-shadow: none;
+}
+
+html.modo-claro #view-spotify .progress-fill::after {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+html.modo-claro #view-spotify .progress-time {
+    color: var(--text-muted);
+}
+
+/* Resultados de búsqueda */
+html.modo-claro #view-spotify .search-result-item:hover {
+    background: rgba(29, 185, 84, 0.07);
+}
+
+html.modo-claro #view-spotify .search-result-item .track-name {
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify .search-result-item .track-artist {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .search-result-item img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Cola de reproducción */
+html.modo-claro #view-spotify .queue-item {
+    background: var(--bg-elevated);
+    border-color: var(--border-subtle);
+}
+
+html.modo-claro #view-spotify .queue-item:hover {
+    background: rgba(29, 185, 84, 0.06);
+    border-color: rgba(29, 185, 84, 0.25);
+}
+
+html.modo-claro #view-spotify .queue-item img {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+html.modo-claro #view-spotify .queue-item-title {
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify .queue-item-artist {
+    color: var(--text-muted);
+}
+
+/* Widget de configuración */
+html.modo-claro #view-spotify .spotify-widget-config {
+    background: var(--bg-card);
+}
+
+html.modo-claro #view-spotify .widget-config-section {
+    border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro #view-spotify .wc-select,
+html.modo-claro #view-spotify .wc-select-small {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify .wc-size-item label {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .wc-size-item input {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-spotify .wc-color-item input[type="color"] {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+}
+
+html.modo-claro #view-spotify .wc-color-item span {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .wc-progress-colors {
+    border-top-color: var(--border-subtle);
+}
+
+html.modo-claro #view-spotify .wc-label {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .wc-toggle {
+    background: var(--bg-elevated);
+    border-color: var(--border-subtle);
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-spotify .wc-toggle:hover {
+    background: rgba(29, 185, 84, 0.05);
+    border-color: rgba(29, 185, 84, 0.3);
+}
+
+html.modo-claro #view-spotify .wc-autosave {
+    border-top-color: var(--border-subtle);
+}
+
+html.modo-claro #view-spotify .wc-options-row {
+    color: var(--text-muted);
+}
+
+/* Estado vacío */
+html.modo-claro #view-spotify .empty-state {
+    color: var(--text-muted);
+}
+
+/* ── Filtro de audiencia — inline style hardcodeado en JS, necesita !important ── */
+html.modo-claro #spotify-audience {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro #spotify-audience option {
+    background: var(--bg-card);
+    color: var(--text-white);
+}

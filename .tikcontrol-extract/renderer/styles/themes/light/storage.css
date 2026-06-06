@@ -1,0 +1,120 @@
+/*
+ * TikControl – Almacenamiento: Light Mode
+ */
+
+/* ── Topbar ── */
+html.modo-claro .stg-topbar {
+    background: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+}
+html.modo-claro .stg-topbar-storage {
+    border-color: var(--border-subtle) !important;
+}
+
+/* ── Usage ring ── */
+html.modo-claro .stg-usage-ring::before { background: var(--bg-card) !important; }
+html.modo-claro .stg-usage-pct   { color: var(--text-white) !important; }
+html.modo-claro .stg-usage-text  { color: var(--text-white) !important; }
+html.modo-claro .stg-usage-sub   { color: var(--text-muted) !important; }
+html.modo-claro .stg-plan-badge--free {
+    background: rgba(0,0,0,0.04) !important;
+    color: var(--text-muted) !important;
+    border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* ── Quick links ── */
+html.modo-claro .stg-quick-label { color: var(--text-muted) !important; }
+html.modo-claro .stg-quick-btn {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-muted) !important;
+}
+html.modo-claro .stg-quick-btn:hover {
+    background: rgba(59,130,246,0.06) !important;
+    border-color: rgba(59,130,246,0.2) !important;
+    color: #2563eb !important;
+}
+
+/* ── Toolbar ── */
+html.modo-claro .stg-toolbar {
+    background: rgba(248,250,252,0.95) !important;
+    border-color: var(--border-subtle) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06) !important;
+}
+html.modo-claro .stg-toolbar-count { color: var(--text-white) !important; }
+html.modo-claro .stg-toolbar-sep   { background: var(--border-light) !important; }
+
+html.modo-claro .stg-action-btn--download {
+    background: rgba(16,185,129,0.06) !important;
+    color: #059669 !important;
+    border-color: rgba(16,185,129,0.2) !important;
+}
+html.modo-claro .stg-action-btn--delete {
+    background: rgba(239,68,68,0.05) !important;
+    color: #dc2626 !important;
+    border-color: rgba(239,68,68,0.12) !important;
+}
+html.modo-claro .stg-action-btn--clear { color: var(--text-muted) !important; }
+html.modo-claro .stg-action-btn--clear:hover { background: rgba(0,0,0,0.04) !important; }
+
+/* ── Sections ── */
+html.modo-claro .stg-section {
+    background: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+}
+html.modo-claro .stg-section-hd {
+    background: rgba(0,0,0,0.015) !important;
+    border-bottom-color: var(--border-subtle) !important;
+}
+html.modo-claro .stg-section-title { color: var(--text-white) !important; }
+html.modo-claro .stg-section-meta  { color: var(--text-muted) !important; }
+
+/* ── Checkbox ── */
+html.modo-claro .stg-check-box { border-color: rgba(0,0,0,0.12) !important; }
+
+/* ── Files ── */
+html.modo-claro .stg-file:hover { background: rgba(0,0,0,0.025) !important; }
+html.modo-claro .stg-file.is-selected { background: rgba(59,130,246,0.08) !important; }
+html.modo-claro .stg-file.is-selected:hover { background: rgba(59,130,246,0.12) !important; }
+html.modo-claro .stg-file-name { color: var(--text-white) !important; }
+html.modo-claro .stg-file-size { color: var(--text-muted) !important; }
+html.modo-claro .stg-file-thumb { border-color: rgba(0,0,0,0.06) !important; }
+html.modo-claro .stg-font-preview {
+    background: rgba(251,146,60,0.06) !important;
+    border-color: rgba(251,146,60,0.15) !important;
+}
+html.modo-claro .stg-font-preview--loaded {
+    color: var(--text-white) !important;
+    background: rgba(0,0,0,0.02) !important;
+    border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* ── Scrollbar ── */
+html.modo-claro .stg-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); }
+html.modo-claro .stg-grid::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.15); }
+
+/* ── Free banner ── */
+html.modo-claro .stg-free-banner {
+    background: var(--bg-card) !important;
+    border-color: rgba(59,130,246,0.12) !important;
+}
+html.modo-claro .stg-free-banner-title { color: #2563eb !important; }
+html.modo-claro .stg-free-banner-desc  { color: var(--text-muted) !important; }
+html.modo-claro .stg-free-banner-premium-box {
+    background: rgba(124,58,237,0.04) !important;
+    border-color: rgba(124,58,237,0.1) !important;
+}
+html.modo-claro .stg-free-banner-premium-text { color: var(--text-white) !important; }
+
+/* ── Empty state ── */
+html.modo-claro .stg-empty       { color: var(--text-muted) !important; }
+html.modo-claro .stg-empty-title { color: var(--text-white) !important; }
+html.modo-claro .stg-empty-desc  { color: var(--text-muted) !important; }
+
+html.modo-claro #storage-content [style*="color:#94a3b8"],
+html.modo-claro #storage-content [style*="color:#64748b"] {
+    color: var(--text-muted) !important;
+}
+html.modo-claro #storage-content [style*="color:#f87171"] {
+    color: #dc2626 !important;
+}

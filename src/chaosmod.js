@@ -88,6 +88,26 @@ export function parseChaosModEffectsSource(sourceText) {
   return effectMap
 }
 
+export function parseChaosModLogRegistrations(logText) {
+  const effectMap = new Map()
+  const registrationPattern = /Registered effect "([^"]+)" with id "([^"]+)"/g
+
+  for (const match of String(logText || '').matchAll(registrationPattern)) {
+    const [, name, id] = match
+    const category = inferChaosModCategory(id)
+
+    effectMap.set(id, {
+      id,
+      name,
+      category,
+      categoryLabel: getChaosModCategoryLabel(category),
+      source: 'log',
+    })
+  }
+
+  return effectMap
+}
+
 export function parseChaosModEffectsIni(effectsIniText) {
   const parsedLines = []
 
@@ -111,23 +131,45 @@ export function parseChaosModEffectsIni(effectsIniText) {
   return parsedLines
 }
 
-export function buildChaosModCatalog(effectsIniText, sourceText = '') {
+export function buildChaosModCatalog(effectsIniText, sourceText = '', chaosLogText = '') {
   const sourceEffects = parseChaosModEffectsSource(sourceText)
+  const logEffects = parseChaosModLogRegistrations(chaosLogText)
+  const catalogMap = new Map()
 
-  return sortChaosModCatalog(
-    parseChaosModEffectsIni(effectsIniText)
-      .filter((entry) => entry.enabled)
-      .map((entry) => {
-        const sourceEffect = sourceEffects.get(entry.id)
-        const category = sourceEffect?.category || inferChaosModCategory(entry.id)
+  parseChaosModEffectsIni(effectsIniText)
+    .filter((entry) => entry.enabled)
+    .forEach((entry) => {
+      const sourceEffect = sourceEffects.get(entry.id)
+      const logEffect = logEffects.get(entry.id)
+      const category = sourceEffect?.category || logEffect?.category || inferChaosModCategory(entry.id)
 
-        return {
-          id: entry.id,
-          name: sourceEffect?.name || formatChaosModFallbackName(entry.id),
-          category,
-          categoryLabel: getChaosModCategoryLabel(category),
-          source: sourceEffect?.source || 'fallback',
-        }
-      }),
-  )
+      catalogMap.set(entry.id, {
+        id: entry.id,
+        name: sourceEffect?.name || logEffect?.name || formatChaosModFallbackName(entry.id),
+        category,
+        categoryLabel: getChaosModCategoryLabel(category),
+        source: sourceEffect?.source || logEffect?.source || 'fallback',
+      })
+    })
+
+  // GTAV Enhanced + Stream To Earn registers many usable effects at runtime via Lua.
+  // They may never appear in effects.ini, so we merge them back into the picker here.
+  for (const [effectId, logEffect] of logEffects.entries()) {
+    if (catalogMap.has(effectId)) {
+      continue
+    }
+
+    const sourceEffect = sourceEffects.get(effectId)
+    const category = sourceEffect?.category || logEffect?.category || inferChaosModCategory(effectId)
+
+    catalogMap.set(effectId, {
+      id: effectId,
+      name: sourceEffect?.name || logEffect?.name || formatChaosModFallbackName(effectId),
+      category,
+      categoryLabel: getChaosModCategoryLabel(category),
+      source: sourceEffect?.source || logEffect?.source || 'fallback',
+    })
+  }
+
+  return sortChaosModCatalog([...catalogMap.values()])
 }

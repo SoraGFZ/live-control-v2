@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Cannon - CaÃ±Ã³n de Regalos</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: transparent;
+        }
+
+        /* Full-screen transparent canvas for physics */
+        #overlayCanvas {
+            position: fixed;
+            top: -1px;
+            left: -1px;
+            width: calc(100% + 2px);
+            height: calc(100% + 2px);
+            pointer-events: none;
+            z-index: 999;
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        /* Container for cannon */
+        #cannonContainer {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Cannon image responsive size */
+        #cannon {
+            width: 10vw;
+            max-width: 100px;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="overlayCanvas"></canvas>
+    <div id="cannonContainer">
+        <img id="cannon"
+            src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8IS0tIENhbm5vbiBiYXJyZWwgLS0+CiAgPHJlY3QgeD0iMzUiIHk9IjQwIiB3aWR0aD0iMzAiIGhlaWdodD0iMTIwIiBmaWxsPSIjNEE0QTRBIiByeD0iNSIvPgogIDxlbGxpcHNlIGN4PSI1MCIgY3k9IjQwIiByeD0iMTgiIHJ5PSI4IiBmaWxsPSIjMzMzMzMzIi8+CiAgCiAgPCEtLSBDYW5ub24gYmFzZSAtLT4KICA8cmVjdCB4PSIyMCIgeT0iMTYwIiB3aWR0aD0iNjAiIGhlaWdodD0iNDAiIGZpbGw9IiM2NjY2NjYiIHJ4PSI1Ii8+CiAgPGVsbGlwc2UgY3g9IjUwIiBjeT0iMTYwIiByeD0iMzUiIHJ5PSIxMCIgZmlsbD0iIzU1NTU1NSIvPgogIAogIDwhLS0gV2hlZWxzIC0tPgogIDxjaXJjbGUgY3g9IjMwIiBjeT0iMTkwIiByPSIxMiIgZmlsbD0iIzMzMzMzMyIvPgogIDxjaXJjbGUgY3g9IjcwIiBjeT0iMTkwIiByPSIxMiIgZmlsbD0iIzMzMzMzMyIvPgogIDxjaXJjbGUgY3g9IjMwIiBjeT0iMTkwIiByPSI2IiBmaWxsPSIjNjY2NjY2Ii8+CiAgPGNpcmNsZSBjeD0iNzAiIGN5PSIxOTAiIHI9IjYiIGZpbGw9IiM2NjY2NjYiLz4KPC9zdmc+"
+            alt="Cannon">
+    </div>
+
+    <!-- TikControl Widget Base (DEBE ir antes de Matter.js) -->
+    <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+    <script src="core/font-loader.js?v=20260526-storage-token-fix"></script>
+    <script src="tikcontrol-widget-base.js?v=2"></script>
+
+    <!-- Matter.js physics engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+    <!-- Gift Cannon widget -->
+    <script src="gift-cannon.js?v=2"></script>
+</body>
+
+</html>
+

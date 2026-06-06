@@ -1,0 +1,552 @@
+/* ═══════════════════════════════════════════════════════════
+   WIDGETS — TEMA CLARO
+   ═══════════════════════════════════════════════════════════ */
+
+/* Vista base */
+html.modo-claro #view-widgets {
+    background: var(--bg-main);
+}
+
+/* Sidebar de filtros */
+html.modo-claro #view-widgets .widgets-sidebar {
+    background: var(--bg-card);
+    border-right-color: var(--border-subtle);
+}
+
+html.modo-claro #view-widgets .sidebar-title {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-widgets .filter-item {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-widgets .filter-item:hover {
+    background: rgba(35, 123, 255, 0.06);
+    color: var(--accent-primary);
+}
+
+html.modo-claro #view-widgets .filter-item.active {
+    background: rgba(35, 123, 255, 0.1);
+    color: var(--accent-primary);
+    border-left-color: var(--accent-primary);
+}
+
+html.modo-claro #view-widgets .filter-item .filter-count {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-widgets .filter-item.active .filter-count {
+    background: rgba(35, 123, 255, 0.15);
+    color: var(--accent-primary);
+}
+
+html.modo-claro #view-widgets .widgets-anim-flyout {
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, var(--bg-elevated) 100%);
+    border-color: var(--border-light);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-subtle);
+}
+
+html.modo-claro #view-widgets .widgets-anim-flyout .anim-filter-sub:hover {
+    background: rgba(168, 85, 247, 0.06);
+}
+
+/* Grid container */
+html.modo-claro #view-widgets .widgets-grid-container {
+    background: var(--bg-main);
+}
+
+/* Barra de búsqueda */
+html.modo-claro #view-widgets .widgets-search-bar {
+    background: var(--bg-card);
+    border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro #view-widgets .widgets-search {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-widgets .widgets-search:focus {
+    background: #ffffff;
+    border-color: var(--accent-primary);
+}
+
+html.modo-claro #view-widgets .widgets-search::placeholder {
+    color: var(--text-muted);
+}
+
+/* Botones de vista (grid/list) */
+html.modo-claro #view-widgets .view-toggles {
+    background: var(--bg-elevated);
+}
+
+html.modo-claro #view-widgets .view-toggle-btn {
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-widgets .view-toggle-btn:hover {
+    color: var(--text-white);
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Tarjeta de widget */
+html.modo-claro #view-widgets .widget-wrapper {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro #view-widgets .widget-wrapper:hover {
+    border-color: rgba(35, 123, 255, 0.25);
+    box-shadow: 0 4px 16px rgba(35, 123, 255, 0.1);
+}
+
+/* Preview del widget */
+html.modo-claro #view-widgets .widget-preview {
+    background: #f0f4f8;
+}
+
+/* Nombre del widget */
+html.modo-claro #view-widgets .widget-name {
+    color: var(--text-white);
+}
+
+html.modo-claro #view-widgets .widget-anim-language-select {
+    background: #ffffff;
+    border-color: var(--border-light);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-widgets .widget-anim-language-select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.14);
+}
+
+/* Botón de info tooltip */
+html.modo-claro #view-widgets .widget-info-btn {
+    background: rgba(35, 123, 255, 0.1);
+    border-color: rgba(35, 123, 255, 0.25);
+}
+
+html.modo-claro #view-widgets .widget-info-btn::after {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+    color: var(--text-white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro #view-widgets .widget-info-btn::before {
+    border-top-color: var(--bg-card);
+}
+
+/* Botón secundario */
+html.modo-claro #view-widgets .widget-btn-secondary {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-muted);
+}
+
+html.modo-claro #view-widgets .widget-btn-secondary:hover {
+    background: var(--bg-card);
+    border-color: var(--border-subtle);
+    color: var(--text-white);
+}
+
+html.modo-claro #view-widgets .widget-btn-secondary:disabled:hover {
+    background: var(--bg-elevated);
+    border-color: var(--border-light);
+    color: var(--text-muted);
+}
+
+/* Footer actions */
+html.modo-claro #view-widgets .widget-footer-actions {
+    border-top-color: var(--border-subtle);
+}
+
+html.modo-claro #view-widgets .widget-footer-btn {
+    border-color: rgba(35, 123, 255, 0.25);
+    color: #237BFF;
+}
+
+html.modo-claro #view-widgets .widget-footer-btn:hover {
+    border-color: rgba(35, 123, 255, 0.5);
+    color: #1a6ae0;
+}
+
+html.modo-claro #view-widgets .widget-footer-btn.wfb--go {
+    color: #fff;
+}
+
+html.modo-claro #view-widgets .widget-footer-btn.wfb--reverting {
+    color: #237BFF;
+}
+
+/* Overlay premium */
+html.modo-claro #view-widgets .widget-premium-overlay {
+    background: linear-gradient(135deg, rgba(255, 251, 230, 0.82), rgba(255, 244, 198, 0.9));
+    backdrop-filter: blur(2px);
+    border: 1px solid rgba(234, 179, 8, 0.34);
+    box-shadow: 0 10px 24px rgba(120, 53, 15, 0.16);
+}
+
+html.modo-claro #view-widgets .widget-premium-overlay:hover {
+    background: linear-gradient(135deg, rgba(255, 251, 230, 0.9), rgba(255, 244, 198, 0.96));
+}
+
+html.modo-claro #view-widgets .widget-premium-overlay .wp-title {
+    color: #92400e;
+}
+
+html.modo-claro #view-widgets .widget-premium-overlay .wp-desc {
+    color: #6b7280;
+}
+
+html.modo-claro #view-widgets .widget-premium-overlay .wp-lock-icon {
+    background: rgba(234, 179, 8, 0.16);
+    color: #a16207;
+}
+
+/* Estado vacío */
+html.modo-claro #view-widgets .widgets-empty-title {
+    color: var(--text-white);
+}
+
+html.modo-claro #view-widgets .widgets-empty-desc {
+    color: var(--text-muted);
+}
+
+/* ── tc-btn / tc-input (inyectados inline por widgets/index.js) ──
+   Se necesita !important para ganar al <style> inline */
+html.modo-claro .tc-btn {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .tc-btn:hover {
+    background: var(--bg-card) !important;
+    border-color: var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+}
+
+/* ── FontSelector component (FontSelector.runtime.js) ── */
+html.modo-claro .mc-font-inline {
+    background: transparent !important;
+}
+
+html.modo-claro .mc-font-select {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+/* Botón "Subir fuente" */
+html.modo-claro .mc-font-upload {
+    background: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+html.modo-claro .mc-font-upload:hover {
+    background: #1a6dff !important;
+}
+
+html.modo-claro .mc-small {
+    color: var(--accent-primary) !important;
+}
+
+html.modo-claro .tc-input {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .tc-input:focus {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.15) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WIDGET CONFIGURATORS — overrides completos vía ModalHost
+   Todos los widgets usan inline styles con colores dark
+   hardcodeados. Se necesita !important para ganarles.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Inputs, selects, textareas dentro de modales de widgets */
+html.modo-claro .ui-modal-content input[type="text"],
+html.modo-claro .ui-modal-content input[type="number"],
+html.modo-claro .ui-modal-content input[type="email"],
+html.modo-claro .ui-modal-content textarea,
+html.modo-claro .ui-modal-content select {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .ui-modal-content input[type="text"]:focus,
+html.modo-claro .ui-modal-content input[type="number"]:focus,
+html.modo-claro .ui-modal-content textarea:focus,
+html.modo-claro .ui-modal-content select:focus {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.12) !important;
+}
+
+/* Labels de configuradores */
+html.modo-claro .ui-modal-content label {
+    color: var(--text-muted) !important;
+}
+
+/* Los colores dark de los widget configurators se sustituyen en el()
+   de widgets/index.js antes de que el navegador los normalice a rgb().
+
+   FALLBACK RGB — cubre dos casos que escapan al interceptor de el():
+   a) switchTab() / asignaciones directas: element.style.background = '#hex'
+   b) React createElement con style object: style:{ background:'#hex' }
+   En ambos casos el navegador normaliza hex→rgb en el atributo style,
+   por lo que usamos [style*="rgb(R, G, B)"] como selector. */
+
+html.modo-claro .ui-modal-content [style*="rgb(10, 15, 26)"],
+html.modo-claro .ui-modal-content [style*="rgb(10, 16, 24)"],
+html.modo-claro .ui-modal-content [style*="rgb(12, 20, 30)"],
+html.modo-claro .ui-modal-content [style*="rgb(13, 22, 34)"],
+html.modo-claro .ui-modal-content [style*="rgb(14, 22, 34)"],
+html.modo-claro .ui-modal-content [style*="rgb(15, 23, 42)"],
+html.modo-claro .ui-modal-content [style*="rgb(17, 24, 39)"],
+html.modo-claro .ui-modal-content [style*="rgb(19, 33, 52)"],
+html.modo-claro .ui-modal-content [style*="rgb(26, 35, 50)"],
+html.modo-claro .ui-modal-content [style*="rgb(27, 42, 60)"],
+html.modo-claro .ui-modal-content [style*="rgb(30, 30, 30)"],
+html.modo-claro .ui-modal-content [style*="rgb(30, 41, 59)"],
+html.modo-claro .ui-modal-content [style*="rgb(31, 41, 55)"],
+html.modo-claro .ui-modal-content [style*="rgb(42, 59, 82)"],
+html.modo-claro .ui-modal-content [style*="rgb(0, 0, 0)"] {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+}
+
+/* Textos blancos/claros que se vuelven invisibles en fondo claro */
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(255, 255, 255)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(139, 157, 181)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(214, 230, 255)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(226, 237, 245)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(226, 232, 240)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(148, 163, 184)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(203, 213, 225)"],
+html.modo-claro .ui-modal-content :not(button)[style*="rgb(199, 219, 239)"] {
+    color: var(--text-muted) !important;
+}
+
+/* Tabs inactivas — sobrescribir asignación directa via switchTab() */
+html.modo-claro .ui-modal-content button[style*="rgb(26, 35, 50)"],
+html.modo-claro .ui-modal-content button[style*="rgb(19, 33, 52)"],
+html.modo-claro .ui-modal-content button[style*="rgb(14, 22, 34)"],
+html.modo-claro .ui-modal-content button[style*="rgb(15, 23, 42)"] {
+    background: var(--bg-elevated) !important;
+    color: var(--text-muted) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+/* Scrollbar en configuradores */
+html.modo-claro .ui-modal-content ::-webkit-scrollbar-track {
+    background: var(--bg-elevated) !important;
+}
+html.modo-claro .ui-modal-content ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIGURADORES DE WIDGETS v2 — clases inyectadas via <style>
+   ranking-config.js → .rc-*
+   gift-config.js    → .rc-*  (mismas clases)
+   top-rotation-config.js → .trc-*
+   Se necesita especificidad extra (html.modo-claro .clase) para
+   ganar a los <style> inyectados dinámicamente.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Contenedor base del panel ── */
+html.modo-claro .rc-panel,
+html.modo-claro .trc-panel {
+    color: var(--text-white) !important;
+}
+
+/* ── Secciones / paneles ── */
+html.modo-claro .rc-section,
+html.modo-claro .rc-font-section {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+}
+
+html.modo-claro .trc-section,
+html.modo-claro .trc-section.highlight {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+}
+
+/* ── Títulos de sección ── */
+html.modo-claro .rc-section-title,
+html.modo-claro .trc-section-title {
+    color: var(--text-white) !important;
+}
+
+/* ── Labels ── */
+html.modo-claro .rc-label,
+html.modo-claro .trc-label {
+    color: var(--text-muted) !important;
+}
+
+/* ── Inputs ── */
+html.modo-claro .rc-input,
+html.modo-claro .trc-input,
+html.modo-claro .trc-top-title-input {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .rc-input:focus,
+html.modo-claro .trc-input:focus {
+    border-color: var(--accent-primary) !important;
+}
+
+/* ── Selects ── */
+html.modo-claro .rc-select,
+html.modo-claro .trc-select {
+    background: #ffffff !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+/* ── Preview de fuente ── */
+html.modo-claro .rc-font-preview,
+html.modo-claro .trc-font-preview {
+    background: var(--bg-main) !important;
+    border-color: var(--border-subtle) !important;
+    color: var(--text-white) !important;
+}
+
+/* ── Botones ── */
+html.modo-claro .rc-btn,
+html.modo-claro .trc-btn {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .rc-btn:hover,
+html.modo-claro .trc-btn:hover {
+    background: var(--bg-card) !important;
+    border-color: var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+}
+
+html.modo-claro .rc-btn.primary,
+html.modo-claro .trc-btn.primary {
+    background: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: #ffffff !important;
+}
+
+html.modo-claro .rc-btn.primary:hover,
+html.modo-claro .trc-btn.primary:hover {
+    background: #1a6dff !important;
+}
+
+/* ── Tarjetas de Top (top-rotation) ── */
+html.modo-claro .trc-top-card {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+}
+
+html.modo-claro .trc-top-card:hover {
+    background: var(--bg-card) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .trc-top-card.selected {
+    border-color: var(--accent-primary) !important;
+    background: rgba(35, 123, 255, 0.06) !important;
+    box-shadow: 0 0 12px rgba(35, 123, 255, 0.12) !important;
+}
+
+html.modo-claro .trc-top-name {
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .trc-top-desc {
+    color: var(--text-muted) !important;
+}
+
+/* ── Color chips (ranking) ── */
+html.modo-claro .rc-color-chip {
+    border-color: var(--border-light) !important;
+}
+
+/* ── Footer del configurador ── */
+html.modo-claro .rc-footer,
+html.modo-claro .trc-footer {
+    border-top-color: var(--border-subtle) !important;
+}
+
+/* ── Filas de configuración con hover oscuro asignado por JS ── */
+/* Neutraliza rgba oscuros que el JS de widgets aplique como fondo */
+html.modo-claro [style*="rgba(40,50,70"],
+html.modo-claro [style*="rgba(40, 50, 70"],
+html.modo-claro [style*="rgba(30,40,60"],
+html.modo-claro [style*="rgba(30, 40, 60"] {
+    background: transparent !important;
+    color: var(--text-white) !important;
+}
+
+/* ── Gift Gallery: secciones con borde rgba(255,255,255,0.08) invisible en claro ── */
+html.modo-claro [style*="rgba(255,255,255,0.08)"],
+html.modo-claro [style*="rgba(255, 255, 255, 0.08)"] {
+    border-color: var(--border-subtle) !important;
+}
+
+/* ── Gift Gallery: tarjetas de regalo pendiente ── */
+html.modo-claro [style*="rgba(255,255,255,0.03)"],
+html.modo-claro [style*="rgba(255, 255, 255, 0.03)"] {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+/* ── Gift Gallery: botón "Restaurar por defecto" y similares ── */
+html.modo-claro .gg-reset-cfg-btn,
+html.modo-claro [style*="background:#1b2a3c"][style*="color:#d6e6ff"] {
+    background: var(--bg-elevated) !important;
+    border-color: var(--border-light) !important;
+    color: var(--text-white) !important;
+}
+
+html.modo-claro .widget-config-live-preview__header {
+    color: var(--text-white);
+}
+
+html.modo-claro .widget-config-live-preview__reload {
+    background: rgba(35, 123, 255, 0.08);
+    border-color: rgba(35, 123, 255, 0.2);
+    color: #237BFF;
+}
+
+html.modo-claro .widget-config-live-preview__reload:hover {
+    background: rgba(35, 123, 255, 0.14);
+    border-color: rgba(35, 123, 255, 0.34);
+    color: #0f5acc;
+}
+
+html.modo-claro .widget-config-live-preview__frame {
+    background:
+        linear-gradient(45deg, rgba(100, 116, 139, 0.12) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(100, 116, 139, 0.12) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(100, 116, 139, 0.12) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(100, 116, 139, 0.12) 75%),
+        #f8fafc;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    background-size: 20px 20px;
+    border-color: rgba(35, 123, 255, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.12);
+}

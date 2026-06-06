@@ -1,0 +1,18 @@
+{
+  "cannon_ballTimeout": 30,
+  "cannon_maxBalls": 20,
+  "cannon_ballSize": 50,
+  "cannon_intensity": 50,
+  "cannon_showGiftPictures": true,
+  "cannon_showCannon": true,
+  "cannon_specialBallEnabled": true,
+  "cannon_specialBallMinCoins": 100,
+  "cannon_specialBallScale": 1.5,
+  "cannon_specialBallBounce": 1,
+  "cannon_specialBallLifetime": 2,
+  "cannon_specialBallBorder": false,
+  "cannon_specialBallBorderColor": "#FFD700",
+  "cannon_specialBallBorderRainbow": true,
+  "cannon_emitLegacyFireEvents": false,
+  "schemaVersion": 1
+}

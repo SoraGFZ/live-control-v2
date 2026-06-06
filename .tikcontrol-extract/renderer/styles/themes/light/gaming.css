@@ -1,0 +1,610 @@
+/* --- GAMING TAB - Light Theme (Steam Layout) --- */
+
+html.modo-claro #gaming-root { color: var(--text-white); }
+
+/* Sub-tabs header */
+html.modo-claro .gaming-subtabs {
+  background: var(--bg-card);
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .gaming-subtab-btn {
+  color: var(--text-muted);
+}
+html.modo-claro .gaming-subtab-btn:hover {
+  color: var(--text-white);
+}
+html.modo-claro .gaming-subtab-btn.active {
+  color: #6352c8;
+}
+html.modo-claro .gaming-subtab-btn.active::after {
+  background: #6352c8;
+}
+
+/* Game page: HUD Preview section */
+html.modo-claro .steam-game-hud-preview {
+  background: rgba(99, 82, 200, 0.04);
+  border-color: rgba(99, 82, 200, 0.12);
+}
+html.modo-claro .steam-game-hud-preview-title {
+  color: var(--text-muted);
+}
+
+/* Sidebar */
+html.modo-claro .steam-sidebar {
+  background: var(--bg-card);
+  border-right-color: var(--border-subtle);
+}
+html.modo-claro .steam-home-btn { border-color: rgba(99, 82, 200, 0.2); color: #6352c8; }
+html.modo-claro .steam-home-btn:hover { background: rgba(99, 82, 200, 0.08); border-color: rgba(99, 82, 200, 0.4); }
+html.modo-claro .steam-sidebar-title { color: var(--text-muted); }
+html.modo-claro .steam-sidebar-count { color: var(--text-muted); }
+html.modo-claro .steam-sidebar-search {
+  background: var(--input-bg); border-color: var(--input-border); color: var(--text-white);
+}
+html.modo-claro .steam-sidebar-search::placeholder { color: var(--text-muted); }
+html.modo-claro .steam-sidebar-search:focus { border-color: var(--accent-primary); }
+html.modo-claro .steam-sidebar-item:hover { background: rgba(122, 92, 255, 0.04); }
+html.modo-claro .steam-sidebar-item.active { background: rgba(122, 92, 255, 0.08); }
+html.modo-claro .steam-sidebar-name { color: var(--text-light); }
+html.modo-claro .steam-sidebar-item.active .steam-sidebar-name { color: var(--text-white); }
+
+html.modo-claro .steam-group-flyout {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, var(--bg-elevated) 100%);
+  border-color: var(--border-light);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-subtle);
+}
+html.modo-claro .steam-group-flyout .steam-sidebar-item {
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .steam-group-flyout .steam-sidebar-item:hover {
+  background: rgba(122, 92, 255, 0.06);
+}
+
+/* Filter dropdown */
+html.modo-claro .steam-filter-select {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+html.modo-claro .steam-filter-select:hover {
+  border-color: rgba(122, 92, 255, 0.3);
+  color: var(--text-white);
+}
+html.modo-claro .steam-filter-select.filtered {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.06);
+}
+html.modo-claro .steam-filter-dropdown {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, var(--bg-elevated) 100%);
+  border-color: var(--border-light);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(12px);
+}
+html.modo-claro .steam-filter-option {
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+}
+html.modo-claro .steam-filter-option:hover {
+  background: rgba(122, 92, 255, 0.06);
+  color: var(--text-white);
+}
+html.modo-claro .steam-filter-option.active {
+  background: rgba(122, 92, 255, 0.1);
+  color: #6352c8;
+  font-weight: 600;
+}
+
+/* Dashboard */
+html.modo-claro .steam-section-title { color: var(--text-white); }
+html.modo-claro .steam-section-count { color: var(--text-muted); }
+html.modo-claro .steam-sort-label { color: var(--text-muted); }
+
+html.modo-claro .steam-banner-card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+html.modo-claro .steam-banner-card:hover {
+  box-shadow: 0 6px 20px rgba(122, 92, 255, 0.15);
+}
+html.modo-claro .steam-game-tile {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+html.modo-claro .steam-game-tile:hover {
+  box-shadow: 0 6px 20px rgba(122, 92, 255, 0.12);
+}
+html.modo-claro .steam-diamond-card { background: var(--bg-elevated); }
+html.modo-claro .steam-diamond-card-name { color: var(--text-primary); text-shadow: none; }
+html.modo-claro .steam-diamond-total { color: #2563eb; }
+html.modo-claro .steam-diamond-avg { background: rgba(37, 99, 235, 0.08); color: #3b82f6; }
+html.modo-claro .steam-diamond-plays { color: var(--text-muted); }
+
+/* Game Page */
+html.modo-claro .steam-hero-banner { background: #e8ecf0; }
+html.modo-claro .steam-hero-gradient { background: linear-gradient(to top, rgba(245, 247, 250, 1) 0%, transparent 100%); }
+html.modo-claro .steam-hero-title { text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+html.modo-claro .steam-chip {
+  background: rgba(122, 92, 255, 0.05);
+  border-color: rgba(122, 92, 255, 0.1);
+  color: var(--text-light);
+}
+html.modo-claro .steam-store-btn {
+  background: linear-gradient(135deg, #e8f0fe, #d0e2f7);
+  color: #1a73e8; border-color: rgba(26, 115, 232, 0.3);
+}
+html.modo-claro .steam-store-btn:hover {
+  background: linear-gradient(135deg, #d0e2f7, #b8d4f0);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+}
+html.modo-claro .steam-commands-col {
+  background: rgba(122, 92, 255, 0.02);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .steam-col-header {
+  color: var(--text-white);
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .steam-col-count { color: #7a5cff; }
+
+html.modo-claro .steam-mgmt-bar { background: var(--bg-elevated); }
+
+/* Commands */
+html.modo-claro .gaming-cmd:hover {
+  background: rgba(122, 92, 255, 0.04); border-color: rgba(122, 92, 255, 0.12);
+}
+html.modo-claro .gaming-cmd-icon { background: rgba(122, 92, 255, 0.06); color: #7a5cff; }
+html.modo-claro .gaming-cmd-name { color: var(--text-white); }
+html.modo-claro .gaming-cmd-desc { color: var(--text-muted); }
+html.modo-claro .gaming-cmd-add { background: rgba(122, 92, 255, 0.06); color: #7a5cff; }
+html.modo-claro .gaming-cmd-add:hover { background: rgba(122, 92, 255, 0.12); }
+html.modo-claro .gaming-cmd-search {
+  background: var(--input-bg); border-color: var(--input-border); color: var(--text-white);
+}
+html.modo-claro .gaming-cmd-search::placeholder { color: var(--text-muted); }
+html.modo-claro .gaming-cmd-search:focus { border-color: var(--accent-primary); }
+
+html.modo-claro .gaming-active-cmd { background: var(--bg-elevated); border-color: rgba(22, 163, 74, 0.15); }
+html.modo-claro .gaming-active-cmd.inactive { border-color: var(--border-subtle); }
+html.modo-claro .gaming-active-cmd-name { color: var(--text-white); }
+html.modo-claro .gaming-active-cmd-trigger { color: var(--text-muted); }
+html.modo-claro .gaming-active-cmd-trigger-badge { background: rgba(122, 92, 255, 0.06); color: #7a5cff; }
+html.modo-claro .gaming-active-cmd-opts-badge { background: rgba(59, 130, 246, 0.06); color: #2563eb; }
+html.modo-claro .steam-sound-badge { background: rgba(22, 163, 74, 0.06); color: #16a34a; }
+html.modo-claro .steam-user-filter-badge { background: rgba(245, 158, 11, 0.08); color: #b45309; }
+
+html.modo-claro .gaming-toggle-slider { background: var(--bg-elevated); border: 1px solid var(--border-light); }
+html.modo-claro .gaming-toggle-slider::before { background: var(--text-muted); }
+html.modo-claro .gaming-toggle input:checked + .gaming-toggle-slider { background: #22c55e; border-color: #16a34a; }
+html.modo-claro .gaming-toggle input:checked + .gaming-toggle-slider::before { background: #fff; }
+
+html.modo-claro .gaming-active-cmd-delete { color: rgba(220, 38, 38, 0.4); }
+html.modo-claro .gaming-active-cmd-delete:hover { background: rgba(220, 38, 38, 0.06); color: #dc2626; }
+html.modo-claro .gaming-active-cmd-edit { color: rgba(99, 82, 200, 0.4); }
+html.modo-claro .gaming-active-cmd-edit:hover { background: rgba(99, 82, 200, 0.06); color: #6352c8; }
+html.modo-claro .steam-bulk-toggle-label { border-color: var(--border-light); color: var(--text-muted); }
+html.modo-claro .steam-bulk-toggle-label:hover { border-color: rgba(99, 82, 200, 0.3); color: #6352c8; }
+html.modo-claro .steam-bulk-toggle-label input[type="checkbox"] { accent-color: #6352c8; }
+html.modo-claro .steam-bulk-delete-btn { background: rgba(220, 38, 38, 0.08); color: #dc2626; }
+html.modo-claro .steam-bulk-delete-btn:hover { background: rgba(220, 38, 38, 0.15); }
+html.modo-claro .steam-select-all-label { color: var(--text-muted); }
+
+html.modo-claro .gaming-test-instant { background: rgba(22, 163, 74, 0.08); color: #16a34a; }
+html.modo-claro .gaming-test-instant:hover:not(:disabled) { background: rgba(22, 163, 74, 0.14); }
+html.modo-claro .gaming-test-delayed { background: rgba(37, 99, 235, 0.08); color: #2563eb; }
+html.modo-claro .gaming-test-delayed:hover:not(:disabled) { background: rgba(37, 99, 235, 0.14); }
+
+/* Status bar */
+html.modo-claro .gaming-status-bar { background: rgba(0,0,0,0.04); }
+html.modo-claro .gm-status-path { color: var(--text-light); }
+html.modo-claro .gm-status-nopath { color: #b45309; }
+html.modo-claro .gm-status-ok { color: #16a34a; }
+html.modo-claro .gm-status-warn { color: #b45309; }
+html.modo-claro .gm-status-dim { color: var(--text-muted); }
+
+/* Target Player */
+html.modo-claro .gaming-target-player { background: rgba(59, 130, 246, 0.04); border-color: rgba(59, 130, 246, 0.15); }
+html.modo-claro .gaming-target-label { color: #2563eb; }
+html.modo-claro .gaming-target-input { background: var(--input-bg); border-color: var(--input-border); color: var(--text-white); }
+html.modo-claro .gaming-target-input::placeholder { color: var(--text-muted); }
+
+/* Premium */
+html.modo-claro .gaming-premium-banner { background: rgba(245, 158, 11, 0.04); border-color: rgba(245, 158, 11, 0.2); }
+html.modo-claro .gaming-premium-banner-text { color: #b45309; }
+
+/* Modal */
+html.modo-claro .gaming-trigger-content {
+  background: var(--bg-card); border-color: var(--border-subtle);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+html.modo-claro .gaming-trigger-title { color: var(--text-white); }
+html.modo-claro .gaming-trigger-subtitle { color: var(--text-muted); }
+html.modo-claro .gaming-trigger-type { background: var(--bg-elevated); border-color: var(--border-subtle); }
+html.modo-claro .gaming-trigger-type:hover { border-color: rgba(122, 92, 255, 0.25); background: rgba(122, 92, 255, 0.03); }
+html.modo-claro .gaming-trigger-type.selected { border-color: rgba(122, 92, 255, 0.4); background: rgba(122, 92, 255, 0.06); }
+html.modo-claro .gaming-trigger-type-label { color: var(--text-white); }
+
+html.modo-claro .gaming-field label { color: var(--text-muted); }
+html.modo-claro .gaming-field input, html.modo-claro .gaming-field select {
+  background: var(--input-bg); border-color: var(--input-border); color: var(--text-white);
+}
+html.modo-claro .gaming-field input:focus, html.modo-claro .gaming-field select:focus {
+  border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.08);
+}
+html.modo-claro .gaming-field input::placeholder { color: var(--text-muted); }
+html.modo-claro .gaming-field-hint { color: var(--text-muted); }
+
+html.modo-claro .steam-user-filter-section { background: rgba(245, 158, 11, 0.03); border-color: rgba(245, 158, 11, 0.1); }
+html.modo-claro .steam-user-filter-check { color: #b45309; }
+html.modo-claro .steam-user-filter-input { background: var(--input-bg); border-color: rgba(245, 158, 11, 0.15); color: var(--text-white); }
+
+html.modo-claro .steam-sound-section { background: rgba(22, 163, 74, 0.03); border-color: rgba(22, 163, 74, 0.1); }
+html.modo-claro .steam-sound-title { color: #16a34a; }
+html.modo-claro .steam-sound-choose-btn { background: var(--input-bg); border-color: rgba(22, 163, 74, 0.15); color: var(--text-muted); }
+html.modo-claro .steam-sound-choose-btn:hover { border-color: rgba(22, 163, 74, 0.3); }
+html.modo-claro .steam-sound-choose-label.steam-sound-chosen { color: #16a34a; }
+html.modo-claro .steam-sound-preview { background: rgba(22, 163, 74, 0.08); color: #16a34a; }
+html.modo-claro .steam-sound-remove { background: rgba(220, 38, 38, 0.06); color: #dc2626; }
+
+html.modo-claro .gaming-options-section { background: rgba(122, 92, 255, 0.02); border-color: rgba(122, 92, 255, 0.08); }
+html.modo-claro .gaming-options-title { color: #7a5cff; }
+
+html.modo-claro .gaming-btn-back { background: var(--btn-ghost-bg); color: var(--text-light); border: 1px solid var(--btn-ghost-border); }
+html.modo-claro .gaming-btn-back:hover { background: var(--btn-ghost-hover); color: var(--text-white); }
+
+html.modo-claro .gaming-gift-selector-container { background: #f8f9fb; border-color: #e0e4ea; }
+
+html.modo-claro .gaming-empty { color: var(--text-muted); }
+html.modo-claro .gaming-loading { color: var(--text-muted); }
+
+html.modo-claro .steam-main::-webkit-scrollbar-thumb { background: rgba(122, 92, 255, 0.15); }
+html.modo-claro .steam-sidebar-list::-webkit-scrollbar-thumb { background: rgba(122, 92, 255, 0.15); }
+
+html.modo-claro .steam-preset-btn { border-color: rgba(0,0,0,0.1); color: var(--text-muted); }
+html.modo-claro .steam-preset-btn:hover { border-color: rgba(59, 130, 246, 0.3); color: #3b82f6; }
+html.modo-claro .steam-preset-btn--purple { background: rgba(139, 92, 246, 0.08); color: #7c3aed; border-color: rgba(139, 92, 246, 0.2); }
+html.modo-claro .steam-preset-btn--purple:hover { background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.35); color: #6d28d9; }
+
+html.modo-claro .gaming-preset-game { background: rgba(122, 92, 255, 0.08); color: #7a5cff; }
+html.modo-claro .gaming-preset-count { color: var(--text-muted); }
+html.modo-claro .gaming-preset-status { color: var(--text-muted); }
+html.modo-claro .gaming-preset-code { color: #7a5cff; background: rgba(122, 92, 255, 0.04); border-color: rgba(122, 92, 255, 0.2); }
+html.modo-claro .gaming-preset-hint { color: var(--text-muted); }
+html.modo-claro .gaming-preset-input { background: var(--input-bg); border-color: rgba(122, 92, 255, 0.15); color: #7a5cff; }
+html.modo-claro .gaming-preset-input::placeholder { color: rgba(0,0,0,0.15); }
+html.modo-claro .gaming-preset-input:focus { border-color: rgba(122, 92, 255, 0.4); }
+html.modo-claro .gaming-preset-warn { background: rgba(245, 158, 11, 0.06); color: #b45309; }
+html.modo-claro .gaming-preset-cmd-item { background: rgba(0,0,0,0.02); }
+html.modo-claro .gaming-preset-cmd-name { color: var(--text-white); }
+html.modo-claro .gaming-preset-cmd-trigger { background: rgba(122, 92, 255, 0.06); color: #7a5cff; }
+html.modo-claro .gaming-preset-cmd-sound { color: var(--text-muted); }
+
+html.modo-claro .tc-preset-section-title { color: var(--text-light); }
+html.modo-claro .tc-preset-section-label { background: rgba(122, 92, 255, 0.04); border-color: rgba(122, 92, 255, 0.1); color: var(--text-white); }
+html.modo-claro .tc-preset-section-label:hover { background: rgba(122, 92, 255, 0.08); border-color: rgba(122, 92, 255, 0.2); }
+
+/* --- HUD Config Panel (non-duplicated rules) --- */
+html.modo-claro .hud-cfg-val {
+  color: #6352c8;
+}
+html.modo-claro .hud-cfg-check {
+  accent-color: #6352c8;
+}
+
+/* HUD Sliders — compact style matching Sounds */
+html.modo-claro .hud-cfg-slider {
+  height: 20px;
+}
+html.modo-claro .hud-cfg-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #6352c8 0%,
+    #6352c8 var(--fill-pct, 0%),
+    rgba(0, 0, 0, 0.08) var(--fill-pct, 0%),
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+html.modo-claro .hud-cfg-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #6352c8;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(99, 82, 200, 0.35);
+  margin-top: -5px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+html.modo-claro .hud-cfg-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.18);
+  box-shadow: 0 2px 8px rgba(99, 82, 200, 0.45);
+}
+html.modo-claro .hud-cfg-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.08);
+}
+html.modo-claro .hud-cfg-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px 0 0 2px;
+  background: #6352c8;
+}
+html.modo-claro .hud-cfg-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #6352c8;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(99, 82, 200, 0.35);
+  cursor: pointer;
+}
+html.modo-claro .hud-cfg-slider::-moz-range-thumb:hover {
+  transform: scale(1.18);
+}
+
+/* Non-duplicated per-command rules */
+html.modo-claro .hud-cmd-game-count {
+  color: #6352c8;
+  background: rgba(99, 82, 200, 0.1);
+}
+html.modo-claro .hud-cmd-custom-badge {
+  color: #6352c8;
+}
+
+/* Cloud image gallery */
+html.modo-claro .hud-gallery-img {
+  border-color: transparent;
+}
+html.modo-claro .hud-gallery-img:hover {
+  border-color: #6352c8;
+}
+html.modo-claro #hud-gallery-close {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+/* ========================================
+   OVERLAY GAMING — Light theme overrides
+   ======================================== */
+
+/* --- Top: Preview area (left panel) --- */
+html.modo-claro .ov-preview-area {
+  background: rgba(99, 82, 200, 0.04);
+  border-color: rgba(99, 82, 200, 0.12);
+}
+html.modo-claro .ov-preview-label {
+  color: var(--text-light);
+}
+html.modo-claro .ov-preview-label .g-icon {
+  color: #6352c8;
+}
+html.modo-claro .ov-preview-frame {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(99, 82, 200, 0.15);
+}
+
+/* --- Sidebar: URL section --- */
+html.modo-claro .ov-url-section {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ov-url-label {
+  color: var(--text-muted);
+}
+html.modo-claro .ov-url-input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-white);
+}
+html.modo-claro .ov-url-input:focus {
+  border-color: rgba(99, 82, 200, 0.5);
+}
+html.modo-claro .ov-url-hint {
+  color: var(--text-muted);
+}
+
+/* --- Sidebar: Presets section --- */
+html.modo-claro .ov-presets-section {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ov-section-label {
+  color: var(--text-light);
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .ov-section-label .g-icon {
+  color: #6352c8;
+}
+
+/* --- Mode toggle (Fácil / Avanzado) --- */
+html.modo-claro .ov-mode-toggle {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ov-mode-btn {
+  color: var(--text-muted);
+}
+html.modo-claro .ov-mode-btn:hover {
+  color: var(--text-white);
+  background: rgba(99, 82, 200, 0.06);
+}
+html.modo-claro .ov-mode-btn.active {
+  background: linear-gradient(135deg, rgba(99, 82, 200, 0.12), rgba(200, 80, 150, 0.06));
+  border-color: rgba(99, 82, 200, 0.3);
+  color: #6352c8;
+  box-shadow: 0 2px 8px rgba(99, 82, 200, 0.1);
+}
+
+/* --- Easy mode --- */
+html.modo-claro .ov-easy-hint {
+  color: var(--text-muted);
+}
+html.modo-claro .hud-preset-desc {
+  color: var(--text-muted);
+}
+html.modo-claro .ov-easy-quick .hud-cfg-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* --- Config cards (shared: easy quick + advanced) --- */
+html.modo-claro .hud-cfg-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .hud-cfg-card-title {
+  color: var(--text-white);
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .hud-cfg-card-title .g-icon {
+  color: #6352c8;
+}
+html.modo-claro .hud-cfg-row {
+  color: var(--text-light);
+}
+html.modo-claro .hud-cfg-select {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-white);
+}
+html.modo-claro .hud-cfg-select option {
+  background: var(--bg-card);
+  color: var(--text-white);
+}
+
+/* --- Dashboard preview wrap --- */
+html.modo-claro .hud-dash-preview-wrap {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(99, 82, 200, 0.12);
+}
+html.modo-claro .hud-dash-hint {
+  color: var(--text-light);
+}
+html.modo-claro .hud-dash-url-input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-white);
+}
+
+/* --- Per-command blocks --- */
+html.modo-claro .hud-cmd-game-group {
+  border-color: var(--border-subtle);
+}
+html.modo-claro .hud-cmd-game-header {
+  background: rgba(99, 82, 200, 0.04);
+  color: var(--text-white);
+}
+html.modo-claro .hud-cmd-game-header:hover {
+  background: rgba(99, 82, 200, 0.08);
+}
+html.modo-claro .hud-cmd-block {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .hud-cmd-block:hover {
+  border-color: rgba(99, 82, 200, 0.35);
+}
+html.modo-claro .hud-cmd-block .hud-cmd-name {
+  color: var(--text-muted);
+}
+html.modo-claro .hud-cmd-img-placeholder {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-muted);
+}
+html.modo-claro .hud-cmd-empty {
+  color: var(--text-muted);
+}
+html.modo-claro .hud-cmd-section-hint {
+  color: var(--text-muted);
+}
+html.modo-claro .hud-cmd-block .hud-cmd-actions button {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+html.modo-claro .hud-cmd-block .hud-cmd-actions button:hover {
+  background: rgba(99, 82, 200, 0.08);
+  border-color: rgba(99, 82, 200, 0.25);
+  color: #6352c8;
+}
+
+/* --- HUD game pills --- */
+html.modo-claro .hud-game-pill {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+html.modo-claro .hud-game-pill:hover {
+  border-color: rgba(99, 82, 200, 0.3);
+}
+html.modo-claro .hud-game-pill.active {
+  background: rgba(99, 82, 200, 0.08);
+  border-color: rgba(99, 82, 200, 0.35);
+  color: var(--text-white);
+}
+html.modo-claro .hud-game-pill-count {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.05);
+}
+html.modo-claro .hud-game-pill.active .hud-game-pill-count {
+  color: #6352c8;
+  background: rgba(99, 82, 200, 0.1);
+}
+html.modo-claro .hud-game-filter-empty {
+  color: var(--text-muted);
+}
+html.modo-claro .hud-dash-subtitle {
+  color: var(--text-muted);
+}
+
+/* --- Preset buttons (shared) --- */
+html.modo-claro .hud-preset-btn {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--text-light);
+}
+html.modo-claro .hud-preset-btn:hover {
+  border-color: rgba(99, 82, 200, 0.35);
+  background: rgba(99, 82, 200, 0.06);
+  color: #6352c8;
+}
+html.modo-claro .hud-preset-btn.active {
+  border-color: #6352c8;
+  background: rgba(99, 82, 200, 0.1);
+  color: #6352c8;
+}
+
+/* --- Gallery card in light mode --- */
+html.modo-claro .hud-gallery-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* --- Config toggle button --- */
+html.modo-claro .hud-dash-config-toggle {
+  background: linear-gradient(135deg, rgba(99, 82, 200, 0.08), rgba(200, 80, 150, 0.04));
+  border-color: rgba(99, 82, 200, 0.2);
+  color: var(--text-light);
+}
+html.modo-claro .hud-dash-config-toggle:hover {
+  background: linear-gradient(135deg, rgba(99, 82, 200, 0.14), rgba(200, 80, 150, 0.08));
+  color: #6352c8;
+}
+
+/* --- Rename input --- */
+html.modo-claro .gaming-active-cmd-rename-input {
+  background: var(--bg-card);
+  border-color: rgba(99, 82, 200, 0.4);
+  color: var(--text-white);
+}
+
+/* --- Game page: status bar --- */
+html.modo-claro .gaming-status-bar {
+  background: rgba(99, 82, 200, 0.03);
+}
+
+/* --- Color picker border --- */
+html.modo-claro .hud-cfg-color {
+  border-color: var(--border-light);
+}

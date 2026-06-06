@@ -1,0 +1,40 @@
+﻿[2026-04-12T04:21:11.044Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T04:26:59.648Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T04:35:33.542Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T04:56:42.039Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T05:04:12.526Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T05:16:47.103Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T05:27:12.943Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T05:59:25.562Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T16:01:54.632Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T16:21:52.103Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T16:28:56.711Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T16:48:17.322Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T16:56:58.198Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T20:00:41.123Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-12T20:36:20.751Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-13T00:47:19.079Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-13T00:59:11.571Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-13T01:02:58.770Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-13T01:05:23.480Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123
+[2026-04-13T01:21:10.278Z] Arrancando backend con C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\release\win-unpacked\resources\app.asar.unpacked\server\index.js
+Live Control backend activo en http://127.0.0.1:5123

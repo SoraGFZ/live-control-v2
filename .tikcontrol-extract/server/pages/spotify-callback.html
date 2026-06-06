@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify - TikControl</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at top, rgba(29, 185, 84, 0.26), transparent 38%),
+        linear-gradient(135deg, #07110b 0%, #0f172a 100%);
+    }
+
+    body.is-error {
+      background:
+        radial-gradient(circle at top, rgba(248, 113, 113, 0.24), transparent 38%),
+        linear-gradient(135deg, #180b0b 0%, #0f172a 100%);
+    }
+
+    .card {
+      width: min(420px, 100%);
+      padding: 32px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.86);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      text-align: center;
+      backdrop-filter: blur(14px);
+    }
+
+    .icon {
+      width: 68px;
+      height: 68px;
+      display: inline-grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      background: rgba(29, 185, 84, 0.16);
+      color: #22c55e;
+      box-shadow: 0 0 26px rgba(34, 197, 94, 0.2);
+    }
+
+    body.is-error .icon {
+      background: rgba(248, 113, 113, 0.16);
+      color: #fb7185;
+      box-shadow: 0 0 26px rgba(248, 113, 113, 0.18);
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    p {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .hint {
+      margin-top: 16px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: none;
+      margin-top: 22px;
+    }
+
+    .button {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e2e8f0;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 16px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon" id="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5"></path>
+      </svg>
+    </div>
+    <h1 id="title">Conexion completada</h1>
+    <p id="message">Spotify ya esta conectado con TikControl. Vuelve a la app para continuar.</p>
+    <p class="hint" id="hint">Esta ventana se cerrara automaticamente.</p>
+    <div class="actions" id="actions">
+      <button class="button" type="button" onclick="window.close()">Cerrar ventana</button>
+    </div>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('spotifyStatus');
+    const message = params.get('message');
+
+    const titleEl = document.getElementById('title');
+    const messageEl = document.getElementById('message');
+    const hintEl = document.getElementById('hint');
+    const iconEl = document.getElementById('icon');
+    const actionsEl = document.getElementById('actions');
+
+    function setError(text) {
+      document.body.classList.add('is-error');
+      iconEl.innerHTML = '<svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+      titleEl.textContent = 'No se pudo conectar Spotify';
+      messageEl.textContent = text || 'Revisa que el Redirect URI sea exactamente http://127.0.0.1:43123/spotify/callback y vuelve a intentarlo desde TikControl.';
+      hintEl.textContent = 'Dejamos esta ventana abierta para que puedas leer el error.';
+      actionsEl.style.display = 'block';
+    }
+
+    if (status === 'success') {
+      try {
+        window.opener?.postMessage({ type: 'spotify-auth-success', timestamp: Date.now() }, '*');
+      } catch (_) {}
+
+      setTimeout(() => {
+        window.close();
+        actionsEl.style.display = 'block';
+      }, 3000);
+    } else {
+      setError(message || null);
+    }
+  </script>
+</body>
+</html>

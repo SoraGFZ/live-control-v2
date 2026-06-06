@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Event Toggle</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #2D2D2D;
+            color: #D8D8D8;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        label {
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 4px;
+        }
+        select {
+            padding: 8px;
+            background-color: #3D3D3D;
+            color: #D8D8D8;
+            border: 1px solid #555555;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #7A5CFF;
+        }
+        .hint {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 4px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <label for="eventSelect">📅 Evento a controlar:</label>
+            <select id="eventSelect">
+                <option value="">Cargando eventos...</option>
+            </select>
+            <div class="hint">
+                💡 Selecciona el evento que deseas activar/desactivar desde el StreamDeck
+            </div>
+        </div>
+        
+        <div class="section">
+            <button id="refreshBtn" style="width: 100%; padding: 10px; background: #7A5CFF; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600;">
+                🔄 Refrescar Lista de Eventos
+            </button>
+        </div>
+        
+        <div id="statusMessage" style="margin-top: 12px; padding: 10px; border-radius: 6px; display: none;"></div>
+    </div>
+
+    <script>
+        let websocket = null;
+        let tikcontrolWs = null;
+        let uuid = null;
+        let settings = {};
+
+        function connectElgatoStreamDeckSocket(inPort, inUUID, inMessageType, inApplicationInfo, inActionInfo) {
+            uuid = inUUID;
+            const actionInfo = JSON.parse(inActionInfo);
+            settings = actionInfo.payload.settings || {};
+
+            websocket = new WebSocket('ws://127.0.0.1:' + inPort);
+
+            websocket.onopen = function() {
+                const json = {
+                    event: inMessageType,
+                    uuid: inUUID
+                };
+                websocket.send(JSON.stringify(json));
+                
+                console.log('[Event Toggle] ✅ Conectado a Stream Deck');
+                
+                // Cargar eventos disponibles
+                loadEvents();
+            };
+
+            websocket.onerror = function(evt) {
+                console.error('[Event Toggle] WebSocket error:', evt);
+            };
+
+            websocket.onclose = function(evt) {
+                console.log('[Event Toggle] WebSocket closed');
+            };
+        }
+
+        function loadEvents() {
+            const eventSelect = document.getElementById('eventSelect');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // Mostrar cargando
+            statusMessage.style.display = 'block';
+            statusMessage.style.background = 'rgba(122, 92, 255, 0.2)';
+            statusMessage.style.color = '#7A5CFF';
+            statusMessage.textContent = '⏳ Cargando eventos...';
+            
+            // Cerrar WebSocket anterior si existe
+            if(tikcontrolWs && tikcontrolWs.readyState === WebSocket.OPEN) {
+                tikcontrolWs.close();
+            }
+            
+            // Conectar al WebSocket de TikControl
+            tikcontrolWs = new WebSocket('ws://localhost:9091');
+            
+            tikcontrolWs.onopen = function() {
+                console.log('[Event Toggle] Conectado a TikControl WebSocket');
+                tikcontrolWs.send(JSON.stringify({
+                    type: 'get_events_list'
+                }));
+            };
+            
+            tikcontrolWs.onmessage = function(evt) {
+                try {
+                    const data = JSON.parse(evt.data);
+                    console.log('[Event Toggle] Mensaje recibido:', data);
+                    
+                    if(data.type === 'events_list') {
+                        updateEventsList(data.data || []);
+                    }
+                } catch(e) {
+                    console.error('[Event Toggle] Error parsing message:', e);
+                    showError('Error procesando respuesta del servidor');
+                }
+            };
+            
+            tikcontrolWs.onerror = function() {
+                console.error('[Event Toggle] Error conectando a TikControl WebSocket');
+                eventSelect.innerHTML = '<option value="">Error: TikControl no está corriendo</option>';
+                showError('No se pudo conectar a TikControl');
+            };
+            
+            tikcontrolWs.onclose = function() {
+                console.log('[Event Toggle] WebSocket cerrado');
+            };
+        }
+        
+        function updateEventsList(events) {
+            const eventSelect = document.getElementById('eventSelect');
+            const statusMessage = document.getElementById('statusMessage');
+            const currentValue = settings.eventId || '';
+            
+            console.log('[Event Toggle] Actualizando lista de eventos');
+            console.log('[Event Toggle] Eventos recibidos:', events.length);
+            console.log('[Event Toggle] eventId actual:', currentValue);
+            
+            eventSelect.innerHTML = '<option value="">-- Selecciona un evento --</option>';
+            
+            if(events.length === 0) {
+                statusMessage.style.display = 'block';
+                statusMessage.style.background = 'rgba(255, 193, 7, 0.2)';
+                statusMessage.style.color = '#FFC107';
+                statusMessage.textContent = '⚠️ No hay eventos configurados. Crea eventos en la pestaña "Acciones y Eventos" de TikControl.';
+                return;
+            }
+            
+            events.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event.id;
+                
+                // Usar el nombre que viene del backend (ya formateado)
+                option.textContent = event.name;
+                
+                console.log('[Event Toggle] 🔍 Evento:', event.name, 'ID:', event.id, 'Match:', event.id === currentValue);
+                
+                if(event.id === currentValue) {
+                    option.selected = true;
+                    console.log('[Event Toggle] ✅ Evento pre-seleccionado:', event.name);
+                }
+                
+                eventSelect.appendChild(option);
+            });
+            
+            // Restaurar selección si existe (CRÍTICO)
+            if(currentValue) {
+                eventSelect.value = currentValue;
+                console.log('[Event Toggle] 🔄 Valor restaurado del select:', eventSelect.value);
+            }
+            
+            statusMessage.style.display = 'block';
+            statusMessage.style.background = 'rgba(74, 222, 128, 0.2)';
+            statusMessage.style.color = '#4ade80';
+            statusMessage.textContent = `✅ ${events.length} evento(s) cargados correctamente`;
+            
+            // Ocultar mensaje de éxito después de 3 segundos
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        function getEventDescription(event) {
+            // Generar descripción basada en el tipo de evento
+            if (event.type === 'gift_specific' && event.giftName) {
+                return `Regalo: ${event.giftName}`;
+            } else if (event.type === 'gift_min' && event.minDiamonds) {
+                return `Regalos de ${event.minDiamonds}+ monedas`;
+            } else if (event.type === 'likes' && event.likeEvery) {
+                return `Cada ${event.likeEvery} likes`;
+            } else if (event.type === 'comment' && event.command) {
+                return `Comando: ${event.command}`;
+            } else if (event.type === 'follow') {
+                return 'Nuevo seguidor';
+            } else if (event.type === 'share') {
+                return 'Compartir';
+            } else if (event.type === 'subscription') {
+                return 'Nueva suscripción';
+            }
+            return event.id;
+        }
+        
+        function showError(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.style.display = 'block';
+            statusMessage.style.background = 'rgba(239, 68, 68, 0.2)';
+            statusMessage.style.color = '#ef4444';
+            statusMessage.innerHTML = `
+                ❌ ${message}<br>
+                <span style="font-size: 11px;">Asegúrate de que TikControl esté abierto y funcionando.</span>
+            `;
+        }
+        
+        function getTypeEmoji(type) {
+            const emojis = {
+                'gift_specific': '🎁',
+                'gift_min': '💎',
+                'likes': '❤️',
+                'share': '📤',
+                'follow': '👤',
+                'subscription': '⭐',
+                'comment': '💬'
+            };
+            return emojis[type] || '📅';
+        }
+
+        document.getElementById('eventSelect').addEventListener('change', function(e) {
+            const selectedValue = this.value;
+            const selectedText = this.options[this.selectedIndex]?.text || '';
+            
+            console.log('[Event Toggle] 📝 Evento seleccionado:', selectedText);
+            console.log('[Event Toggle] 📝 ID del evento:', selectedValue);
+            
+            if(selectedValue && selectedValue !== '' && selectedValue !== 'undefined' && selectedValue !== 'null') {
+                settings.eventId = selectedValue;
+                settings.eventName = selectedText;
+                console.log('[Event Toggle] ✅ Settings actualizados:', settings);
+            } else {
+                delete settings.eventId;
+                delete settings.eventName;
+                console.log('[Event Toggle] ⚠️ No hay evento seleccionado - settings limpiados');
+            }
+            
+            saveSettings();
+        });
+        
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            console.log('[Event Toggle] Refrescando eventos...');
+            loadEvents();
+        });
+
+        function saveSettings() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                const json = {
+                    event: 'setSettings',
+                    context: uuid,
+                    payload: settings
+                };
+                websocket.send(JSON.stringify(json));
+                console.log('[Event Toggle] Settings guardados:', settings);
+            }
+        }
+        
+        // Exponer función para Stream Deck
+        window.connectElgatoStreamDeckSocket = connectElgatoStreamDeckSocket;
+    </script>
+</body>
+</html>
+

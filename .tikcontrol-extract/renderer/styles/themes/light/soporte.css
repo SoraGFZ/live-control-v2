@@ -1,0 +1,324 @@
+/* ═══════════════════════════════════════════════════════════
+   SOPORTE — TEMA CLARO
+   Los estilos base están embebidos en el JS, por eso se
+   necesita !important para sobreescribirlos.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Contenedor principal ─── */
+html.modo-claro .sp {
+  background: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* ─── Hero header ─── */
+html.modo-claro .sp-hero-txt h2 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-hero-txt p {
+  color: var(--text-muted) !important;
+}
+
+/* ─── Categorías ─── */
+html.modo-claro .sp-cat {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-cat:hover {
+  background: rgba(79, 70, 229, 0.05) !important;
+  border-color: rgba(79, 70, 229, 0.2) !important;
+}
+
+html.modo-claro .sp-cat-ic {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.modo-claro .sp-cat-txt h4 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-cat-txt p {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-cat-arr {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-cat:hover .sp-cat-arr {
+  color: #6366f1 !important;
+}
+
+/* ─── Banner AI ─── */
+html.modo-claro .sp-ai-banner {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(109, 40, 217, 0.02)) !important;
+  border-color: rgba(79, 70, 229, 0.15) !important;
+}
+
+html.modo-claro .sp-ai-banner-txt h4 {
+  color: #4f46e5 !important;
+}
+
+html.modo-claro .sp-ai-banner-txt p {
+  color: var(--text-muted) !important;
+}
+
+/* ─── Breadcrumb ─── */
+html.modo-claro .sp-bc span {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-bc span:hover {
+  color: #4f46e5 !important;
+}
+
+html.modo-claro .sp-bc .now {
+  color: #4f46e5 !important;
+}
+
+html.modo-claro .sp-bc .sep {
+  color: var(--border-light) !important;
+}
+
+/* ─── Step header ─── */
+html.modo-claro .sp-step-head {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-step-head h3 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-step-head p {
+  color: var(--text-muted) !important;
+}
+
+/* ─── Opciones ─── */
+html.modo-claro .sp-opt {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-opt:hover {
+  background: rgba(79, 70, 229, 0.05) !important;
+  border-color: rgba(79, 70, 229, 0.2) !important;
+}
+
+html.modo-claro .sp-opt-ic {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+html.modo-claro .sp-opt span {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-opt .arr {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-opt:hover .arr {
+  color: #6366f1 !important;
+}
+
+/* ─── Solución ─── */
+html.modo-claro .sp-sol {
+  background: rgba(22, 163, 74, 0.04) !important;
+  border-color: rgba(22, 163, 74, 0.15) !important;
+}
+
+html.modo-claro .sp-sol h4 {
+  color: #16a34a !important;
+}
+
+html.modo-claro .sp-sol pre {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-sol-q {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-btn-ok {
+  background: rgba(22, 163, 74, 0.1) !important;
+  color: #16a34a !important;
+}
+
+html.modo-claro .sp-btn-no {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: #dc2626 !important;
+}
+
+/* ─── Formulario ─── */
+html.modo-claro .sp-fld label {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-fld input,
+html.modo-claro .sp-fld textarea {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-fld input::placeholder,
+html.modo-claro .sp-fld textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-fld input:focus,
+html.modo-claro .sp-fld textarea:focus {
+  background: #ffffff !important;
+  border-color: rgba(79, 70, 229, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1) !important;
+}
+
+/* ─── Detalle de ticket ─── */
+html.modo-claro .sp-back {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-back:hover {
+  color: var(--text-white) !important;
+  background: var(--bg-card) !important;
+}
+
+html.modo-claro .sp-det-head {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-det-head h3 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-det-head .sp-meta {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-msg {
+  border-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-msg-ag {
+  background: rgba(79, 70, 229, 0.04) !important;
+  border-left-color: #6366f1 !important;
+}
+
+html.modo-claro .sp-msg-me {
+  background: var(--bg-elevated) !important;
+  border-left-color: var(--border-light) !important;
+}
+
+html.modo-claro .sp-msg-who {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-msg-ag .sp-msg-who {
+  color: #6366f1 !important;
+}
+
+html.modo-claro .sp-msg-when {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-msg-body {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-reply {
+  border-top-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-reply textarea {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-closed {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-empty {
+  color: var(--text-muted) !important;
+}
+
+/* ─── AI Drawer ─── */
+html.modo-claro .sp-ai-drawer {
+  background: var(--bg-card) !important;
+  border-left-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-ai-header {
+  background: rgba(79, 70, 229, 0.03) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-ai-info h3 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-ai-close {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-ai-msg-bot {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-ai-msg-bot strong {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-ai-msg-bot code {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #4f46e5 !important;
+}
+
+html.modo-claro .sp-ai-typing {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-ai-welcome h4 {
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-ai-welcome p {
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .sp-ai-sug {
+  background: rgba(79, 70, 229, 0.05) !important;
+  border-color: rgba(79, 70, 229, 0.12) !important;
+  color: #4f46e5 !important;
+}
+
+html.modo-claro .sp-ai-sug:hover {
+  background: rgba(79, 70, 229, 0.1) !important;
+  border-color: rgba(79, 70, 229, 0.22) !important;
+  color: #4338ca !important;
+}
+
+html.modo-claro .sp-ai-input {
+  background: var(--bg-elevated) !important;
+  border-top-color: var(--border-subtle) !important;
+}
+
+html.modo-claro .sp-ai-input textarea {
+  background: #ffffff !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .sp-ai-input textarea::placeholder {
+  color: var(--text-muted) !important;
+}

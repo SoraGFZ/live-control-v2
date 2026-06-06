@@ -1,0 +1,19 @@
+/*
+ * TikControl - components.css
+ *
+ * STUB DE COMPATIBILIDAD — el contenido ha sido dividido en:
+ *
+ *   renderer/styles/components/
+ *     ├── index.css    ← punto de entrada (importado desde main.css)
+ *     ├── buttons.css
+ *     ├── cards.css
+ *     ├── inputs.css
+ *     ├── modals.css
+ *     ├── tables.css
+ *     ├── chips.css
+ *     └── misc.css
+ *
+ * main.css ya importa './components/index.css' directamente.
+ */
+
+@import './components/index.css';

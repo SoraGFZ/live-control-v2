@@ -1,0 +1,20 @@
+---
+description: Tras cambiar codigo de Live Control, regenerar siempre el mismo instalador beta.1
+globs:
+  - src/**
+  - server/**
+  - bridge/**
+  - electron/**
+  - public/**
+  - vite.config.js
+  - package.json
+alwaysApply: false
+---
+
+Cuando modifiques archivos de esta app:
+
+1. Ejecuta `npm run rebuild:installer` (no le pidas al usuario que lo haga).
+2. Debe quedar **un solo** instalador: `release\Live Control Beta-Setup-0.1.0-beta.1.exe` (version fija 0.1.0-beta.1, sin beta.2/beta.3).
+3. Al cerrar la tarea, indica esa ruta y la fecha del archivo.
+
+No des por terminado un cambio de producto sin regenerar ese instalador.

@@ -1,0 +1,272 @@
+/* Live Control — tema morado predominante (premium) */
+
+:root {
+  --lc-brand: #8b5cf6;
+  --lc-brand-strong: #6d28d9;
+  --lc-brand-soft: rgba(139, 92, 246, 0.18);
+  --lc-accent: #a78bfa;
+  --theme-accent: #a78bfa;
+  --theme-accent-strong: #7c3aed;
+  --theme-border-soft: rgba(167, 139, 250, 0.2);
+  --tc-accent: #8b5cf6;
+  --tc-accent-strong: #6d28d9;
+  --tc-brand-gradient: linear-gradient(135deg, #a78bfa 0%, #6d28d9 55%, #5b21b6 100%);
+}
+
+html,
+body,
+#root {
+  background:
+    radial-gradient(1100px 560px at 8% -12%, rgba(139, 92, 246, 0.22), transparent 58%),
+    radial-gradient(900px 480px at 92% 4%, rgba(192, 132, 252, 0.14), transparent 52%),
+    radial-gradient(700px 400px at 50% 100%, rgba(91, 33, 182, 0.12), transparent 55%),
+    var(--lc-surface-0, #07060d);
+}
+
+body {
+  background: transparent;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, rgba(18, 10, 32, 0.97) 0%, rgba(10, 8, 18, 0.99) 100%);
+  border-right-color: rgba(167, 139, 250, 0.12);
+}
+
+.brand-badge {
+  border-color: rgba(167, 139, 250, 0.35);
+  background: rgba(139, 92, 246, 0.14);
+  color: #ddd6fe;
+}
+
+.nav-button.active {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.18), rgba(109, 40, 217, 0.1));
+  color: #f5f3ff;
+  border-color: rgba(167, 139, 250, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 28px rgba(91, 33, 182, 0.22);
+}
+
+.nav-button.active .nav-button-token {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(139, 92, 246, 0.2);
+  color: #ede9fe;
+}
+
+.nav-button.active .nav-button-icon {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(139, 92, 246, 0.16);
+  color: #e9d5ff;
+}
+
+.primary-button {
+  background: var(--tc-brand-gradient);
+  color: #faf5ff;
+  border: 1px solid rgba(216, 180, 254, 0.35);
+  box-shadow: 0 10px 28px rgba(91, 33, 182, 0.35);
+}
+
+.secondary-button {
+  background: rgba(139, 92, 246, 0.12);
+  color: #ddd6fe;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+}
+
+.status-chip.ok {
+  border-color: rgba(167, 139, 250, 0.35);
+  background: rgba(139, 92, 246, 0.14);
+  color: #e9d5ff;
+}
+
+.tc-intro-banner {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(91, 33, 182, 0.08));
+}
+
+.tc-intro-icon {
+  background: rgba(139, 92, 246, 0.22);
+  color: #ddd6fe;
+}
+
+.tc-widget-card.is-live,
+.tc-feature-card:hover {
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+.tc-premium-hero {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(192, 132, 252, 0.14), transparent 42%),
+    linear-gradient(155deg, rgba(30, 18, 52, 0.95), rgba(12, 10, 22, 0.98));
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.28);
+}
+
+.tc-premium-hero h3 {
+  margin: 0;
+  font-family: var(--lc-font-display);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  color: #faf5ff;
+}
+
+.tc-premium-hero p {
+  margin: 0;
+  color: #c4b5fd;
+  line-height: 1.55;
+  max-width: 42rem;
+}
+
+.tc-premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(216, 180, 254, 0.35);
+  color: #ede9fe;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tc-sound-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.tc-sound-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(24, 16, 40, 0.9), rgba(14, 10, 24, 0.95));
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.tc-sound-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167, 139, 250, 0.28);
+  box-shadow: 0 16px 32px rgba(91, 33, 182, 0.2);
+}
+
+.tc-sound-card strong {
+  font-size: 0.92rem;
+  color: #f5f3ff;
+  line-height: 1.3;
+}
+
+.tc-sound-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tc-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.tc-profile-card {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(160deg, rgba(22, 14, 38, 0.92), rgba(10, 8, 18, 0.98));
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.tc-profile-card[data-active='true'] {
+  border-color: var(--profile-accent, #a78bfa);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--profile-accent, #a78bfa) 40%, transparent);
+}
+
+.tc-profile-card:hover {
+  transform: translateY(-2px);
+}
+
+.tc-profile-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--profile-accent, #a78bfa);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--profile-accent, #a78bfa) 60%, transparent);
+}
+
+.tc-storage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.tc-storage-thumb {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.tc-storage-thumb img,
+.tc-storage-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tts-engine-row.active,
+.tts-toggle[data-active='true'],
+.tts-voice-card.active,
+.tts-profile-card[data-selected='true'] {
+  border-color: rgba(167, 139, 250, 0.32) !important;
+}
+
+.tts-engine-row.active .tts-engine-dot,
+.tts-active-dot {
+  background: #a78bfa !important;
+  border-color: #c4b5fd !important;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.45) !important;
+}
+
+.dense-table-row:hover,
+.action-card:hover,
+.trigger-card:hover {
+  border-color: rgba(167, 139, 250, 0.22) !important;
+}
+
+.output-chip-row .tag,
+.action-output-chip {
+  border-color: rgba(167, 139, 250, 0.2) !important;
+  background: rgba(139, 92, 246, 0.1) !important;
+  color: #ede9fe !important;
+}
+
+.tc-event-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.tc-event-control-block {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.tc-event-live-controls h4 {
+  margin: 0 0 6px;
+}

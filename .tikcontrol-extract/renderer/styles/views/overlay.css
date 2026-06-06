@@ -1,0 +1,49 @@
+/*
+ * TikControl - Overlay View
+ * REFACTORIZADO: Sin !important - usando mayor especificidad
+ */
+
+#view-overlay.view {
+    padding: 0;
+    display: none;
+}
+
+#view-overlay.view.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 20px;
+}
+
+/* Version Selector */
+#view-overlay .overlay-version-selector {
+    flex-shrink: 0;
+}
+
+#view-overlay .overlay-version-btn:hover {
+    filter: brightness(1.1);
+}
+
+#view-overlay .section-header-icon.overlay-icon {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(124, 58, 237, 0.1));
+    border-color: rgba(147, 51, 234, 0.3);
+}
+
+#view-overlay .overlay-editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: linear-gradient(165deg, rgba(24, 24, 28, 0.95) 0%, rgba(16, 16, 19, 0.98) 100%);
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#view-overlay .overlay-editor-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    background: #0a0a0c;
+}

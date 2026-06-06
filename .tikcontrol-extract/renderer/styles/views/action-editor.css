@@ -1,0 +1,1245 @@
+/*
+ * TikControl - Action Editor Styles
+ * Estilos para el sistema de Acciones y Eventos
+ * Incluye: clases del formulario, acordeón, campos, vídeo, toast, etc.
+ */
+
+/* ═══════════════════════════════════════════════════════════
+   INPUTS Y SELECTS DEL ACTION EDITOR
+   ═══════════════════════════════════════════════════════════ */
+.ae-input,
+.action-editor-modal input[type="text"],
+.action-editor-modal input[type="number"],
+.action-editor-modal select {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font: inherit;
+    color: #e2edf5;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ae-select,
+.action-editor-modal select {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 40px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    border-radius: 10px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    font: inherit;
+    color: #e2edf5;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ae-select-with-icon {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 42px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    border-radius: 10px;
+    padding: 8px 12px 8px 42px;
+    box-sizing: border-box;
+    font: inherit;
+    color: #e2edf5;
+    outline: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ae-name-input {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 42px;
+    background: rgba(10, 15, 25, 0.8);
+    border: 1px solid rgba(35, 123, 255, 0.3);
+    border-radius: 10px;
+    padding: 8px 12px 8px 42px;
+    box-sizing: border-box;
+    font: inherit;
+    color: #e2edf5;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), 0 2px 4px rgba(0, 0, 0, .2);
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ae-input:focus,
+.ae-select:focus,
+.ae-select-with-icon:focus,
+.ae-name-input:focus,
+.action-editor-modal input:focus,
+.action-editor-modal select:focus {
+    border-color: #237BFF;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.2);
+    outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OPCIONES AVANZADAS
+   ═══════════════════════════════════════════════════════════ */
+.advanced-option-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.ae-field-label {
+    color: #b8c9db;
+}
+
+.ae-group-label {
+    color: #d5e2ee;
+}
+
+.ae-field-hint {
+    color: #8da3b0;
+    font-size: 11px;
+}
+
+.advanced-option-label {
+    min-width: 90px;
+    font-weight: bold;
+    color: #d5e2ee;
+}
+
+.advanced-option-field {
+    flex: 1;
+}
+
+.advanced-control-section {
+    margin: 0;
+    padding: 16px 0;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0;
+    background: transparent;
+}
+
+.advanced-section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #5C9DFF;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(35, 123, 255, 0.2);
+    padding-bottom: 5px;
+}
+
+.advanced-section-title svg {
+    stroke: #5C9DFF;
+}
+
+.advanced-option-field select,
+.advanced-option-field input {
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    color: #e2edf5;
+    padding: 6px 8px;
+    border-radius: 8px;
+    width: 100%;
+    height: 34px;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.advanced-option-field select:focus,
+.advanced-option-field input:focus {
+    border-color: #237BFF;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.2);
+    outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOTONES
+   ═══════════════════════════════════════════════════════════ */
+.obs-auto-switch-row {
+    align-items: flex-start;
+    margin-top: 4px;
+}
+
+.obs-auto-switch-row > .advanced-option-label {
+    padding-top: 13px;
+}
+
+.obs-auto-switch-card {
+    width: 100%;
+    max-width: 430px;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(35, 123, 255, 0.08), rgba(10, 15, 25, 0.34));
+    border: 1px solid rgba(35, 123, 255, 0.16);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    box-sizing: border-box;
+}
+
+.ae-option-toggle.obs-auto-switch-toggle {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.ae-option-toggle.obs-auto-switch-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    padding: 0;
+    border-radius: 4px;
+    accent-color: #237BFF;
+}
+
+.obs-auto-switch-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.obs-auto-switch-title {
+    color: #e7f0fb;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.obs-auto-switch-hint {
+    color: #8b9bb4;
+    font-size: 11px;
+    line-height: 1.25;
+}
+
+.obs-auto-switch-details {
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 8px 10px;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.obs-auto-switch-field-label {
+    color: #cbd7e6;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.obs-auto-switch-details .ae-input,
+.obs-auto-switch-details .ae-select {
+    height: 34px;
+}
+
+.obs-auto-switch-details input[type="number"] {
+    max-width: 110px;
+}
+
+.obs-auto-switch-details .num-input-wrap {
+    width: 96px;
+    height: 32px;
+    justify-self: start;
+}
+
+.obs-auto-switch-details .num-input-wrap input[type="number"] {
+    width: 38px;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+}
+
+.obs-auto-switch-details .num-input-wrap .num-input-btn {
+    width: 28px;
+}
+
+.refresh-btn,
+.ae-btn-refresh {
+    background: linear-gradient(135deg, #237BFF, #0F5ACC);
+    border: 1px solid rgba(35, 123, 255, .4);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.refresh-btn:hover,
+.ae-btn-refresh:hover {
+    background: linear-gradient(135deg, #5C9DFF, #237BFF);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(35, 123, 255, .3);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODALES
+   ═══════════════════════════════════════════════════════════ */
+.ae-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.ae-modal-container {
+    background: linear-gradient(135deg, #101216, #0a0c10);
+    border: 1px solid rgba(35, 123, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, .5);
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+    user-select: none;
+}
+
+.ae-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(35, 123, 255, .2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ae-modal-body {
+    padding: 20px;
+}
+
+.ae-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(35, 123, 255, .2);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT DEL FORMULARIO DE ACCIONES
+   (migrado desde compactActionCSS() en actionEditor.js)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.act-modal-layout-single {
+    display: flex;
+    flex-direction: column;
+    max-width: 620px;
+    margin: 0 auto;
+    gap: 16px;
+}
+
+/* Input wraps con icono posicionado */
+.mc-input-wrap {
+    position: relative !important;
+    display: block !important;
+}
+
+.mc-input-wrap svg.icon,
+.mc-input-wrap .icon {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+    opacity: 0.7 !important;
+    width: 14px !important;
+    height: 14px !important;
+    fill: rgba(255, 255, 255, 0.5) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    /* Neutralizar el .icon global de cards.css */
+    background: transparent !important;
+    border-radius: 0 !important;
+    display: block !important;
+    font-size: inherit !important;
+    flex-shrink: unset !important;
+    place-items: unset !important;
+}
+
+#mc-act-name,
+.mc-input-wrap input[type="text"] {
+    padding-left: 42px !important;
+    text-indent: 0 !important;
+}
+
+/* mc-act-screen: sin icono, padding normal */
+
+/* Custom select dentro del editor de acciones: iguala altura de los inputs */
+.act-grid-3 .cs-wrap,
+.act-grid-2 .cs-wrap,
+.action-editor-modal .cs-wrap {
+    width: 100%;
+}
+.act-grid-3 .cs-trigger,
+.act-grid-2 .cs-trigger,
+.action-editor-modal .cs-trigger {
+    height: 42px;
+    min-height: 42px;
+    border-radius: 10px;
+    font-size: 13px;
+    border-color: rgba(35, 123, 255, 0.25);
+    background: rgba(10, 15, 25, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+.act-grid-3 .cs-trigger:hover,
+.act-grid-2 .cs-trigger:hover,
+.action-editor-modal .cs-trigger:hover {
+    border-color: rgba(35, 123, 255, 0.5);
+    background: rgba(10, 15, 25, 0.7);
+}
+
+/* Bloques de sección */
+.act-block {
+    position: relative;
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0;
+    padding: 20px 0;
+    overflow: visible;
+    box-shadow: none;
+}
+
+.act-block:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.act-block::before {
+    display: none;
+}
+
+.act-h {
+    position: relative;
+    font-size: 12px;
+    font-weight: 700;
+    color: #5C9DFF;
+    margin: 0 0 14px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+}
+
+.act-h::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, #237BFF, #2FFFE3);
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(35, 123, 255, 0.4);
+}
+
+.act-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.act-grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 14px;
+    align-items: end;
+}
+
+.act-grid-3 .wide {
+    grid-column: span 1;
+}
+
+#mc-act-name::placeholder,
+#mc-act-duration::placeholder {
+    color: #6b7d8a !important;
+    opacity: 1 !important;
+}
+
+#mc-act-name.invalid {
+    border-color: #ff6b6b !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.25) !important;
+    animation: shake-input 0.35s ease;
+}
+
+@keyframes shake-input {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+.act-grid-flex3 {
+    display: flex;
+    gap: 10px;
+}
+
+.act-grid-flex3 > div {
+    flex: 1;
+}
+
+.act-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.act-range-val {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #2FFFE3;
+    text-align: center;
+    font-weight: 600;
+}
+
+.act-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #8b9bb4;
+    line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACORDEÓN
+   ═══════════════════════════════════════════════════════════════════════════ */
+.act-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.accordion-item {
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0;
+    overflow: visible;
+    transition: none;
+}
+
+.accordion-item:first-child {
+    border-top: none;
+}
+
+.accordion-item:hover {
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: none;
+}
+
+.accordion-item.active {
+    border-color: rgba(255, 255, 255, 0.06);
+    background: transparent;
+    box-shadow: none;
+}
+
+.accordion-item.active > .accordion-header {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    margin-top: 6px;
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer !important;
+    user-select: none;
+    transition: background 0.2s ease;
+}
+
+.accordion-header * {
+    cursor: pointer !important;
+}
+
+.accordion-header:hover {
+    background: transparent;
+}
+
+.accordion-check {
+    display: flex;
+    align-items: center;
+    cursor: pointer !important;
+}
+
+.accordion-check input[type=checkbox] {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    cursor: pointer !important;
+    background: rgba(10, 15, 25, 0.8);
+    border: 2px solid rgba(35, 123, 255, 0.3);
+    border-radius: 6px;
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+.accordion-check input[type=checkbox]:hover {
+    border-color: rgba(35, 123, 255, 0.6);
+    box-shadow: 0 0 10px rgba(35, 123, 255, 0.2);
+}
+
+.accordion-check input[type=checkbox]:checked {
+    background: linear-gradient(135deg, #237BFF, #0F5ACC);
+    border-color: transparent;
+    box-shadow: 0 0 15px rgba(35, 123, 255, 0.4);
+}
+
+.accordion-check input[type=checkbox]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.check-icon {
+    margin-left: 6px;
+    font-size: 16px;
+}
+
+.accordion-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2edf5;
+    letter-spacing: 0.2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.accordion-title svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.accordion-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.accordion-toggle {
+    background: rgba(35, 123, 255, 0.1);
+    border: 1px solid rgba(35, 123, 255, 0.2);
+    border-radius: 8px;
+    color: #237BFF;
+    font-size: 12px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.accordion-toggle:hover {
+    background: rgba(35, 123, 255, 0.2);
+    color: #5C9DFF;
+}
+
+.accordion-item.active .accordion-toggle {
+    background: rgba(35, 123, 255, 0.2);
+    border-color: rgba(35, 123, 255, 0.4);
+    color: #2FFFE3;
+}
+
+.accordion-item.expanded .accordion-toggle {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordion-content.open {
+    max-height: 2000px;
+    overflow: visible;
+}
+
+.accordion-inner {
+    padding: 14px 16px 16px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CAMPOS AVANZADOS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.adv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.adv-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #c4cdd5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.adv-field input, .adv-field select, .adv-field textarea {
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #e2edf5;
+    font: inherit;
+    transition: all 0.25s ease;
+}
+
+.adv-field input[type="range"] {
+    padding: 0;
+    border: none;
+}
+
+.adv-field input:hover, .adv-field select:hover, .adv-field textarea:hover {
+    border-color: rgba(35, 123, 255, 0.4);
+}
+
+.adv-field input:focus, .adv-field select:focus, .adv-field textarea:focus {
+    border-color: #237BFF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.15);
+}
+
+.adv-preview {
+    background: rgba(35, 123, 255, 0.05);
+    border: 1px dashed rgba(35, 123, 255, 0.3);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.adv-hint {
+    font-size: 11px;
+    color: #8b9bb4;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALERT PANEL
+   ═══════════════════════════════════════════════════════════════════════════ */
+.mc-field-group {
+    margin-bottom: 18px;
+}
+
+.mc-field-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c4cdd5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.mc-field-group textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.2);
+    border-radius: 10px;
+    color: #e2edf5;
+    font: inherit;
+    resize: vertical;
+    transition: all 0.25s ease;
+}
+
+.mc-field-group textarea:focus {
+    border-color: #237BFF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.15);
+}
+
+.mc-small {
+    font-size: 11px;
+    color: #8a94a2;
+    margin-top: 6px;
+}
+
+.mc-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.mc-col-span-3 {
+    grid-column: span 3;
+}
+
+.mc-font-inline {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.mc-font-select {
+    flex: 1;
+    padding: 12px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.2);
+    border-radius: 10px;
+    color: #e2edf5;
+    transition: all 0.25s ease;
+}
+
+.mc-font-select:focus {
+    border-color: #237BFF;
+    outline: none;
+}
+
+.mc-font-upload {
+    padding: 12px 16px;
+    background: rgba(35, 123, 255, 0.1);
+    border: 1px solid rgba(35, 123, 255, 0.3);
+    color: #5C9DFF;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+}
+
+.mc-font-upload:hover {
+    background: rgba(35, 123, 255, 0.2);
+    border-color: rgba(35, 123, 255, 0.5);
+    color: #ffffff;
+}
+
+.mc-font-tools {
+    margin-top: 10px;
+}
+
+.mc-font-row.sizes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.mc-font-row.sizes > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-font-row.sizes label {
+    font-size: 10px;
+    color: #8a94a2;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.mc-font-row.sizes input {
+    padding: 10px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.2);
+    border-radius: 8px;
+    color: #e2edf5;
+    font-size: 12px;
+    transition: all 0.25s ease;
+}
+
+.mc-font-row.sizes input:focus {
+    border-color: #237BFF;
+    outline: none;
+}
+
+.mc-flags {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.mc-flag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c4cdd5;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.mc-flag:hover {
+    background: rgba(35, 123, 255, 0.1);
+    border-color: rgba(35, 123, 255, 0.25);
+}
+
+.mc-flag input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(35, 123, 255, 0.3);
+    border-radius: 5px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.mc-flag input[type="checkbox"]:checked {
+    background: linear-gradient(135deg, #237BFF, #0F5ACC);
+    border-color: transparent;
+    box-shadow: 0 0 10px rgba(35, 123, 255, 0.3);
+}
+
+.mc-flag input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* Range sliders en .act-block usan estilos globales de components/inputs.css */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ae-toast-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.ae-toast {
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+    max-width: 400px;
+    opacity: 0;
+    transform: translateX(100px);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.ae-toast-icon {
+    font-size: 18px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MENSAJES DE ERROR Y VALIDACIÓN
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ae-field-error {
+    color: #ff6b6b;
+    font-size: 11px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PANEL DE VÍDEO
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Cabecera con pestañas de fuente */
+.ae-vid-tabs-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vid-source-tab {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #e2edf5;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.vid-source-tab.active {
+    background: rgba(35, 123, 255, 0.12);
+    border-bottom-color: #5C9DFF;
+}
+
+/* Zona drag & drop */
+.ae-vid-dropzone {
+    margin-bottom: 12px;
+    padding: 30px;
+    background: rgba(10, 15, 25, 0.4);
+    border: 2px dashed rgba(35, 123, 255, 0.25);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.ae-vid-dropzone.drag-over {
+    border-color: #5C9DFF;
+    background: rgba(35, 123, 255, 0.06);
+}
+
+.ae-vid-dropzone svg {
+    margin-bottom: 8px;
+}
+
+.ae-vid-dropzone-title {
+    color: #e2edf5;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ae-vid-dropzone-sub {
+    color: #8b9bb4;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.ae-vid-formats {
+    color: #8b9bb4;
+    font-size: 11px;
+    margin-top: 12px;
+}
+
+/* Botón subir archivo */
+.ae-btn-upload {
+    padding: 8px 20px;
+    background: rgba(35, 123, 255, 0.12);
+    border: 1px solid rgba(35, 123, 255, 0.3);
+    color: #e2edf5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.ae-btn-upload:hover {
+    background: rgba(35, 123, 255, 0.22);
+    border-color: rgba(35, 123, 255, 0.5);
+}
+
+/* Botón outline pequeño (refresh, etc.) */
+.ae-btn-sm-outline {
+    background: rgba(35, 123, 255, 0.1);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    color: #e2edf5;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ae-btn-sm-outline:hover {
+    background: rgba(35, 123, 255, 0.2);
+}
+
+/* Barra de progreso de subida */
+.mc-upload-progress .bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(10, 15, 25, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mc-upload-progress .fill {
+    width: 0%;
+    height: 100%;
+    background: #237BFF;
+    transition: width 0.3s;
+}
+
+.mc-upload-progress .meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #8b9bb4;
+}
+
+/* Fila toggle (checkbox + texto) */
+.ae-option-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    padding: 8px;
+    background: rgba(10, 15, 25, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+}
+
+.ae-option-text {
+    color: #b9bbbe;
+    font-size: 12px;
+}
+
+/* Cabecera de sección (espacio entre título y botón) */
+.ae-vid-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+.ae-vid-section-title {
+    color: #b9bbbe;
+    font-weight: 600;
+}
+
+/* Lista de vídeos en la nube */
+.ae-vid-library {
+    background: rgba(10, 15, 25, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Preview del vídeo seleccionado */
+.ae-vid-preview {
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(10, 15, 25, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+}
+
+.ae-vid-preview-label {
+    color: #b9bbbe;
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+
+.ae-vid-preview-name {
+    color: #e2edf5;
+    font-size: 12px;
+    word-break: break-all;
+}
+
+/* Sección opciones de reproducción */
+.ae-vid-options {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Lista vertical de opciones (checkboxes) */
+.ae-option-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ae-option-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* Imagen preview */
+.ae-img-preview {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7ea8bf;
+    margin-top: 8px;
+}
+
+.ae-preview-img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+}
+
+/* Input de URL en panel de vídeo */
+.ae-vid-url-input {
+    width: 100%;
+    padding: 8px;
+    background: rgba(10, 15, 25, 0.6);
+    border: 1px solid rgba(35, 123, 255, 0.25);
+    border-radius: 6px;
+    color: #e2edf5;
+    font-size: 12px;
+    font: inherit;
+    transition: border-color 0.2s;
+}
+
+.ae-vid-url-input:focus {
+    border-color: #237BFF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.15);
+}
+
+/* Label de campo (negrita, gris claro) */
+.ae-label-bold {
+    color: #b9bbbe;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+

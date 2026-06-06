@@ -1,0 +1,337 @@
+/**
+ * base.css - Estilos base del modulo de batallas
+ * Contenedor principal, estado de conexion, secciones, responsive, scrollbar
+ */
+
+/* === CONTENEDOR PRINCIPAL === */
+.batallas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: var(--view-max-width);
+  margin: 0 auto;
+}
+
+/* === ESTADO DE CONEXION === */
+.battle-status-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+  .battle-status-card {
+    justify-content: center;
+  }
+}
+
+.battle-status-card.offline {
+  border-color: #f59e0b40;
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(245, 158, 11, 0.08));
+}
+
+.battle-status-card.online {
+  border-color: #22c55e40;
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(34, 197, 94, 0.08));
+}
+
+.battle-status-card.in-battle {
+  border-color: #ff3ea580;
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(255, 62, 165, 0.08));
+  animation: battlePulse 2s infinite;
+}
+
+@keyframes battlePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 62, 165, 0.3); }
+  50% { box-shadow: 0 0 20px 0 rgba(255, 62, 165, 0.2); }
+}
+
+.battle-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+.battle-status-card.online .battle-status-indicator { background: #22c55e; }
+.battle-status-card.in-battle .battle-status-indicator {
+  background: #ff3ea5;
+  animation: indicatorPulse 1s infinite;
+}
+
+@keyframes indicatorPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+.battle-status-text {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.battle-status-card.online .battle-status-text { color: #4ade80; }
+.battle-status-card.in-battle .battle-status-text { color: #ff6bb5; font-weight: 600; }
+
+/* === FILA DE SECCIONES 50/50 === */
+.battle-sections-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.battle-sections-row > .battle-section {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+}
+
+/* rewards-content: flex:1 para crecer; el layout grid interno lo define history.css */
+.battle-sections-row > .battle-section .rewards-content {
+  flex: 1;
+  min-height: 80px;
+}
+
+/* boosts-grid ocupa el espacio disponible que le da la card estirada y scrollea si sobra */
+.battle-sections-row > .battle-section .boosts-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar fina y discreta */
+.battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+.battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Solo los empty states se centran */
+.battle-sections-row > .battle-section .rewards-content > .no-rewards,
+.battle-sections-row > .battle-section .boosts-grid > .no-boosts {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Altura fija idéntica en ambos headers */
+.battle-sections-row > .battle-section .battle-section-header {
+  height: 48px;
+  padding: 0 16px;
+}
+
+/* === SECCIONES === */
+.battle-section {
+  background: linear-gradient(165deg, rgba(24, 24, 28, 0.95) 0%, rgba(16, 16, 19, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.battle-section:hover {
+  border-color: rgba(35, 123, 255, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.battle-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.battle-section-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* === HISTORIAL DESPLEGABLE === */
+.battle-section-collapsible .battle-section-toggle {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.battle-section-collapsible .battle-section-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.history-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.collapse-icon {
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.battle-section-collapsible.expanded .collapse-icon {
+  transform: rotate(180deg);
+}
+
+.battle-history-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 400px;
+}
+
+.battle-history-content.collapsed {
+  max-height: 0;
+}
+
+/* === PANEL IDLE === */
+.battle-idle {
+  display: flex;
+}
+
+.idle-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.idle-icon {
+  font-size: 56px;
+  opacity: 0.3;
+  margin-bottom: 16px;
+}
+
+.idle-content h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 0 0 8px 0;
+}
+
+.idle-content p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* === BOTONES DE SECCIÓN === */
+.boosts-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-clear,
+.btn-add-powerup {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+
+.btn-clear:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.btn-add-powerup:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.06);
+}
+
+/* === EMPTY STATES === */
+.history-empty, .no-boosts, .no-rewards {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+  width: 100%;
+}
+
+/* === SCROLLBAR === */
+.battle-history-list::-webkit-scrollbar,
+.boosts-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.battle-history-list::-webkit-scrollbar-track,
+.boosts-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.battle-history-list::-webkit-scrollbar-thumb,
+.boosts-grid::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 600px) {
+  .battle-contenders-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .contender {
+    justify-content: center;
+  }
+
+  .battle-center {
+    order: -1;
+  }
+
+  .battle-mvps-row {
+    grid-template-columns: 1fr;
+  }
+
+  .mission-card {
+    margin: 12px 8px;
+    padding: 10px 12px;
+  }
+
+  .multiplier-value {
+    font-size: 18px;
+  }
+
+  .contender-score {
+    font-size: 22px;
+  }
+}

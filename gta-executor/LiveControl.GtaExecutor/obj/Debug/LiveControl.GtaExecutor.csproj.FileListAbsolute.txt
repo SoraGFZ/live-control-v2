@@ -1,0 +1,10 @@
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.csproj.AssemblyReference.cache
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.AssemblyInfoInputs.cache
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.AssemblyInfo.cs
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.csproj.CoreCompileInputs.cache
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.sourcelink.json
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\bin\Debug\LiveControl.GtaExecutor.dll
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\bin\Debug\LiveControl.GtaExecutor.pdb
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.dll
+C:\Users\soraf\Desktop\APPTIKTOK\live-control-app\gta-executor\LiveControl.GtaExecutor\obj\Debug\LiveControl.GtaExecutor.pdb

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate StreamDeck Icons</title>
+</head>
+<body>
+    <h1>Generating Icons...</h1>
+    <div id="status"></div>
+    <script>
+        const icons = [
+            { name: 'pluginIcon', text: 'T', bg: '#6441a5' },
+            { name: 'action', text: '▶', bg: '#0e99e5' },
+            { name: 'win', text: '✓', bg: '#00ff00' },
+            { name: 'life', text: '❤', bg: '#ff0000' },
+            { name: 'toggle', text: '👁', bg: '#ffa500' },
+            { name: 'reset', text: '↻', bg: '#808080' },
+            { name: 'sound', text: '🔊', bg: '#9b59b6' },
+            { name: 'gtav', text: '🚗', bg: '#27ae60' },
+            { name: 'minecraft', text: '⛏', bg: '#8b4513' },
+            { name: 'obs', text: '🎥', bg: '#1e1e1e' }
+        ];
+
+        const sizes = [
+            { suffix: '', size: 72 },
+            { suffix: '@2x', size: 144 }
+        ];
+
+        async function createIcon(name, text, bg, size, suffix) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, size, size);
+
+            // Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, size / 2, size / 2);
+
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    resolve({ name: `${name}${suffix}.png`, blob });
+                }, 'image/png');
+            });
+        }
+
+        async function generateAllIcons() {
+            const statusDiv = document.getElementById('status');
+            const files = [];
+
+            for (const icon of icons) {
+                for (const { suffix, size } of sizes) {
+                    const { name, blob } = await createIcon(icon.name, icon.text, icon.bg, size, suffix);
+                    files.push({ name, blob });
+                    statusDiv.innerHTML += `<p>✓ Created ${name}</p>`;
+                }
+            }
+
+            // Create download
+            statusDiv.innerHTML += '<h2>Icons Generated! Check console for download links.</h2>';
+            
+            // Log instructions
+            console.log('=== COPY THESE FILES TO streamdeck-plugin/assets/ ===');
+            files.forEach(({ name, blob }) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = name;
+                document.body.appendChild(a);
+                console.log(`${name}: Click to download or use URL: ${url}`);
+            });
+        }
+
+        generateAllIcons();
+    </script>
+</body>
+</html>
+
+
+

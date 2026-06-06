@@ -1,0 +1,370 @@
+﻿<!doctype html>
+<meta charset="utf-8" />
+<title>Pinned Message</title>
+<style>
+  html, body {
+    margin: 0;
+    background: transparent;
+    color: #fff;
+    font-family: 'Poppins', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .pinned-container {
+    --pm-transform: translate(0, 0);
+    position: fixed;
+    background: var(--bg-color, rgba(26, 26, 26, 0.95));
+    border: var(--border-width, 2px) solid var(--border-color, #00d9ff);
+    border-radius: var(--border-radius, 15px);
+    padding: var(--padding, 20px);
+    min-width: var(--min-width, 400px);
+    max-width: var(--max-width, 600px);
+    box-shadow: var(--box-shadow, 0 0 var(--glow-intensity, 30px) var(--glow-color, rgba(0, 217, 255, 0.5)));
+    opacity: 0;
+    transform: var(--pm-transform);
+    transition: opacity var(--animation-duration, 0.5s) ease;
+    pointer-events: none;
+  }
+
+  /* Posiciones */
+  .pinned-container.position-top {
+    top: 20px;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    --pm-transform: translateX(-50%);
+  }
+  .pinned-container.position-center {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    --pm-transform: translate(-50%, -50%);
+  }
+  .pinned-container.position-bottom-right {
+    top: auto;
+    left: auto;
+    bottom: 20px;
+    right: 20px;
+    --pm-transform: translate(0, 0);
+  }
+  .pinned-container.position-bottom-left {
+    top: auto;
+    right: auto;
+    bottom: 20px;
+    left: 20px;
+    --pm-transform: translate(0, 0);
+  }
+
+  .pinned-container.show {
+    opacity: 1;
+  }
+
+  .pinned-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .pin-icon {
+    width: var(--icon-size, 24px);
+    height: var(--icon-size, 24px);
+    color: var(--icon-color, #ffcc00);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .pin-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .pin-icon.pulse {
+    animation: pulse var(--pulse-speed, 1.5s) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  .pinned-title {
+    color: var(--title-color, #00d9ff);
+    font-size: var(--title-size, 16px);
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .pinned-content {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .profile-pic-wrapper {
+    flex-shrink: 0;
+  }
+
+  .profile-pic {
+    width: var(--profile-size, 60px);
+    height: var(--profile-size, 60px);
+    border: var(--profile-border-width, 2px) solid var(--profile-border-color, #00d9ff);
+    object-fit: cover;
+  }
+
+  .profile-pic.shape-circle {
+    border-radius: 50%;
+  }
+
+  .profile-pic.shape-square {
+    border-radius: 8px;
+  }
+
+  .profile-pic.shape-hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  }
+
+  .message-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-nickname {
+    color: var(--nickname-color, #ffffff);
+    font-size: var(--nickname-size, 18px);
+    font-weight: var(--nickname-weight, bold);
+    margin-bottom: 5px;
+    word-wrap: break-word;
+  }
+
+  .user-comment {
+    color: var(--comment-color, #e0e0e0);
+    font-size: var(--comment-size, 16px);
+    font-weight: var(--comment-weight, normal);
+    line-height: 1.4;
+    max-height: calc(var(--comment-size, 16px) * 1.4 * var(--max-lines, 3));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: var(--max-lines, 3);
+    -webkit-box-orient: vertical;
+    word-wrap: break-word;
+  }
+
+  /* Animaciones de entrada */
+  .slide-in-top {
+    animation: slideInTop var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideInTop {
+    from { transform: var(--pm-transform) translateY(-150%); opacity: 0; }
+    to { transform: var(--pm-transform); opacity: 1; }
+  }
+
+  .slide-in-bottom {
+    animation: slideInBottom var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideInBottom {
+    from { transform: var(--pm-transform) translateY(150%); opacity: 0; }
+    to { transform: var(--pm-transform); opacity: 1; }
+  }
+
+  .slide-in-left {
+    animation: slideInLeft var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideInLeft {
+    from { transform: var(--pm-transform) translateX(-150%); opacity: 0; }
+    to { transform: var(--pm-transform); opacity: 1; }
+  }
+
+  .slide-in-right {
+    animation: slideInRight var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideInRight {
+    from { transform: var(--pm-transform) translateX(150%); opacity: 0; }
+    to { transform: var(--pm-transform); opacity: 1; }
+  }
+
+  .fade-in {
+    animation: fadeIn var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .bounce-in {
+    animation: bounceIn var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes bounceIn {
+    0% { transform: var(--pm-transform) scale(0.3); opacity: 0; }
+    50% { transform: var(--pm-transform) scale(1.05); }
+    70% { transform: var(--pm-transform) scale(0.9); }
+    100% { transform: var(--pm-transform) scale(1); opacity: 1; }
+  }
+
+  .zoom-in {
+    animation: zoomIn var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes zoomIn {
+    from { transform: var(--pm-transform) scale(0); opacity: 0; }
+    to { transform: var(--pm-transform) scale(1); opacity: 1; }
+  }
+
+  .rotate-in {
+    animation: rotateIn var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes rotateIn {
+    from { transform: var(--pm-transform) rotate(-180deg) scale(0); opacity: 0; }
+    to { transform: var(--pm-transform) rotate(0) scale(1); opacity: 1; }
+  }
+
+  /* Animaciones de salida */
+  .slide-out-top {
+    animation: slideOutTop var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideOutTop {
+    from { transform: var(--pm-transform); opacity: 1; }
+    to { transform: var(--pm-transform) translateY(-150%); opacity: 0; }
+  }
+
+  .slide-out-bottom {
+    animation: slideOutBottom var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideOutBottom {
+    from { transform: var(--pm-transform); opacity: 1; }
+    to { transform: var(--pm-transform) translateY(150%); opacity: 0; }
+  }
+
+  .slide-out-left {
+    animation: slideOutLeft var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideOutLeft {
+    from { transform: var(--pm-transform); opacity: 1; }
+    to { transform: var(--pm-transform) translateX(-150%); opacity: 0; }
+  }
+
+  .slide-out-right {
+    animation: slideOutRight var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes slideOutRight {
+    from { transform: var(--pm-transform); opacity: 1; }
+    to { transform: var(--pm-transform) translateX(150%); opacity: 0; }
+  }
+
+  .fade-out {
+    animation: fadeOut var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  .zoom-out {
+    animation: zoomOut var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes zoomOut {
+    from { transform: var(--pm-transform) scale(1); opacity: 1; }
+    to { transform: var(--pm-transform) scale(0); opacity: 0; }
+  }
+
+  .rotate-out {
+    animation: rotateOut var(--animation-duration, 0.5s) ease;
+  }
+  @keyframes rotateOut {
+    from { transform: var(--pm-transform) rotate(0) scale(1); opacity: 1; }
+    to { transform: var(--pm-transform) rotate(180deg) scale(0); opacity: 0; }
+  }
+
+  .pm-burst-particle {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    animation: pmBurst 900ms ease-out forwards;
+  }
+
+  .pm-effects-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 2147483000;
+  }
+
+  .pm-burst-particle.confetti {
+    border-radius: 2px;
+  }
+
+  .pm-burst-particle.fireworks {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 12px currentColor, 0 0 22px currentColor;
+  }
+
+  @keyframes pmBurst {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3) rotate(360deg); }
+  }
+</style>
+
+<div id="pinnedContainer" class="pinned-container position-center">
+  <div class="pinned-header">
+    <span id="pinIcon" class="pin-icon pulse" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="currentColor" focusable="false">
+        <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h6v7l1 1 1-1v-7h6v-2c-1.66 0-3-1.34-3-3z"/>
+      </svg>
+    </span>
+    <span id="pinnedTitle" class="pinned-title">Mensaje Fijado</span>
+  </div>
+  <div class="pinned-content">
+    <div class="profile-pic-wrapper">
+      <img id="profilePic" class="profile-pic shape-circle" alt="Profile">
+    </div>
+    <div class="message-content">
+      <div id="userNickname" class="user-nickname"></div>
+      <div id="userComment" class="user-comment"></div>
+    </div>
+  </div>
+</div>
+<div id="pmEffectsLayer" class="pm-effects-layer" aria-hidden="true"></div>
+
+<script>
+(function(){
+  var v = Date.now();
+  var envReady = false, baseReady = false;
+  function tryLoadWidget(){
+    if (!envReady || !baseReady) return;
+    var s2 = document.createElement('script');
+    s2.src = 'pinned-message.js?v=' + v;
+    document.body.appendChild(s2);
+  }
+  var s0 = document.createElement('script');
+  s0.src = '/widgets/core/env.js?v=20260507-ws-storage-' + v;
+  s0.onload = s0.onerror = function(){ envReady = true; tryLoadWidget(); };
+  var sf = document.createElement('script');
+  sf.src = 'core/font-loader.js?v=20260526-storage-token-fix';
+  document.body.appendChild(sf);
+  var s1 = document.createElement('script');
+  s1.src = 'tikcontrol-widget-base.js?v=' + v;
+  s1.onload = s1.onerror = function(){ baseReady = true; tryLoadWidget(); };
+  document.body.appendChild(s0);
+  document.body.appendChild(s1);
+})();
+</script>
+
+

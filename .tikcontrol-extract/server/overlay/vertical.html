@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikControl Overlay - Vertical</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* ✅ Sin barras de scroll */
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #overlay-container {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      background: transparent;
+      overflow: hidden; /* ✅ Sin scroll interno */
+    }
+
+    .element {
+      position: absolute;
+      pointer-events: auto;
+      overflow: visible; /* ✅ Permitir que text-shadow se extienda fuera */
+    }
+
+    .element img,
+    .element iframe,
+    .element video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .element iframe {
+      border: none;
+      /* ✅ Forzar que el contenido del iframe se adapte al contenedor */
+      transform: scale(1);
+      transform-origin: top left;
+    }
+
+    .element.panel {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="mute-in-tikcontrol.js"></script>
+  
+  <script src="vertical.js"></script>
+</body>
+</html>
+

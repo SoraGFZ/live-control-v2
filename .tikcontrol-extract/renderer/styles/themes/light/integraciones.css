@@ -1,0 +1,33 @@
+/* ═══════════════════════════════════════════════════════════
+   INTEGRACIONES — TEMA CLARO
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Premium gate wall ── */
+html.modo-claro .ig-premium-wall {
+    background: linear-gradient(
+        150deg,
+        rgba(255, 251, 230, 0.97) 0%,
+        rgba(255, 244, 198, 0.95) 100%
+    );
+    backdrop-filter: blur(6px);
+    border-top: 2px solid rgba(234, 179, 8, 0.30);
+}
+
+html.modo-claro .ig-premium-title {
+    color: #92400e;
+}
+
+html.modo-claro .ig-premium-desc {
+    color: #4b5563;
+}
+
+html.modo-claro .ig-premium-cta {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(217, 119, 6, 0.30);
+}
+
+html.modo-claro .ig-premium-cta:hover {
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.40);
+    transform: translateY(-1px);
+}

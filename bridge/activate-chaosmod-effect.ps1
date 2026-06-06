@@ -26,6 +26,15 @@ for ($index = 0; $index -lt $MoveCount; $index++) {
   Start-Sleep -Milliseconds $KeyDelayMs
 }
 
+# Send Enter to execute the effect
 $wshell.SendKeys('~')
-Start-Sleep -Milliseconds 90
-$wshell.SendKeys('{BACKSPACE}')
+
+# Wait for the effect to execute and the menu to process
+Start-Sleep -Milliseconds 500
+
+# Send Escape key multiple times to ensure menu closes
+$wshell.SendKeys('{ESC}')
+Start-Sleep -Milliseconds 100
+$wshell.SendKeys('{ESC}')
+Start-Sleep -Milliseconds 100
+$wshell.SendKeys('{ESC}')

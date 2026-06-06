@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Goals Radial — Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a1d24;
+    min-height: 100vh;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding: 40px;
+  }
+
+  /* ─── Variante A: Radial grande ─────────────────────── */
+  .goal-radial {
+    --size: 220px;
+    --thickness: 18px;
+    --progress: 65;            /* 0-100 */
+    --color-fill: #ff0099;
+    --color-track: rgba(255, 255, 255, 0.08);
+    --color-text: #ffffff;
+
+    width: var(--size);
+    height: var(--size);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .goal-radial svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .goal-radial circle {
+    fill: none;
+    stroke-width: var(--thickness);
+    stroke-linecap: round;
+  }
+  .goal-radial .track  { stroke: var(--color-track); }
+  .goal-radial .fill   {
+    stroke: var(--color-fill);
+    stroke-dasharray: var(--circumference);
+    stroke-dashoffset: calc(var(--circumference) - (var(--circumference) * var(--progress) / 100));
+    transition: stroke-dashoffset 0.6s ease-out;
+    filter: drop-shadow(0 0 8px var(--color-fill));
+  }
+
+  .goal-radial .center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text);
+    text-align: center;
+  }
+  .goal-radial .icon { font-size: 28px; margin-bottom: 4px; opacity: 0.85; }
+  .goal-radial .value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .goal-radial .target {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.6;
+    margin-top: 2px;
+  }
+  .goal-radial .label {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ─── Variante B: Compacto horizontal ─────────────────── */
+  .goal-compact {
+    --size: 96px;
+    --thickness: 9px;
+    --progress: 65;
+    --color-fill: #ff0099;
+    --color-track: rgba(255, 255, 255, 0.08);
+    --color-text: #ffffff;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(15, 18, 25, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 12px 18px 12px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+  .goal-compact .ring {
+    width: var(--size);
+    height: var(--size);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .goal-compact svg {
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+  }
+  .goal-compact circle { fill: none; stroke-width: var(--thickness); stroke-linecap: round; }
+  .goal-compact .track { stroke: var(--color-track); }
+  .goal-compact .fill {
+    stroke: var(--color-fill);
+    stroke-dasharray: var(--circumference);
+    stroke-dashoffset: calc(var(--circumference) - (var(--circumference) * var(--progress) / 100));
+    transition: stroke-dashoffset 0.6s ease-out;
+    filter: drop-shadow(0 0 6px var(--color-fill));
+  }
+  .goal-compact .ring-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+  .goal-compact .info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 130px;
+  }
+  .goal-compact .label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  .goal-compact .value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--color-text);
+    line-height: 1.1;
+  }
+  .goal-compact .target {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .goal-compact .pct {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-fill);
+  }
+
+  h2 { color: #888; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; width: 100%; text-align: center; margin: 20px 0 10px; }
+  .group { display: flex; gap: 32px; flex-wrap: wrap; justify-content: center; }
+</style>
+</head>
+<body>
+  <h2>Variante A — Radial (grande, cuadrado)</h2>
+  <div class="group">
+    <div class="goal-radial" style="--progress: 65; --color-fill: #ff0099;">
+      <svg viewBox="0 0 100 100">
+        <circle class="track" cx="50" cy="50" r="42"></circle>
+        <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+      </svg>
+      <div class="center">
+        <div class="icon">❤️</div>
+        <div class="value">3.2K</div>
+        <div class="target">/ 5K</div>
+      </div>
+      <div class="label">LIKES</div>
+    </div>
+
+    <div class="goal-radial" style="--progress: 88; --color-fill: #ffb800;">
+      <svg viewBox="0 0 100 100">
+        <circle class="track" cx="50" cy="50" r="42"></circle>
+        <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+      </svg>
+      <div class="center">
+        <div class="icon">🎁</div>
+        <div class="value">88</div>
+        <div class="target">/ 100</div>
+      </div>
+      <div class="label">REGALOS</div>
+    </div>
+
+    <div class="goal-radial" style="--progress: 35; --color-fill: #2ecc71;">
+      <svg viewBox="0 0 100 100">
+        <circle class="track" cx="50" cy="50" r="42"></circle>
+        <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+      </svg>
+      <div class="center">
+        <div class="icon">👥</div>
+        <div class="value">7</div>
+        <div class="target">/ 20</div>
+      </div>
+      <div class="label">FOLLOWS</div>
+    </div>
+  </div>
+
+  <h2>Variante B — Compacto (anillo + texto, OBS-friendly)</h2>
+  <div class="group" style="flex-direction: column;">
+    <div class="goal-compact" style="--progress: 65; --color-fill: #ff0099;">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="track" cx="50" cy="50" r="42"></circle>
+          <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+        </svg>
+        <div class="ring-icon">❤️</div>
+      </div>
+      <div class="info">
+        <div class="label">LIKES</div>
+        <div class="value">3,247</div>
+        <div class="target">de 5,000 · <span class="pct">65%</span></div>
+      </div>
+    </div>
+
+    <div class="goal-compact" style="--progress: 88; --color-fill: #ffb800;">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="track" cx="50" cy="50" r="42"></circle>
+          <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+        </svg>
+        <div class="ring-icon">🎁</div>
+      </div>
+      <div class="info">
+        <div class="label">REGALOS</div>
+        <div class="value">88</div>
+        <div class="target">de 100 · <span class="pct">88%</span></div>
+      </div>
+    </div>
+
+    <div class="goal-compact" style="--progress: 35; --color-fill: #2ecc71;">
+      <div class="ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="track" cx="50" cy="50" r="42"></circle>
+          <circle class="fill"  cx="50" cy="50" r="42" style="--circumference: 263.89;"></circle>
+        </svg>
+        <div class="ring-icon">👥</div>
+      </div>
+      <div class="info">
+        <div class="label">FOLLOWS</div>
+        <div class="value">7</div>
+        <div class="target">de 20 · <span class="pct">35%</span></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

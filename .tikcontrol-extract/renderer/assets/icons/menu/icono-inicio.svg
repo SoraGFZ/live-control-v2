@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Inicio" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 65 60">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #036cf8;
+        stroke-miterlimit: 10;
+        stroke-width: 2.5px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M59.67,25.71L33.71,4.52c-.72-.59-1.69-.59-2.41,0L5.33,25.71c-1.64,1.33-.81,4.27,1.21,4.27h5.13v19.12c0,3.24,2.31,5.87,5.16,5.87h9.25v-16.7h12.84v16.7h9.25c2.85,0,5.16-2.63,5.16-5.87v-19.12h5.13c2.01,0,2.84-2.94,1.21-4.27h0Z"/>
+</svg>

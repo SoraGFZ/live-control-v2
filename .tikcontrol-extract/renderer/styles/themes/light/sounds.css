@@ -1,0 +1,288 @@
+/* --- SOUNDS --- */
+html.modo-claro .sounds-card,
+html.modo-claro .sounds-panel {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .sound-search-input {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro .sound-results-table thead th,
+html.modo-claro .configured-sounds-table thead th {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
+html.modo-claro .sound-results-table tbody td,
+html.modo-claro .configured-sounds-table tbody td {
+  border-bottom-color: var(--border-subtle);
+  color: var(--text-white);
+}
+
+html.modo-claro .sound-results-table tbody tr:hover td,
+html.modo-claro .configured-sounds-table tbody tr:hover td {
+  background: rgba(35, 123, 255, 0.04);
+}
+
+html.modo-claro .sound-tab {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .sound-tab.active {
+  background: rgba(0, 210, 211, 0.12);
+  color: #00a8a9;
+  border-color: #00a8a9;
+}
+
+/* ---- SOUNDS: Notifications, Card headers, Tables ---- */
+html.modo-claro .notification-overlay {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .notification-modal {
+  background: var(--bg-card);
+  color: var(--text-white);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .notification-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .notification-message {
+  color: var(--text-muted);
+}
+
+html.modo-claro .notification-btn.secondary {
+  color: var(--text-white);
+}
+
+html.modo-claro .notification-btn.primary {
+  color: white;
+}
+
+html.modo-claro .sounds-card .card-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .sound-results-table thead th {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
+html.modo-claro #sound-search-input {
+  color: var(--text-white);
+}
+
+html.modo-claro .no-sounds-text {
+  color: var(--text-white);
+}
+
+html.modo-claro .no-sounds-hint {
+  color: var(--text-muted);
+}
+
+html.modo-claro .gift-mini .gm-chosen {
+  color: var(--text-white);
+}
+
+html.modo-claro .emote-mini .emote-chosen {
+  color: var(--text-white);
+}
+
+/* --- Sounds View: banner cubierto por reglas globales en actions.css --- */
+html.modo-claro #view-sonidos .tab-intro-flow-dot {
+  background: rgba(35, 123, 255, 0.7);
+  box-shadow: 0 0 8px rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro #view-sonidos .snd-panel {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+html.modo-claro #view-sonidos .snd-panel-header {
+  border-bottom-color: var(--border-light);
+}
+
+html.modo-claro #view-sonidos .snd-panel-title {
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .snd-badge {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .lib-sound-name {
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .lib-ctrl-btn {
+  border-color: var(--border-light);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .lib-ctrl-btn:hover {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.2);
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .lib-add-btn {
+  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+html.modo-claro #view-sonidos .lib-vol-slider {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro #view-sonidos .sound-results-table thead th,
+html.modo-claro #view-sonidos .configured-sounds-table thead th {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+  border-bottom-color: var(--border-light);
+}
+
+html.modo-claro #view-sonidos .sound-results-table tbody td,
+html.modo-claro #view-sonidos .configured-sounds-table tbody td {
+  border-bottom-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .btn-play,
+html.modo-claro #view-sonidos .btn-stop {
+  border-color: var(--border-light);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .btn-delete {
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.12);
+}
+
+html.modo-claro #view-sonidos .local-toolbar {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-light);
+}
+
+html.modo-claro #view-sonidos .local-sound-card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+html.modo-claro #view-sonidos .local-sound-card.selected {
+  border-color: rgba(35, 123, 255, 0.3);
+  background: rgba(35, 123, 255, 0.03);
+}
+
+html.modo-claro #view-sonidos .local-card-title {
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .local-card-btn {
+  border-color: var(--border-light);
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .sound-tab {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .sound-tab:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .sound-tab.active {
+  background: rgba(0, 210, 211, 0.12);
+  color: #00a8a9;
+  border-color: #00a8a9;
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-empty {
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-empty-title {
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-empty-hint {
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-upload-inline {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-upload-inline:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.14);
+  color: #065f46;
+}
+
+html.modo-claro #view-sonidos .sounds-cloud-empty-formats {
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos #sound-search-input {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+html.modo-claro #view-sonidos .sounds-sec-title {
+  border-bottom-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro #view-sonidos .notification-modal {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+/* ── Paneles flotantes (emote y gift) ── */
+html.modo-claro .sounds-floating-panel {
+  background: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .12) !important;
+}
+
+html.modo-claro .snd-fp-filter {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+
+html.modo-claro .snd-fp-btn {
+  background: var(--bg-elevated) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-muted) !important;
+}
+
+html.modo-claro .snd-fp-btn:hover {
+  background: var(--bg-card) !important;
+  border-color: var(--accent-primary) !important;
+}
+
+/* Paginador */
+html.modo-claro .snd-results-pager {
+  background: var(--bg-elevated);
+  border-top-color: var(--border-subtle);
+}
+

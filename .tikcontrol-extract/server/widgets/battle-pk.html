@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="bp-asset-version" content="26">
+    <title>TikControl · Battle PK</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-a: #3B82F6;
+            --color-b: #EAB308;
+            --points-color: #FFD000;
+            --vs-color: #FFFFFF;
+            --text-color: #ffffff;
+            --text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+            --text-stroke-width: 0;
+            --text-stroke-color: transparent;
+        }
+        /* Contorno uniforme con -webkit-text-stroke + paint-order para
+           que el stroke se pinte ANTES que el fill — así el contorno se
+           ve por igual en todas direcciones, sin diagonales raras. */
+        .bp-name, .bp-score, .bp-vs, .bp-wins-num, .bp-wins-label {
+            -webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+            paint-order: stroke fill;
+        }
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: transparent;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #fff;
+        }
+        #root {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 16px; box-sizing: border-box;
+        }
+
+        .bp-card {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 18px;
+            background: rgba(15, 18, 25, 0.92);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-radius: 20px;
+            padding: 18px 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            transition: opacity .35s ease, transform .35s ease;
+            opacity: 1;
+            min-width: 540px;
+            max-width: 760px;
+        }
+        body[data-transparent="1"] .bp-card {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .bp-card.bp-hidden {
+            opacity: 0;
+            transform: scale(0.92);
+            pointer-events: none;
+        }
+
+        .bp-side {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+        .bp-side-b { grid-template-columns: 1fr auto; }
+        .bp-side-b .bp-info { text-align: right; order: 1; }
+        .bp-side-b .bp-avatar-stack { order: 2; }
+
+        /* Avatar / Wins stack */
+        .bp-avatar-stack {
+            position: relative;
+            min-width: 78px;
+            height: 78px;
+            flex-shrink: 0;
+            display: flex; align-items: center;
+        }
+        .bp-avatar-face,
+        .bp-wins-face {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: opacity .45s ease, transform .45s cubic-bezier(.4,0,.2,1);
+        }
+        .bp-avatar-face { border-radius: 0; } /* contiene la lista, no recorta */
+        .bp-avatar-face.bp-hide,
+        .bp-wins-face.bp-hide {
+            opacity: 0;
+            transform: scale(0.6) rotate(-10deg);
+        }
+
+        /* Lista horizontal de avatares (1 sólo en 1v1, varios apilados en team) */
+        .bp-avatar-list {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%;
+        }
+        .bp-side-b .bp-avatar-list { flex-direction: row-reverse; }
+        .bp-av-cell {
+            position: relative;
+            width: 78px; height: 78px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        /* Overlap cuando hay >1 avatar */
+        .bp-avatar-list .bp-av-cell + .bp-av-cell { margin-left: -28px; }
+        .bp-side-b .bp-avatar-list .bp-av-cell + .bp-av-cell {
+            margin-left: 0; margin-right: -28px;
+        }
+        /* Cuando hay teammates, el LEAD queda al frente y los compis detrás */
+        .bp-av-cell:nth-child(1) { z-index: 4; }
+        .bp-av-cell:nth-child(2) { z-index: 3; }
+        .bp-av-cell:nth-child(3) { z-index: 2; }
+        .bp-av-cell:nth-child(4) { z-index: 1; }
+
+        /* Avatares más pequeños cuando hay >1 participante por lado */
+        body[data-team-mode="1"] .bp-av-cell {
+            width: 64px; height: 64px;
+        }
+
+        /* img + fallback ABSOLUTOS dentro del cell para que se solapen
+           (no se apilen vertical). Cell es position:relative. */
+        .bp-avatar-img {
+            position: absolute;
+            inset: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid currentColor;
+            box-shadow: 0 0 16px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+            display: block;
+        }
+        .bp-avatar-fallback {
+            position: absolute;
+            inset: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, currentColor, rgba(0,0,0,0.7));
+            font-size: 24px; font-weight: 800;
+            color: #fff;
+            border: 3px solid currentColor;
+            box-shadow: 0 0 16px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+        /* Badge "+N" para teammates extra que no caben (>3 teammates) */
+        .bp-av-more {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, currentColor, rgba(0,0,0,0.7));
+            color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 900;
+            border: 3px solid currentColor;
+            box-shadow: 0 0 16px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .bp-side-a .bp-av-more,
+        .bp-side-a .bp-av-cell { color: var(--color-a); }
+        .bp-side-b .bp-av-more,
+        .bp-side-b .bp-av-cell { color: var(--color-b); }
+        .bp-wins-face {
+            background: radial-gradient(circle at 30% 30%, currentColor, rgba(0,0,0,0.85));
+            border: 3px solid currentColor;
+            box-shadow: 0 0 20px currentColor, 0 4px 12px rgba(0,0,0,0.4);
+            flex-direction: column;
+            gap: 0;
+        }
+        .bp-wins-num {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1;
+            color: #fff;
+            text-shadow: var(--text-shadow);
+        }
+        .bp-wins-label {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.85);
+            margin-top: 2px;
+        }
+
+        .bp-info {
+            display: flex; flex-direction: column;
+            gap: 3px; min-width: 0;
+        }
+        .bp-name {
+            font-size: 13px; font-weight: 700;
+            color: var(--text-color);
+            text-shadow: var(--text-shadow);
+            letter-spacing: 0.2px;
+            /* Antes era nowrap+ellipsis (cortaba nombres largos). Ahora
+               permitimos hasta 2 líneas con line-clamp y se rompe por
+               palabra/grafema para que no se corte por la fuente. */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            line-height: 1.15;
+        }
+        .bp-score {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--points-color);
+            text-shadow: var(--text-shadow);
+            transition: transform .25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-variant-numeric: tabular-nums;
+        }
+        .bp-score.bp-flash { transform: scale(1.18); }
+
+        .bp-side-a .bp-avatar-img,
+        .bp-side-a .bp-avatar-fallback,
+        .bp-side-a .bp-wins-face { color: var(--color-a); }
+        .bp-side-b .bp-avatar-img,
+        .bp-side-b .bp-avatar-fallback,
+        .bp-side-b .bp-wins-face { color: var(--color-b); }
+
+        /* ── VS libre, sin caja ─────────────────────────────── */
+        .bp-divider {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 6px;
+            min-width: 56px;
+        }
+        .bp-vs {
+            font-size: 26px; font-weight: 900;
+            color: var(--vs-color);
+            /* Combina la sombra configurable + el glow de currentColor */
+            text-shadow: var(--text-shadow), 0 0 14px currentColor;
+            animation: vsPulse 1.8s ease-in-out infinite;
+            letter-spacing: 1.5px;
+        }
+        @keyframes vsPulse {
+            0%,100% { transform: scale(1); }
+            50%     { transform: scale(1.1); }
+        }
+        .bp-mult {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 9px;
+            border-radius: 999px;
+            letter-spacing: 0.4px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity .3s ease, transform .3s ease;
+        }
+        .bp-mult.bp-mult-active {
+            opacity: 1; transform: translateY(0);
+            background: linear-gradient(90deg, #FFD000, #FF6B35);
+            color: #000;
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 0 12px rgba(255,107,53,0.5);
+            animation: multPulse 0.9s ease-in-out infinite;
+        }
+        @keyframes multPulse {
+            0%,100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        /* Reveal */
+        .bp-side.bp-winner .bp-avatar-img,
+        .bp-side.bp-winner .bp-avatar-fallback,
+        .bp-side.bp-winner .bp-wins-face {
+            animation: winnerGlow 1.2s ease-in-out infinite;
+        }
+        @keyframes winnerGlow {
+            0%,100% { box-shadow: 0 0 16px currentColor, 0 4px 12px rgba(0,0,0,0.4); }
+            50%     { box-shadow: 0 0 32px currentColor, 0 0 56px currentColor, 0 4px 12px rgba(0,0,0,0.4); }
+        }
+        .bp-side.bp-loser {
+            opacity: 0.45;
+            filter: grayscale(0.5);
+        }
+        .bp-crown {
+            position: absolute;
+            top: -22px; left: 50%;
+            transform: translateX(-50%);
+            color: gold;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+            animation: crownDrop 0.5s ease-out;
+            z-index: 10;
+        }
+        @keyframes crownDrop {
+            0%   { transform: translate(-50%, -20px); opacity: 0; }
+            100% { transform: translate(-50%, 0);     opacity: 1; }
+        }
+
+        /* Score-only mode */
+        body[data-mode="score-only"] .bp-card {
+            grid-template-columns: 1fr auto 1fr;
+            min-width: 0;
+            padding: 12px 18px;
+            gap: 14px;
+        }
+        body[data-mode="score-only"] .bp-avatar-stack,
+        body[data-mode="score-only"] .bp-name,
+        body[data-mode="score-only"] .bp-vs {
+            display: none;
+        }
+        body[data-mode="score-only"] .bp-divider { min-width: 0; padding: 0 6px; }
+        body[data-mode="score-only"] .bp-side {
+            grid-template-columns: 1fr;
+        }
+        body[data-mode="score-only"] .bp-info { text-align: center; }
+        body[data-mode="score-only"] .bp-side-b .bp-info { text-align: center; }
+        body[data-mode="score-only"] .bp-score {
+            font-size: 36px;
+            padding: 6px 14px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 10px;
+            border: 1.5px solid currentColor;
+            color: var(--points-color);
+            display: inline-block;
+        }
+        body[data-mode="score-only"] .bp-side-a .bp-score { border-color: var(--color-a); }
+        body[data-mode="score-only"] .bp-side-b .bp-score { border-color: var(--color-b); }
+
+        body[data-hide-host="1"] .bp-side-a .bp-score,
+        body[data-hide-rival="1"] .bp-side-b .bp-score,
+        body[data-hide-points="1"] .bp-score { visibility: hidden; }
+
+        /* ── Team mode (2v2, 1v3, FFA…) ───────────────────────
+           El widget mantiene el mismo layout, pero cada lado muestra los
+           avatares de TODOS los miembros de su equipo, apilados con
+           overlap. El score es la suma total del equipo. */
+        body[data-team-mode="1"] .bp-card {
+            padding: 22px 28px;
+        }
+        /* Más miembros → ancho mínimo mayor para que respiren */
+        body[data-team-mode="1"] .bp-avatar-stack {
+            min-width: 110px;
+        }
+        body[data-team-mode="1"][data-team-size="3"] .bp-avatar-stack { min-width: 140px; }
+        body[data-team-mode="1"][data-team-size="4"] .bp-avatar-stack { min-width: 170px; }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="bp-card bp-hidden" id="bp-card">
+            <div class="bp-side bp-side-a">
+                <div class="bp-avatar-stack" id="bp-stack-a">
+                    <div class="bp-avatar-face" id="bp-face-a">
+                        <div class="bp-avatar-list" id="bp-avlist-a"></div>
+                    </div>
+                    <div class="bp-wins-face bp-hide" id="bp-wins-a">
+                        <span class="bp-wins-num" id="bp-wins-num-a">0</span>
+                        <span class="bp-wins-label">WINS</span>
+                    </div>
+                </div>
+                <div class="bp-info">
+                    <div class="bp-name" id="bp-name-a">—</div>
+                    <div class="bp-score" id="bp-score-a">0</div>
+                </div>
+            </div>
+
+            <div class="bp-divider">
+                <div class="bp-vs" id="bp-vs">VS</div>
+                <div class="bp-mult" id="bp-mult">×1</div>
+            </div>
+
+            <div class="bp-side bp-side-b">
+                <div class="bp-avatar-stack" id="bp-stack-b">
+                    <div class="bp-avatar-face" id="bp-face-b">
+                        <div class="bp-avatar-list" id="bp-avlist-b"></div>
+                    </div>
+                    <div class="bp-wins-face bp-hide" id="bp-wins-b">
+                        <span class="bp-wins-num" id="bp-wins-num-b">0</span>
+                        <span class="bp-wins-label">WINS</span>
+                    </div>
+                </div>
+                <div class="bp-info">
+                    <div class="bp-name" id="bp-name-b">—</div>
+                    <div class="bp-score" id="bp-score-b">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/widgets/battle-pk.js?v=2.1.5-host-side"></script>
+</body>
+</html>

@@ -1,0 +1,949 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Animation</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:transparent;overflow:hidden;width:100%;height:100%}
+#root{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+video{
+  width:100%;height:100%;object-fit:contain;
+  position:absolute;top:0;left:0;
+  display:none;
+}
+video.playing{display:block}
+</style>
+</head>
+<body>
+<div id="root">
+  <video id="vid" playsinline></video>
+</div>
+
+<script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+<script src="core/font-loader.js?v=1.0.29-cache7"></script>
+<script src="tikcontrol-widget-base.js?v=1.0.29-cache7"></script>
+<script>
+(function(){
+  'use strict';
+
+  var ALL_TYPES = ['x2','x3','guantes','cofre','snipe','taptap','quiereme','enigma','fan','donador'];
+  var qs = new URLSearchParams(window.location.search);
+  var rawType = qs.get('type') || '';
+  if(rawType === 'miembro') rawType = 'fan';
+  var singleMode = rawType && rawType !== 'all' && ALL_TYPES.indexOf(rawType) !== -1;
+  var animType = singleMode ? rawType : null;
+  var widgetVariant = qs.get('variant') || '';
+  var LANGUAGE_TYPES = { guantes: true, quiereme: true };
+  var SUPPORTED_LANGUAGES = { es: true, en: true, fr: true, de: true, it: true, pt: true };
+  function normalizeLanguage(value){
+    var lang = String(value || '').toLowerCase().split('-')[0];
+    return SUPPORTED_LANGUAGES[lang] ? lang : 'es';
+  }
+  var widgetLanguage = normalizeLanguage(qs.get('lang') || qs.get('language') || qs.get('lang_' + rawType) || qs.get('language_' + rawType) || 'es');
+  var hasEnabledTypesParam = qs.has('enabled') || qs.has('enabledTypes') || qs.has('types');
+  function parseEnabledTypes(value){
+    var map = {};
+    String(value || '').split(',').forEach(function(type){
+      type = String(type || '').trim();
+      if(ALL_TYPES.indexOf(type) !== -1) map[type] = true;
+    });
+    return map;
+  }
+  var enabledTypes = parseEnabledTypes(qs.get('enabled') || qs.get('enabledTypes') || qs.get('types') || '');
+  var widgetKey = singleMode ? ('anim-' + animType + (widgetVariant ? '-' + widgetVariant : '')) : '';
+  var inApp = qs.get('inTikControl') === 'true' || qs.get('inEditor') === 'true';
+
+  var configs = {};
+  ALL_TYPES.forEach(function(t){
+    configs[t] = {
+      variant: 'tikcontrol',
+      autoMultiplier: true,
+      autoEnigma: true,
+      enigmaCooldownEnabled: false,
+      enigmaCooldownMin: 5,
+      enigmaUserCooldownEnabled: false,
+      enigmaUserCooldownMin: 10,
+      autoLastSeconds: false,
+      lastSecondsThreshold: 10,
+      autoBattleStart: false,
+      autoMemberLevelUp: true,
+      autoDonorLevelUp: true,
+      levelVideoMode: 'per-level',
+      language: normalizeLanguage(qs.get('lang_' + t) || qs.get('language_' + t) || 'es'),
+      minLevel: (t === 'fan' || t === 'donador') ? 10 : 1
+    };
+  });
+  configs.taptap.autoBattleStart = true;
+  if(singleMode && widgetVariant && configs[animType]) configs[animType].variant = widgetVariant;
+  if(singleMode && configs[animType]) configs[animType].language = widgetLanguage;
+
+  var vid = document.getElementById('vid');
+  var playing = false;
+  var playQueue = [];
+
+  var battleEndTimeMs = 0;
+  var battleActive = false;
+  var lastSecondsTimer = null;
+  var battleStartFired = false;
+  var currentBattleId = null;
+  var finishedBattleId = null;
+  var lastEventTs = 0;
+
+  var pendingMultiple = 0;
+  var multiplierAnimFired = false;
+  var missionCompleted = false;
+  var lastEnigmaTs = 0;
+  var rewardDelayTimer = null;
+  var configsLoaded = false;
+  var _tokenReady = false;
+  var _pendingPlays = [];
+  var customPack = {};
+
+  function _onTokenReady(){
+    _tokenReady = true;
+    var queued = _pendingPlays.slice();
+    _pendingPlays = [];
+    for(var i = 0; i < queued.length; i++) play(queued[i].type, queued[i].level);
+  }
+
+  // Check if tokens already exist (e.g. from a previous widget load)
+  if(window.__tcStorageTokens && window.__tcStorageTokens.animations) _tokenReady = true;
+
+  if(inApp) vid.muted = true;
+
+  function getStorageBase(){
+    return (window.__tcEnv && window.__tcEnv.st) ? window.__tcEnv.st() : 'https://storage.tikcontrol.live';
+  }
+
+  function clampLevel(value){
+    return Math.max(1, Math.min(50, parseInt(value, 10) || 1));
+  }
+
+  function levelUpMinLevel(type){
+    var c = configs[type] || {};
+    return Math.max(1, Math.min(50, parseInt(c.minLevel, 10) || 10));
+  }
+
+  function passesLevelUpMinLevel(type, level){
+    if(type !== 'fan' && type !== 'donador') return true;
+    return (parseInt(level, 10) || 0) >= levelUpMinLevel(type);
+  }
+
+  function customVideoUrl(type, level){
+    var entry = customPack && customPack[type];
+    if(!entry && type === 'fan' && customPack && customPack.miembro) entry = customPack.miembro;
+    if(!entry) return '';
+    if(entry.mode === 'per-level'){
+      var levels = entry.levels || {};
+      var levelEntry = levels[clampLevel(level)] || levels[String(clampLevel(level))];
+      if(levelEntry && levelEntry.url) return levelEntry.url;
+    }
+    return entry.url || '';
+  }
+
+  function supportsLanguage(type, variant){
+    return !!LANGUAGE_TYPES[type] && (variant || 'tikcontrol') === 'tikcontrol';
+  }
+
+  function getVideoUrl(type, level){
+    var c = configs[type] || configs.x2;
+    if((c.variant || 'tikcontrol') === 'custom'){
+      var customUrl = customVideoUrl(type, level);
+      if(customUrl) return customUrl;
+    }
+    if((type === 'fan' || type === 'donador') && c.levelVideoMode === 'per-level'){
+      var safeLevel = clampLevel(level);
+      if(type === 'donador' && (safeLevel === 12 || safeLevel === 13)) return '';
+      return getStorageBase() + '/animations/' + type + '/level-' + safeLevel + '.webm';
+    }
+    var variant = c.variant || 'tikcontrol';
+    var language = normalizeLanguage(c.language || 'es');
+    var file = variant;
+    if(supportsLanguage(type, variant) && language !== 'es') file += '-' + language;
+    return getStorageBase() + '/animations/' + type + '/' + file + '.webm';
+  }
+
+  function accepts(type){
+    if(hasEnabledTypesParam && !enabledTypes[type]) return false;
+    if(singleMode) return type === animType;
+    return ALL_TYPES.indexOf(type) !== -1;
+  }
+
+  function targetMatches(data){
+    if(!data || typeof data !== 'object') return true;
+    var targetWidget = String(data.widget || data.widgetKey || data.targetWidget || '').trim();
+    if(targetWidget){
+      var parsed = parseAnimKey(targetWidget);
+      if(parsed){
+        if(!accepts(parsed.type)) return false;
+        if(singleMode && widgetVariant && parsed.variant && parsed.variant !== widgetVariant) return false;
+        return true;
+      }
+      return !singleMode || targetWidget === widgetKey;
+    }
+    var targetVariant = String(data.variant || data.pack || '').trim();
+    if(singleMode && widgetVariant && targetVariant && targetVariant !== widgetVariant) return false;
+    return true;
+  }
+
+  function requestedTestType(data){
+    if(!data || typeof data !== 'object') return '';
+    var targetWidget = String(data.widget || data.widgetKey || data.targetWidget || '').trim();
+    if(targetWidget){
+      var parsed = parseAnimKey(targetWidget);
+      if(parsed) return parsed.type;
+    }
+    var t = data.animationType || data.animType || '';
+    return ALL_TYPES.indexOf(t) !== -1 ? t : '';
+  }
+
+  var lastManualTestKey = '';
+  var lastManualTestTs = 0;
+  function shouldAcceptManualTest(data){
+    var testType = requestedTestType(data);
+    var targetVariant = String((data && (data.variant || data.pack)) || '').trim();
+    var targetWidget = String((data && (data.widget || data.widgetKey || data.targetWidget)) || '').trim();
+    var key = [testType, targetVariant, targetWidget, data && data.level || ''].join('|');
+    var now = Date.now();
+    key += '|' + normalizeLanguage(data && (data.language || data.lang) || '');
+    if(key === lastManualTestKey && now - lastManualTestTs < 1200) return false;
+    lastManualTestKey = key;
+    lastManualTestTs = now;
+    return true;
+  }
+
+  function needsPrivateStorageToken(url){
+    if(!url || typeof url !== 'string') return false;
+    if(url.indexOf('storage.tikcontrol.live') === -1 && url.indexOf('/storage/download') === -1) return false;
+    if(url.indexOf('/animations/') !== -1) return false;
+    return url.indexOf('/users-data/') !== -1 || url.indexOf('/storage/download') !== -1 || url.indexOf('ws.tikcontrol.live') !== -1;
+  }
+
+  function play(type, level){
+    if(!type || !accepts(type)) return;
+    if(playing){
+      playQueue.push({ type: type, level: level });
+      return;
+    }
+    var videoUrl = getVideoUrl(type, level);
+    if(!videoUrl){
+      processQueue();
+      return;
+    }
+    if(needsPrivateStorageToken(videoUrl) && !_tokenReady && !window.__tcStorageTokens){
+      _pendingPlays.push({ type: type, level: level });
+      return;
+    }
+    playing = true;
+    // console.log('[Animation] Playing:', type);
+    vid.src = (window.__tcSignedUrl || function(u){return u})(videoUrl);
+    vid.classList.add('playing');
+    vid.currentTime = 0;
+    if(inApp) vid.muted = true;
+
+    vid.play().then(function(){
+      // console.log('[Animation] Play OK:', type);
+    }).catch(function(e){
+      if(e.name === 'NotAllowedError' && !vid.muted){
+        vid.muted = true;
+        vid.play().catch(function(){
+          playing = false;
+          vid.classList.remove('playing');
+          processQueue();
+        });
+      } else {
+        playing = false;
+        vid.classList.remove('playing');
+        processQueue();
+      }
+    });
+  }
+
+  function processQueue(){
+    if(playQueue.length > 0){
+      var next = playQueue.shift();
+      setTimeout(function(){ play(next.type, next.level); }, 50);
+    }
+  }
+
+  var clearing = false;
+  function cleanup(){
+    if(clearing) return;
+    clearing = true;
+    playing = false;
+    vid.classList.remove('playing');
+    vid.removeAttribute('src');
+    vid.load();
+    if(playQueue.length === 0) try { window.parent.postMessage({ type: 'ANIMATION_ENDED' }, '*'); } catch(_){}
+    clearing = false;
+    processQueue();
+  }
+
+  function applyPayloadLanguage(data, type){
+    if(!data || !type || !configs[type]) return;
+    if(data.language === undefined && data.lang === undefined) return;
+    var variant = data.variant || data.pack || configs[type].variant || 'tikcontrol';
+    if(supportsLanguage(type, variant)){
+      configs[type].language = normalizeLanguage(data.language || data.lang);
+    }
+  }
+
+  vid.addEventListener('ended', cleanup);
+  vid.addEventListener('error', function(){
+    if(clearing || !vid.hasAttribute('src')) return;
+    cleanup();
+  });
+
+  function parseAnimKey(widgetKey) {
+    var m = widgetKey.match(/^anim-(.+)$/);
+    if (!m || !m[1]) return null;
+    var rest = m[1];
+    if(rest === 'miembro' || rest.indexOf('miembro-') === 0) rest = rest.replace(/^miembro/, 'fan');
+    for (var i = 0; i < ALL_TYPES.length; i++) {
+      if (rest === ALL_TYPES[i] || rest.indexOf(ALL_TYPES[i] + '-') === 0) {
+        var variant = rest.length > ALL_TYPES[i].length ? rest.substring(ALL_TYPES[i].length + 1) : null;
+        return { type: ALL_TYPES[i], variant: variant };
+      }
+    }
+    return { type: rest, variant: null };
+  }
+
+  function configTargetsThisWidget(type, cfg, parsedVariant){
+    if(!type || !accepts(type)) return false;
+    if(singleMode && widgetVariant){
+      var cfgVariant = String((cfg && cfg.variant) || parsedVariant || '').trim();
+      if(parsedVariant && parsedVariant !== widgetVariant) return false;
+      if(!parsedVariant && cfgVariant && cfgVariant !== widgetVariant) return false;
+    }
+    return true;
+  }
+
+  function applyParsedConfig(parsed, cfg){
+    if(!parsed || !cfg) return;
+    if(!configTargetsThisWidget(parsed.type, cfg, parsed.variant)) return;
+    var cfgCopy = cfg;
+    if(parsed.variant && cfgCopy.variant === undefined) cfgCopy = Object.assign({}, cfgCopy, {variant: parsed.variant});
+    if(singleMode && widgetVariant) cfgCopy = Object.assign({}, cfgCopy, {variant: widgetVariant});
+    applyConfig(parsed.type, cfgCopy);
+  }
+
+  function applyConfig(type, newCfg){
+    if(!newCfg || !type) return;
+    var c = configs[type];
+    if(!c) return;
+    if(newCfg.variant !== undefined) c.variant = (singleMode && widgetVariant) ? widgetVariant : newCfg.variant;
+    if(newCfg.autoMultiplier !== undefined) c.autoMultiplier = !!newCfg.autoMultiplier;
+    if(newCfg.autoEnigma !== undefined) c.autoEnigma = !!newCfg.autoEnigma;
+    // Cooldowns del enigma â€” antes faltaban en applyConfig, asÃ­ que aunque el
+    // creador los activara en la app, el widget seguÃ­a con los defaults
+    // (enigmaCooldownEnabled=false) y la animaciÃ³n se disparaba con cada chat.
+    if(newCfg.enigmaCooldownEnabled !== undefined) c.enigmaCooldownEnabled = !!newCfg.enigmaCooldownEnabled;
+    if(newCfg.enigmaCooldownMin !== undefined) c.enigmaCooldownMin = Math.max(1, Number(newCfg.enigmaCooldownMin) || 5);
+    if(newCfg.enigmaUserCooldownEnabled !== undefined) c.enigmaUserCooldownEnabled = !!newCfg.enigmaUserCooldownEnabled;
+    if(newCfg.enigmaUserCooldownMin !== undefined) c.enigmaUserCooldownMin = Math.max(1, Number(newCfg.enigmaUserCooldownMin) || 10);
+    if(newCfg.autoLastSeconds !== undefined) c.autoLastSeconds = !!newCfg.autoLastSeconds;
+    if(newCfg.lastSecondsThreshold !== undefined) c.lastSecondsThreshold = Math.max(1, Number(newCfg.lastSecondsThreshold) || 10);
+    if(newCfg.autoBattleStart !== undefined) c.autoBattleStart = !!newCfg.autoBattleStart;
+    if(newCfg.autoMemberLevelUp !== undefined) c.autoMemberLevelUp = !!newCfg.autoMemberLevelUp;
+    if(newCfg.autoDonorLevelUp !== undefined) c.autoDonorLevelUp = !!newCfg.autoDonorLevelUp;
+    if(newCfg.levelVideoMode !== undefined) c.levelVideoMode = newCfg.levelVideoMode === 'per-level' ? 'per-level' : 'unified';
+    if(newCfg.language !== undefined || newCfg.lang !== undefined) c.language = normalizeLanguage(newCfg.language || newCfg.lang);
+    if(newCfg.minLevel !== undefined) c.minLevel = Math.max(1, Math.min(50, parseInt(newCfg.minLevel, 10) || 10));
+    configsLoaded = true;
+    // Silenciado para reducir spam
+  }
+
+  function applyCustomPack(pack){
+    if(pack && typeof pack === 'object') {
+      customPack = pack;
+      if(customPack.miembro && !customPack.fan) customPack.fan = customPack.miembro;
+    }
+  }
+
+  function handleBattleStart(){
+    if(battleStartFired) return;
+    battleStartFired = true;
+    var types = singleMode ? [animType] : ALL_TYPES;
+    for(var i = 0; i < types.length; i++){
+      var t = types[i];
+      if(configs[t] && configs[t].autoBattleStart && accepts(t)){
+        // console.log('[Animation] Battle start trigger:', t);
+        play(t);
+        return;
+      }
+    }
+  }
+
+  function isBattleEnd(data){
+    var bsNum = parseInt(data.battleStatus) || 0;
+    // Only treat as ended if status >= 5 (definitive end) OR
+    // if status >= 3 AND the timer has already expired
+    if(bsNum >= 5) return true;
+    if(bsNum >= 3){
+      // If we have a known endTimeMs and it's still in the future, don't end yet
+      if(battleEndTimeMs > 0 && battleEndTimeMs > Date.now()){
+        return false;
+      }
+      return true;
+    }
+    var action = parseInt(data.action || data.battleAction) || 0;
+    if(action >= 5) return true;
+    if(action >= 3){
+      if(battleEndTimeMs > 0 && battleEndTimeMs > Date.now()){
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function resetBattle(){
+    battleActive = false;
+    battleEndTimeMs = 0;
+    lastSecondsFiredMap = {};
+    multiplierAnimFired = false;
+    missionCompleted = false;
+    pendingMultiple = 0;
+    if(rewardDelayTimer){ clearTimeout(rewardDelayTimer); rewardDelayTimer = null; }
+    stopLastSecondsCheck();
+  }
+
+  var battleEventDedup = {};
+  
+  function handleBattleEvent(data){
+    if(!data) return;
+
+    var bId = data.battleId || '';
+    if(!bId) return;
+
+    // Dedup: skip if we already processed this exact event recently
+    var evKey = bId + ':' + (data.battleStatus || '') + ':' + (data.scoreUpdateTime || data.giftSentTime || '');
+    if(battleEventDedup[evKey]) return;
+    battleEventDedup[evKey] = true;
+    setTimeout(function(){ delete battleEventDedup[evKey]; }, 200);
+
+    if(bId === finishedBattleId) return;
+
+    var settings = data.battleSettings || data.battleSetting || {};
+    var now = Date.now();
+
+    // Calculate endMs using same logic as battleTimer.js syncTimer
+    var endMs = 0;
+    var rawEndMs = parseInt(settings.endTimeMs || settings.end_time_ms) || 0;
+    if(rawEndMs > 0){
+      endMs = rawEndMs;
+    } else {
+      var startMs = parseInt(settings.startTimeMs || settings.start_time_ms) || 0;
+      var dur = parseInt(settings.duration) || 0;
+      var extra = parseInt(settings.extraDurationSecond) || 0;
+      if(startMs > 0 && dur > 0){
+        endMs = startMs + ((dur + extra) * 1000);
+      }
+    }
+
+    if(isBattleEnd(data)){
+      if(battleActive || currentBattleId === bId){
+        // console.log('[Animation] Battle ended, status:', data.battleStatus);
+        finishedBattleId = bId;
+        currentBattleId = null;
+        resetBattle();
+      }
+      return;
+    }
+
+    if(endMs > 0 && endMs < now){
+      if(currentBattleId === bId){
+        // console.log('[Animation] Battle expired');
+        finishedBattleId = bId;
+        currentBattleId = null;
+        resetBattle();
+      }
+      return;
+    }
+
+    var isNewBattle = bId !== currentBattleId;
+
+    if(isNewBattle){
+      currentBattleId = bId;
+      battleActive = true;
+      battleStartFired = false;
+      lastSecondsFiredMap = {};
+      multiplierAnimFired = false;
+      missionCompleted = false;
+      pendingMultiple = 0;
+      battleEndTimeMs = 0;
+      if(rewardDelayTimer){ clearTimeout(rewardDelayTimer); rewardDelayTimer = null; }
+      stopLastSecondsCheck();
+      // console.log('[Animation] New battle:', bId, endMs ? 'endMs:' + endMs + ' remaining:' + Math.round((endMs - now)/1000) + 's' : 'no endMs yet');
+      handleBattleStart();
+    } else if(!battleActive){
+      battleActive = true;
+    }
+
+    // Update endMs if we got a better value
+    if(endMs > now){
+      if(!battleEndTimeMs || Math.abs(endMs - battleEndTimeMs) > 2000){
+        // console.log('[Animation] endTimeMs updated:', endMs, 'remaining:', Math.round((endMs - now)/1000) + 's');
+      }
+      battleEndTimeMs = endMs;
+      if(!lastSecondsTimer){
+        startLastSecondsCheck();
+      }
+    }
+  }
+
+  var lastSecondsFiredMap = {};
+
+  function startLastSecondsCheck(){
+    if(lastSecondsTimer) return;
+    if(!battleEndTimeMs) return;
+    lastSecondsFiredMap = {};
+    var remaining0 = Math.round((battleEndTimeMs - Date.now()) / 1000);
+    var enabled = [];
+    ALL_TYPES.forEach(function(t){
+      if(configs[t] && configs[t].autoLastSeconds) enabled.push(t + '(' + configs[t].lastSecondsThreshold + 's)');
+    });
+    // console.log('[Animation] Starting last-seconds check, remaining:', remaining0 + 's, enabled:', enabled.length ? enabled.join(',') : 'NONE');
+    if(enabled.length === 0) return;
+    lastSecondsTimer = setInterval(function(){
+      if(!battleEndTimeMs){
+        stopLastSecondsCheck();
+        return;
+      }
+      var remaining = (battleEndTimeMs - Date.now()) / 1000;
+      if(remaining <= 0){
+        // console.log('[Animation] Battle timer expired (endTimeMs reached)');
+        if(currentBattleId){
+          finishedBattleId = currentBattleId;
+          currentBattleId = null;
+        }
+        resetBattle();
+        return;
+      }
+      var types = singleMode ? [animType] : ALL_TYPES;
+      for(var i = 0; i < types.length; i++){
+        var t = types[i];
+        if(configs[t] && configs[t].autoLastSeconds && !lastSecondsFiredMap[t] && remaining <= configs[t].lastSecondsThreshold && accepts(t)){
+          lastSecondsFiredMap[t] = true;
+          // console.log('[Animation] LAST SECONDS trigger:', t, 'remaining:', Math.round(remaining) + 's');
+          play(t);
+        }
+      }
+    }, 500);
+  }
+
+  function stopLastSecondsCheck(){
+    if(lastSecondsTimer){
+      clearInterval(lastSecondsTimer);
+      lastSecondsTimer = null;
+    }
+  }
+
+  function handleBattleTask(data){
+    if(!data) return;
+    var taskType = parseInt(data.battleTaskMessageType);
+    if(isNaN(taskType)) taskType = -1;
+    // console.log('[Animation] BattleTask received, type:', taskType, 'keys:', Object.keys(data).join(','));
+
+    if(taskType === 0){
+      var config = data.taskStart && data.taskStart.battleBonusConfig;
+      if(config){
+        var rewardCfg = config.rewardPeriodConfig || {};
+        pendingMultiple = parseInt(rewardCfg.rewardMultiple) || 2;
+        multiplierAnimFired = false;
+        missionCompleted = false;
+        if(rewardDelayTimer){ clearTimeout(rewardDelayTimer); rewardDelayTimer = null; }
+        // console.log('[Animation] Mission started, x' + pendingMultiple);
+      }
+      return;
+    }
+
+    if(taskType === 2){
+      var settle = data.taskSettle || {};
+      var result = parseInt(settle.taskResult);
+      // console.log('[Animation] BattleTask SETTLE, taskResult:', result);
+      if(result === 0 || result === 2){
+        missionCompleted = true;
+        // Try to get multiplier from multiple sources
+        var mul = pendingMultiple;
+        if(!mul || mul < 2){
+          if(data.taskStart && data.taskStart.battleBonusConfig && data.taskStart.battleBonusConfig.rewardPeriodConfig){
+            mul = parseInt(data.taskStart.battleBonusConfig.rewardPeriodConfig.rewardMultiple) || 0;
+          }
+        }
+        if(!mul || mul < 2){
+          // Try bonusMultiple from settle
+          mul = parseInt(settle.bonusMultiple || settle.rewardMultiple) || 0;
+        }
+        if(!mul || mul < 2){
+          // Try from data directly
+          mul = parseInt(data.bonusMultiple || data.rewardMultiple) || 0;
+        }
+        if(!mul || mul < 2) mul = 2;
+        pendingMultiple = mul;
+        // console.log('[Animation] Mission completed! x' + mul + ', playing in 8s');
+        if(!multiplierAnimFired){
+          rewardDelayTimer = setTimeout(function(){
+            rewardDelayTimer = null;
+            if(multiplierAnimFired) return;
+            multiplierAnimFired = true;
+            // console.log('[Animation] Playing multiplier x' + pendingMultiple);
+            if(pendingMultiple >= 3 && accepts('x3')) play('x3');
+            else if(accepts('x2')) play('x2');
+          }, 8000);
+        }
+      }
+      return;
+    }
+  }
+
+  var enigmaUserTs = {};
+  function handleEnigma(evData){
+    if(!configs.enigma.autoEnigma || !accepts('enigma')) return;
+    var cfg = configs.enigma;
+    var now = Date.now();
+    // Global cooldown â€” limits overall animation frequency
+    if(cfg.enigmaCooldownEnabled){
+      var globalMs = (cfg.enigmaCooldownMin || 5) * 60000;
+      if(now - lastEnigmaTs < globalMs) return;
+    }
+    // Per-user cooldown â€” same user can't trigger again too quickly
+    if(cfg.enigmaUserCooldownEnabled){
+      var userId = evData && evData.user && (evData.user.userId || evData.user.id) || '';
+      if(userId){
+        var userMs = (cfg.enigmaUserCooldownMin || 10) * 60000;
+        if(enigmaUserTs[userId] && now - enigmaUserTs[userId] < userMs) return;
+        enigmaUserTs[userId] = now;
+      }
+    }
+    lastEnigmaTs = now;
+    play('enigma');
+  }
+
+  var levelState = { fan: {}, donador: {} };
+  function asNumber(value){
+    var n = Number(value);
+    return isFinite(n) ? n : 0;
+  }
+
+  function eventPayload(ev){
+    if(!ev) return {};
+    if(ev.data && typeof ev.data === 'object') return ev.data;
+    return ev;
+  }
+
+  function userKeyFrom(data){
+    var u = data && (data.user || data.senderUser || data.operator || data.fromUser || {});
+    return String(
+      data.uniqueId || data.userId || data.secUid ||
+      u.uniqueId || u.userId || u.id || u.secUid ||
+      data.nickname || u.nickname || ''
+    );
+  }
+
+  function firstNumber(data, keys){
+    for(var i = 0; i < keys.length; i++){
+      var parts = keys[i].split('.');
+      var cur = data;
+      for(var j = 0; j < parts.length && cur != null; j++) cur = cur[parts[j]];
+      var n = asNumber(cur);
+      if(n > 0) return n;
+    }
+    return 0;
+  }
+
+  function levelActuallyIncreased(kind, userKey, nextLevel, prevLevel, trustedEvent){
+    if(!nextLevel || nextLevel <= 0) return false;
+    var bucket = levelState[kind] || (levelState[kind] = {});
+    var old = asNumber(prevLevel);
+    var known = userKey ? asNumber(bucket[userKey]) : 0;
+    var shouldPlay = false;
+
+    if(old > 0) shouldPlay = nextLevel > old;
+    else if(known > 0) shouldPlay = nextLevel > known;
+    else shouldPlay = !!trustedEvent;
+
+    if(userKey) bucket[userKey] = Math.max(known, nextLevel);
+    return shouldPlay;
+  }
+
+  function handleLevelUpEvent(ev){
+    if(!ev) return;
+    var type = String(ev.type || ev.eventType || '').toLowerCase();
+    var data = eventPayload(ev);
+    if(!data || typeof data !== 'object') return;
+
+    if(configs.fan && configs.fan.autoMemberLevelUp && accepts('fan')){
+      var trustedMember = type === 'member_level_up';
+      var memberLevel = firstNumber(data, ['newLevel','memberLevel','teamMemberLevel','level','user.memberLevel','user.teamMemberLevel']);
+      var previousMember = firstNumber(data, ['previousLevel','oldLevel','prevLevel','fromLevel']);
+      if(trustedMember && passesLevelUpMinLevel('fan', memberLevel) && levelActuallyIncreased('fan', userKeyFrom(data), memberLevel, previousMember, true)){
+        play('fan', memberLevel);
+      }
+    }
+
+    if(configs.donador && configs.donador.autoDonorLevelUp && accepts('donador')){
+      var trustedDonor = type === 'donor_level_up';
+      var donorLevel = firstNumber(data, ['newGifterLevel','newDonorLevel','gifterLevel','donorLevel','level','user.gifterLevel','user.donorLevel']);
+      var previousDonor = firstNumber(data, ['previousGifterLevel','previousDonorLevel','oldGifterLevel','oldDonorLevel','previousLevel','oldLevel','prevLevel','fromLevel']);
+      if(trustedDonor && passesLevelUpMinLevel('donador', donorLevel) && levelActuallyIncreased('donador', userKeyFrom(data), donorLevel, previousDonor, true)){
+        play('donador', donorLevel);
+      }
+    }
+  }
+
+  function listen(socket){
+    if(!socket || typeof socket.on !== 'function') return;
+
+    // Wait for storage token to process queued animations
+    socket.on('storage:tokenReady', function(){
+      _onTokenReady();
+    });
+    // Token may have arrived before we started listening
+    if(window.__tcStorageTokens && window.__tcStorageTokens.animations && !_tokenReady){
+      _onTokenReady();
+    }
+
+    socket.on('animation:play', function(data){
+      if(inApp) return;
+      if(!data) return;
+      var t = data.type || data.animationType;
+      if(t && accepts(t) && targetMatches(data)){
+        applyPayloadLanguage(data, t);
+        play(t, data.level);
+      }
+    });
+
+    socket.on('widget:test', function(data){
+      if(inApp) return;
+      if(!data || data.type !== 'ANIMATION_TEST') return;
+      var t = requestedTestType(data);
+      if(t && accepts(t) && targetMatches(data) && shouldAcceptManualTest(data)){
+        applyPayloadLanguage(data, t);
+        play(t, data.level);
+      }
+    });
+
+    socket.on('tiktok:event', function(ev){
+      if(!ev || !ev.type) return;
+      // ev.data might be empty {} from the wrapper, use ev directly if ev.data has no battleId
+      var d = ev.data;
+      if(!d || (typeof d === 'object' && !d.battleId && !d.battleTaskMessageType && ev.battleId)){
+        d = ev;
+      }
+      if(ev.type === 'linkMicBattle') handleBattleEvent(d);
+      if(ev.type === 'linkMicArmies') handleBattleEvent(d);
+      if(ev.type === 'linkMicBattleTask') handleBattleTask(d);
+      if(ev.type === 'enigma_detected') handleEnigma(d);
+      handleLevelUpEvent(ev);
+      if(ev.type === 'widgetConfig' && ev.widget && ev.config){
+        var parsed = parseAnimKey(ev.widget);
+        applyParsedConfig(parsed, ev.config);
+      }
+    });
+
+    socket.on('widget:configUpdated', function(msg){
+      if(!msg) return;
+      var w = msg.widget || '';
+      var cfg = msg.config;
+      if(!cfg) return;
+      if(w === 'animation' && typeof cfg === 'object'){
+        var keys = Object.keys(cfg);
+        for(var i = 0; i < keys.length; i++){
+          var k = keys[i];
+          var parsed = parseAnimKey(k);
+          if(parsed && cfg[k]) applyParsedConfig(parsed, cfg[k]);
+        }
+        return;
+      }
+      // Handle anim-active-variants: { x2: 'gladiador', x3: 'tikcontrol', ... }
+      if(w === 'anim-active-variants' && typeof cfg === 'object'){
+        for(var j = 0; j < ALL_TYPES.length; j++){
+          var activeVariant = cfg[ALL_TYPES[j]];
+          if(!activeVariant) continue;
+          if(singleMode && widgetVariant && activeVariant !== widgetVariant) continue;
+          applyConfig(ALL_TYPES[j], { variant: activeVariant });
+        }
+        return;
+      }
+      if(w === 'anim-custom-pack' && typeof cfg === 'object'){
+        applyCustomPack(cfg);
+        return;
+      }
+      var parsed2 = parseAnimKey(w);
+      applyParsedConfig(parsed2, cfg);
+    });
+
+    ALL_TYPES.forEach(function(t){
+      socket.on('widget:configUpdated:anim-' + t, function(msg){
+        if(msg && msg.config) applyParsedConfig({ type: t, variant: null }, msg.config);
+      });
+    });
+    socket.on('widget:configUpdated:anim-miembro', function(msg){
+      if(msg && msg.config) applyParsedConfig({ type: 'fan', variant: null }, msg.config);
+    });
+
+    var uid = qs.get('uid') || '';
+
+    function requestAllConfigs(ws, reason){
+      if(!ws || ws.readyState !== WebSocket.OPEN){
+        console.warn('[Animation] requestAllConfigs(' + reason + '): WS not open');
+        return false;
+      }
+      if(singleMode && widgetKey){
+        try{
+          ws.send(JSON.stringify({ type: 'getWidgetConfig', data: { widget: widgetKey }, uid: uid }));
+        }catch(e){ console.error('[Animation] send error:', e); }
+      }
+      ALL_TYPES.forEach(function(t){
+        try{
+          ws.send(JSON.stringify({ type: 'getWidgetConfig', data: { widget: 'anim-' + t }, uid: uid }));
+        }catch(e){ console.error('[Animation] send error:', e); }
+      });
+      try{
+        ws.send(JSON.stringify({ type: 'getWidgetConfig', data: { widget: 'anim-custom-pack' }, uid: uid }));
+      }catch(e){ console.error('[Animation] send error:', e); }
+      // Silenciado
+      return true;
+    }
+
+    // Intercept raw WebSocket messages to catch widgetConfig responses AND battle events
+    function hookRawWebSocket(ws){
+      ws.addEventListener('message', function(event){
+        try{
+          var msg = JSON.parse(event.data);
+          if(msg.type === 'widgetConfig' && msg.widget && msg.config){
+            if(msg.widget === 'anim-custom-pack'){
+              applyCustomPack(msg.config);
+              return;
+            }
+            var parsed = parseAnimKey(msg.widget);
+            applyParsedConfig(parsed, msg.config);
+          }
+          // Also handle battle events directly from raw WS to ensure we get full data
+          if(msg.type === 'linkMicBattle' || msg.type === 'linkMicArmies'){
+            var bd = msg.data || msg;
+            if(bd.battleId) handleBattleEvent(bd);
+          }
+          if(msg.type === 'linkMicBattleTask'){
+            var td = msg.data || msg;
+            handleBattleTask(td);
+          }
+          if(msg.type === 'member_level_up' || msg.type === 'donor_level_up'){
+            handleLevelUpEvent(msg);
+          }
+        }catch(_){}
+      });
+      // Silenciado
+    }
+
+    // Get native WebSocket and hook + request configs
+    var nativeWs = socket.socket; // AWSSocket stores native WS as .socket
+    if(nativeWs){
+      hookRawWebSocket(nativeWs);
+      if(nativeWs.readyState === WebSocket.OPEN){
+        requestAllConfigs(nativeWs, 'immediate');
+      } else {
+        nativeWs.addEventListener('open', function(){
+          if(!configsLoaded) requestAllConfigs(nativeWs, 'ws-open');
+        });
+      }
+    }
+
+    // Also listen on wrapper connect event (handles reconnects too)
+    socket.on('connect', function(){
+      var ws = socket.socket;
+      if(ws){
+        if(ws !== nativeWs){ hookRawWebSocket(ws); nativeWs = ws; }
+        if(!configsLoaded) requestAllConfigs(ws, 'on-connect');
+      }
+    });
+
+    // Retry fallback (only for AWS mode where native WebSocket is available)
+    if(!inApp){
+      var configRetry = 0;
+      var configRetryTimer = setInterval(function(){
+        configRetry++;
+        if(configsLoaded || configRetry > 5){
+          clearInterval(configRetryTimer);
+          return;
+        }
+        var ws = socket.socket || nativeWs;
+        if(ws && ws.readyState === WebSocket.OPEN){
+          requestAllConfigs(ws, 'retry-' + configRetry);
+        }
+      }, 2000);
+    }
+
+    // Silenciado
+  }
+
+  function init(){
+    if(window.TikControlWidget){
+      window.TikControlWidget.getSocket().then(function(s){
+        // Silenciado
+        if(s) listen(s);
+      }).catch(function(e){ console.error('[Animation] getSocket error:', e); });
+    } else if(window.TikControlRelay){
+      listen(window.TikControlRelay);
+    } else if(window.io){
+      var port = Number(qs.get('overlayPort')) || 43123;
+      var isHttpsCloud = location.protocol === 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+      // En HTTPS no-localhost: nunca conectar a 127.0.0.1 (Mixed Content).
+      if (!isHttpsCloud) {
+        try{ listen(io('http://127.0.0.1:' + port, {reconnection:true})); }catch(_){}
+      }
+    }
+  }
+
+  window.addEventListener('message', function(e){
+    var m = e && e.data;
+    if(!m) return;
+    if(m.type === 'ANIMATION_TEST'){
+      var testType = requestedTestType(m);
+      if(testType && accepts(testType) && targetMatches(m) && shouldAcceptManualTest(m)){
+        applyPayloadLanguage(m, testType);
+        play(testType, m.level);
+      }
+      return;
+    }
+    if(m.type === 'animation:play'){
+      var t = m.animationType || m.animType || (singleMode ? animType : null);
+      if(t && accepts(t) && targetMatches(m)){
+        applyPayloadLanguage(m, t);
+        play(t, m.level);
+      }
+      return;
+    }
+    if(m.type === 'widget:config' && m.config && m.widget){
+      if(m.widget === 'anim-custom-pack'){
+        applyCustomPack(m.config);
+        return;
+      }
+      var parsed = parseAnimKey(m.widget);
+      applyParsedConfig(parsed, m.config);
+    }
+  });
+
+  if(/^(1|true)$/i.test(qs.get('test') || '')){
+    setTimeout(function(){ play(singleMode ? animType : 'x2'); }, 500);
+  }
+
+  if(qs.get('preview') === '1'){
+    var pi = 0;
+    setTimeout(function(){
+      play(singleMode ? animType : ALL_TYPES[0]);
+      setInterval(function(){ pi = (pi + 1) % ALL_TYPES.length; play(singleMode ? animType : ALL_TYPES[pi]); }, 15000);
+    }, 2000);
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else setTimeout(init, 50);
+
+})();
+</script>
+</body>
+</html>
+
+

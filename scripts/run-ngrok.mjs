@@ -1,10 +1,9 @@
 import { spawn } from 'node:child_process'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
+import { persistTunnelUrl, syncPublicUrl } from './tunnel-sync.mjs'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
-const storageDirectory = path.join(projectRoot, 'storage')
-const tunnelUrlFile = path.join(storageDirectory, 'active-tunnel-url.txt')
 const tunnelPort = Number(process.env.TUNNEL_PORT || 5123)
 
 const candidatePaths = [
@@ -27,34 +26,9 @@ function resolveNgrokPath() {
   )
 }
 
-async function syncPublicUrl(publicBaseUrl) {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    try {
-      const response = await fetch(`http://127.0.0.1:${tunnelPort}/api/state`)
-
-      if (!response.ok) {
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        continue
-      }
-
-      const state = await response.json()
-      state.profile.publicBaseUrl = publicBaseUrl
-
-      await fetch(`http://127.0.0.1:${tunnelPort}/api/state`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(state),
-      })
-      return
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-    }
-  }
-}
-
-mkdirSync(storageDirectory, { recursive: true })
+console.log(
+  'Nota: ngrok gratis muestra "Visit Site" en TikTok LIVE Studio. Si te molesta, usa: npm run tunnel:cloudflare',
+)
 
 const ngrokProcess = spawn(resolveNgrokPath(), ['http', String(tunnelPort), '--log', 'stdout'], {
   cwd: projectRoot,
@@ -83,8 +57,8 @@ function handleStdoutChunk(chunk) {
     }
 
     latestPublicUrl = matchedUrl
-    writeFileSync(tunnelUrlFile, `${matchedUrl}\n`, 'utf8')
-    console.log(`Public URL: ${matchedUrl}`)
+    persistTunnelUrl(matchedUrl)
+    console.log(`Public URL (ngrok): ${matchedUrl}`)
     void syncPublicUrl(matchedUrl)
   })
 }

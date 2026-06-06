@@ -1,0 +1,607 @@
+/* ═══════════════════════════════════════════════════════════
+   BATALLAS — TEMA CLARO
+   html.modo-claro #view-batallas ...
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── base.css overrides ────────────────────────────────── */
+
+html.modo-claro .battle-section {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .battle-section:hover {
+  border-color: rgba(35, 123, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .battle-section-header {
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .battle-status-text {
+  color: var(--text-muted);
+}
+
+html.modo-claro .battle-status-card.online .battle-status-text {
+  color: #16a34a;
+}
+
+html.modo-claro .battle-status-card.in-battle .battle-status-text {
+  color: #db2777;
+}
+
+html.modo-claro .battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .battle-sections-row > .battle-section .boosts-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* ── battle-1v1.css overrides ──────────────────────────── */
+
+html.modo-claro .battle-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .battle-card:hover {
+  border-color: rgba(35, 123, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .battle-top-bar {
+  background: rgba(35, 123, 255, 0.06);
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .battle-timer {
+  color: var(--text-white);
+  text-shadow: none;
+}
+
+html.modo-claro .battle-timer.urgent {
+  color: #dc2626;
+  text-shadow: none;
+}
+
+html.modo-claro .battle-progress-bar {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+html.modo-claro .progress-divider {
+  background: var(--bg-card);
+}
+
+html.modo-claro .contender-name .battle-username {
+  color: var(--text-muted);
+}
+
+html.modo-claro .vs-text {
+  color: var(--text-muted);
+}
+
+html.modo-claro .winning-badge.host-winning,
+html.modo-claro .winning-badge.guest-winning {
+  background: rgba(35, 123, 255, 0.08);
+  color: #2563eb;
+  border-color: rgba(35, 123, 255, 0.3);
+}
+
+html.modo-claro .winning-badge.host-winning.dominating,
+html.modo-claro .winning-badge.guest-winning.dominating {
+  background: rgba(35, 123, 255, 0.12);
+  border-color: rgba(35, 123, 255, 0.4);
+}
+
+html.modo-claro .winning-badge.host-winning.crushing,
+html.modo-claro .winning-badge.guest-winning.crushing {
+  background: rgba(35, 123, 255, 0.18);
+  border-color: #2563eb;
+  box-shadow: 0 0 12px rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro .winning-badge.tie {
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+html.modo-claro .battle-quick-stats {
+  border-top-color: var(--border-subtle);
+}
+
+html.modo-claro .stat-value {
+  color: var(--text-white);
+}
+
+html.modo-claro .contender-score.host-score {
+  color: #db2777;
+}
+
+html.modo-claro .contender-score.guest-score {
+  color: #2563eb;
+}
+
+html.modo-claro .host-side .contender-avatar {
+  border-color: #ec4899;
+}
+
+html.modo-claro .guest-side .contender-avatar {
+  border-color: #3b82f6;
+}
+
+/* Responsive MVP side panel */
+@media (max-width: 900px) {
+  html.modo-claro .battle-mvps-side-panel .battle-mvps-stacked .mvp-column {
+    border-right-color: var(--border-subtle);
+  }
+}
+
+/* ── mvps.css overrides ────────────────────────────────── */
+
+html.modo-claro .battle-mvps-row {
+  background: var(--border-subtle);
+}
+
+html.modo-claro .mvp-column {
+  background: var(--bg-card);
+}
+
+html.modo-claro .battle-mvps-stacked .mvp-column {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .mvp-item {
+  background: var(--bg-elevated);
+}
+
+html.modo-claro .mvp-item:hover {
+  background: var(--bg-hover);
+}
+
+html.modo-claro .mvp-item.position-1 {
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(255, 215, 0, 0.1));
+  border-color: rgba(255, 215, 0, 0.25);
+}
+
+html.modo-claro .mvp-item.position-2 {
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(148, 163, 184, 0.1));
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+html.modo-claro .mvp-item.position-3 {
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(205, 127, 50, 0.1));
+  border-color: rgba(205, 127, 50, 0.25);
+}
+
+html.modo-claro .mvp-position {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+html.modo-claro .mvp-score {
+  color: #b45309;
+}
+
+html.modo-claro .mvp-item.position-1 .mvp-score {
+  color: #b45309;
+}
+
+html.modo-claro .mvp-item.position-2 .mvp-score {
+  color: var(--text-muted);
+}
+
+html.modo-claro .mvp-item.position-3 .mvp-score {
+  color: #92400e;
+}
+
+html.modo-claro .mvp-item.top3 .mvp-name {
+  color: #b45309;
+}
+
+html.modo-claro .battle-username {
+  color: var(--text-muted);
+}
+
+html.modo-claro .mvp-item.has-powerups {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(236, 72, 153, 0.06));
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+/* ── battle-multi.css overrides ────────────────────────── */
+
+html.modo-claro #battle-multi-view {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .multi-battle-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-timer {
+  color: #c2410c;
+  background: rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+html.modo-claro .multi-participant-card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-participant-card.is-host::before {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+html.modo-claro .multi-participant-name .battle-username {
+  color: var(--text-muted);
+}
+
+html.modo-claro .multi-participant-avatar {
+  background: var(--bg-card);
+}
+
+html.modo-claro .multi-participant-avatar.no-avatar {
+  background: var(--bg-card);
+}
+
+html.modo-claro .multi-participant-rank.rank-other {
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+}
+
+html.modo-claro .multi-battle-stats {
+  border-top-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-stat .stat-value {
+  color: var(--text-white);
+}
+
+/* Progress bar multi */
+html.modo-claro .multi-progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .multi-progress-bar::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, transparent 100%);
+}
+
+html.modo-claro .multi-progress-bar::after {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.15) 0%,
+    transparent 7%,
+    transparent 93%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+
+html.modo-claro .multi-progress-segment + .multi-progress-segment::before {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Streamer blocks */
+html.modo-claro .multi-streamer-block {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-streamer-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-streamer-block.is-host .multi-streamer-header::after {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+html.modo-claro .multi-streamer-name small.battle-username {
+  color: var(--text-muted);
+}
+
+html.modo-claro .multi-streamer-mvp-row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .multi-streamer-mvp-row .multi-mvp-avatar {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* MVP by creator sections */
+html.modo-claro .multi-mvp-creator-section {
+  background: var(--bg-elevated);
+}
+
+html.modo-claro .multi-mvp-creator-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .multi-mvp-item {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* ── timer-missions.css overrides ──────────────────────── */
+
+html.modo-claro .mission-progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.modo-claro .mission-card.reward-active .mission-progress-bar {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.12);
+}
+
+html.modo-claro .mission-card.reward-active .mission-description {
+  color: #16a34a;
+}
+
+html.modo-claro .mission-progress-text {
+  color: #b45309;
+}
+
+html.modo-claro .mission-card.completed .mission-progress-text {
+  color: #16a34a;
+}
+
+html.modo-claro .mission-card.failed .mission-progress-text {
+  color: #dc2626;
+}
+
+html.modo-claro .mission-card.reward-active .mission-progress-text.reward-timer {
+  color: #16a34a;
+}
+
+/* ── history.css overrides ─────────────────────────────── */
+
+html.modo-claro .history-matchup .host-name {
+  color: #db2777;
+}
+
+html.modo-claro .history-matchup .guest-name {
+  color: #2563eb;
+}
+
+html.modo-claro .reward-matchup .host-name {
+  color: #db2777;
+}
+
+html.modo-claro .reward-matchup .guest-name {
+  color: #2563eb;
+}
+
+html.modo-claro .reward-result {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+html.modo-claro .reward-card.position-1 .reward-card-user {
+  color: #b45309;
+}
+
+html.modo-claro .reward-card.position-2 .reward-card-user {
+  color: #64748b;
+}
+
+html.modo-claro .reward-card.position-3 .reward-card-user {
+  color: #92400e;
+}
+
+html.modo-claro .reward-info {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .reward-actions {
+  border-top-color: var(--border-subtle);
+}
+
+html.modo-claro .reward-finish-btn {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.06));
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #16a34a;
+}
+
+html.modo-claro .reward-finish-btn:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  border-color: #16a34a;
+}
+
+html.modo-claro .reward-countdown {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(245, 158, 11, 0.1));
+  border-color: rgba(234, 179, 8, 0.35);
+  color: #b45309;
+}
+
+/* ── powerups.css overrides ────────────────────────────── */
+
+html.modo-claro .pu-nick {
+  color: #7c3aed;
+}
+
+html.modo-claro .pu-tag {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+html.modo-claro .pu-tag:hover {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+html.modo-claro .pu-tag.exp {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+html.modo-claro .pu-tag.exp small {
+  color: #b45309;
+}
+
+html.modo-claro .pu-row:hover {
+  background: rgba(139, 92, 246, 0.04);
+}
+
+html.modo-claro .pu-row.is-online {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+html.modo-claro .pu-details {
+  background: var(--bg-elevated);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+html.modo-claro .pu-detail-time {
+  color: #7c3aed;
+}
+
+html.modo-claro .pu-detail-time.warn {
+  color: #b45309;
+}
+
+html.modo-claro .boosts-legend {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .boost-card-count {
+  color: #db2777;
+}
+
+/* ── modals.css overrides ──────────────────────────────── */
+
+html.modo-claro .powerup-modal {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(35, 123, 255, 0.06);
+}
+
+html.modo-claro .powerup-modal-avatar {
+  border-color: rgba(35, 123, 255, 0.25);
+}
+
+html.modo-claro .powerup-modal-avatar-placeholder {
+  background: rgba(35, 123, 255, 0.06);
+}
+
+html.modo-claro .powerup-type-icon {
+  background: rgba(35, 123, 255, 0.05);
+}
+
+html.modo-claro .pu-ctrl-count {
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.18);
+  color: #2563eb;
+}
+
+html.modo-claro .pu-ctrl-btn.plus {
+  border-color: rgba(35, 123, 255, 0.25);
+  color: #2563eb;
+}
+
+html.modo-claro .pu-ctrl-btn.plus:hover {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.4);
+  color: #1d4ed8;
+}
+
+html.modo-claro .powerup-used-modal {
+  background: var(--bg-card);
+  border-color: rgba(234, 179, 8, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), 0 0 20px rgba(234, 179, 8, 0.06);
+}
+
+html.modo-claro .powerup-used-header {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(139, 92, 246, 0.1));
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .powerup-used-header h3 {
+  color: #b45309;
+}
+
+html.modo-claro .powerup-used-user {
+  background: var(--bg-elevated);
+}
+
+html.modo-claro .powerup-used-avatar {
+  border-color: rgba(234, 179, 8, 0.35);
+}
+
+html.modo-claro .powerup-used-count {
+  background: rgba(234, 179, 8, 0.1);
+  color: #b45309;
+}
+
+html.modo-claro .powerup-user-nick {
+  color: #7c3aed;
+}
+
+html.modo-claro .powerup-user-header {
+  border-bottom-color: rgba(139, 92, 246, 0.2);
+}
+
+/* ── Scrollbar global batallas ─────────────────────────── */
+
+html.modo-claro .battle-history-list::-webkit-scrollbar-thumb,
+html.modo-claro .boosts-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .battle-history-list::-webkit-scrollbar-thumb:hover,
+html.modo-claro .boosts-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* ── Live video toggle ─────────────────────────────────── */
+
+html.modo-claro .battle-video-toggle {
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .battle-video-toggle:hover {
+  border-color: rgba(35, 123, 255, 0.3);
+  color: #2563eb;
+  background: rgba(35, 123, 255, 0.05);
+}
+
+html.modo-claro .battle-video-toggle.active {
+  border-color: rgba(35, 123, 255, 0.4);
+  color: #2563eb;
+  background: rgba(35, 123, 255, 0.08);
+}
+
+html.modo-claro .battle-video-info-notice {
+  color: #b87a00;
+  background: rgba(200, 140, 0, 0.1);
+}
+
+html.modo-claro .battle-video-info-notice:hover {
+  background: rgba(200, 140, 0, 0.18);
+  color: #a06800;
+}
+
+html.modo-claro .battle-video-info-notice .battle-video-info-text {
+  background: #fff;
+  color: #333;
+  border-color: rgba(200, 140, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .battle-video-info-notice .battle-video-info-text::after {
+  border-color: #fff transparent transparent transparent;
+}

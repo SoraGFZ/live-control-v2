@@ -1,0 +1,1193 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Puntos - TikControl</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- TikControl Widget System -->
+  <link rel="stylesheet" href="tikcontrol-widget.css">
+
+  <style>
+    :root {
+      --tc-primary: #fbbf24;
+      --tc-accent: #fbbf24;
+      --tc-title-color: #ffffff;
+      --tc-text-color: #ffffff;
+      --tc-value-color: #fbbf24;
+      --tc-top1-color: #ffd700;
+      --tc-top2-color: #c0c0c0;
+      --tc-top3-color: #cd7f32;
+      --tc-font-size: 22px;
+      --tc-title-size: 34px;
+      --tc-stroke-color: #000000;
+      --tc-stroke-width: 2px;
+    }
+
+    /* Por defecto: TRANSPARENTE (para OBS) */
+    .tc-widget {
+      background: transparent;
+    }
+
+    /* Con fondo activado: gradiente oscuro */
+    .tc-widget.has-bg {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 40, 0.9) 100%);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .tc-title {
+      font-size: var(--tc-title-size);
+      color: var(--tc-title-color);
+    }
+
+    .tc-row {
+      font-size: var(--tc-font-size);
+      gap: 14px;
+      min-height: 68px;
+      padding: 12px 16px;
+    }
+
+    .tc-list {
+      gap: 10px;
+    }
+
+    .tc-pos {
+      min-width: 38px;
+      height: 38px;
+      font-size: 1.05em;
+    }
+
+    .tc-avatar,
+    .tc-avatar-fallback {
+      width: 56px;
+      height: 56px;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .tc-name {
+      font-weight: 800;
+      font-size: 1em;
+      line-height: 1.12;
+    }
+
+    .tc-username {
+      font-size: 0.72em;
+      line-height: 1.15;
+    }
+
+    .tc-value {
+      min-width: 96px;
+      font-size: 1.05em;
+      line-height: 1;
+    }
+
+    .tc-name,
+    .tc-username {
+      color: var(--tc-text-color);
+    }
+
+    .tc-value {
+      color: var(--tc-value-color);
+    }
+
+    /* Colores del Podio */
+    .tc-row.top-1 {
+      border-left-color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-pos {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-name {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-2 {
+      border-left-color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-pos {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-name {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-3 {
+      border-left-color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-pos {
+      color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-name {
+      color: var(--tc-top3-color);
+    }
+
+    /* Efectos de texto */
+    .tc-effect-glow {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+
+    .tc-effect-neon {
+      text-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 40px currentColor;
+      animation: neon-flicker 2s infinite alternate;
+    }
+
+    @keyframes neon-flicker {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    .tc-effect-rainbow {
+      background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0080ff, #8000ff);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-shift 3s linear infinite;
+    }
+
+    @keyframes rainbow-shift {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 200% 50%;
+      }
+    }
+
+    /* Contorno de texto */
+    .tc-stroke {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* Contorno GLOBAL */
+    .tc-widget.stroke-enabled .tc-title,
+    .tc-widget.stroke-enabled .tc-pos,
+    .tc-widget.stroke-enabled .tc-name,
+    .tc-widget.stroke-enabled .tc-username,
+    .tc-widget.stroke-enabled .tc-value {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* Corona SVG para #1 â€” centrada ENCIMA DEL AVATAR.
+       Offset normal (flex): padding-left(14) + pos(32) + gap(12) + avatar/2(20) = 78px */
+    .tc-row.top-1.has-crown {
+      margin-top: 22px;
+      position: relative;
+    }
+
+    .tc-row.top-1.has-crown::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      left: 78px;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 18px;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='%23ffd700' stroke='%23b8860b' stroke-width='0.7' stroke-linejoin='round'%3E%3Cpath d='M2 17l2-12 5 5 3-7 3 7 5-5 2 12z'/%3E%3Ccircle cx='4' cy='5' r='1.2' fill='%23fff'/%3E%3Ccircle cx='12' cy='3' r='1.2' fill='%23fff'/%3E%3Ccircle cx='20' cy='5' r='1.2' fill='%23fff'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 10;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
+    }
+
+    @keyframes crown-bounce {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(-3px);
+      }
+    }
+
+    .tc-pos {
+      position: relative;
+    }
+
+    /* Icono de estrella SVG â€” reemplaza star cuando el creador NO ha puesto
+       un pointsIcon custom. Render idÃ©ntico en cualquier dispositivo. */
+    .tc-icon.star,
+    .tc-empty-icon.star,
+    .tc-title.has-star::before {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22g%22%20cx%3D%229%22%20cy%3D%226%22%20r%3D%2216%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff9b1%22%2F%3E%3Cstop%20offset%3D%22.38%22%20stop-color%3D%22%23facc15%22%2F%3E%3Cstop%20offset%3D%22.72%22%20stop-color%3D%22%23f59e0b%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%2392400e%22%2F%3E%3C%2FradialGradient%3E%3ClinearGradient%20id%3D%22shine%22%20x1%3D%226%22%20y1%3D%224%22%20x2%3D%2217%22%20y2%3D%2218%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.9%22%2F%3E%3Cstop%20offset%3D%22.48%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M12%202.15%2015.05%208.3l6.8.98-4.92%204.78%201.16%206.76L12%2017.62l-6.09%203.2%201.16-6.76-4.92-4.78%206.8-.98Z%22%20fill%3D%22url(%23g)%22%20stroke%3D%22%237c2d12%22%20stroke-width%3D%221.15%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M12%204.65%2014%208.7l4.45.65-3.22%203.13.76%204.42L12%2014.8l-3.99%202.1.76-4.42-3.22-3.13L10%208.7Z%22%20fill%3D%22url(%23shine)%22%20opacity%3D%22.65%22%2F%3E%3C%2Fsvg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: inline-block;
+      vertical-align: -0.15em;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px var(--tc-value-color));
+    }
+    .tc-icon.star { width: 1.45rem; height: 1.45rem; }
+    .tc-empty-icon.star { width: 56px; height: 56px; vertical-align: baseline; }
+    .tc-title.has-star::before {
+      content: '';
+      width: 1.35rem;
+      height: 1.35rem;
+      margin-right: 0.35em;
+    }
+
+    /* Medallas SVG â€” reemplazan goldsilverbronze. */
+    .tc-row.top-1 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23facc15' stroke='%23a16207' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23a16207' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23f59e0b'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-2 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23e5e7eb' stroke='%236b7280' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%236b7280' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%239ca3af'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-3 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23d97706' stroke='%2378350f' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2378350f' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%2392400e'/%3E%3C/svg%3E");
+    }
+    .tc-pos.medal {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: transparent;
+      font-size: 0;
+      user-select: none;
+      min-width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35));
+    }
+    .tc-widget.compact .tc-pos.medal {
+      min-width: 20px;
+      height: 30px;
+    }
+
+    /* Animaciones */
+    .tc-anim-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .tc-anim-bounce {
+      animation: bounce 1s ease infinite;
+    }
+
+    .tc-anim-wiggle {
+      animation: wiggle 0.5s ease-in-out infinite;
+    }
+
+    .tc-anim-glow {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    .tc-anim-spin {
+      animation: tc-spin 1.3s linear infinite;
+    }
+
+    .tc-anim-heartbeat {
+      animation: heartbeat 1.2s ease-in-out infinite;
+    }
+
+    .tc-anim-float {
+      animation: float 2.6s ease-in-out infinite;
+    }
+
+    .tc-anim-shake {
+      animation: shake 0.45s ease-in-out infinite;
+    }
+
+    @keyframes tc-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @keyframes wiggle {
+
+      0%,
+      100% {
+        transform: rotate(-3deg);
+      }
+
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+
+    @keyframes glow-pulse {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 5px currentColor);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 15px currentColor);
+      }
+    }
+
+    @keyframes heartbeat {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      14% {
+        transform: scale(1.18);
+      }
+
+      28% {
+        transform: scale(1);
+      }
+
+      42% {
+        transform: scale(1.12);
+      }
+
+      70% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-2px);
+      }
+
+      40% {
+        transform: translateX(2px);
+      }
+
+      60% {
+        transform: translateX(-1px);
+      }
+
+      80% {
+        transform: translateX(1px);
+      }
+    }
+    /* Marcos de avatar para rankings. El pack actual solo incluye Top 1;
+       al anadir top2-top5 basta con publicar los PNG y registrar la ruta. */
+    .tc-avatar-frame {
+      position: relative;
+      width: 64px;
+      aspect-ratio: var(--top-frame-aspect, 1) / 1;
+      flex: 0 0 64px;
+      display: block;
+      align-self: center;
+    }
+
+    .tc-avatar-frame .tc-avatar,
+    .tc-avatar-frame .tc-avatar-fallback {
+      position: absolute;
+      left: var(--top-frame-avatar-left, 50%);
+      top: var(--top-frame-avatar-top, 50%);
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      border: 0;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .tc-avatar-frame-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tc-widget.compact .tc-avatar-frame {
+      grid-area: avatar;
+      width: 48px;
+      flex-basis: 48px;
+      align-self: center;
+      justify-self: center;
+    }
+
+    .tc-widget.compact .tc-avatar-frame .tc-avatar,
+    .tc-widget.compact .tc-avatar-frame .tc-avatar-fallback {
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      font-size: 12px;
+    }
+
+    /* Avatar oculto */
+    .tc-avatar.hidden {
+      display: none;
+    }
+
+    /* Nickname oculto */
+    .tc-row.hide-names .tc-info {
+      display: none;
+    }
+
+    /* @username oculto (nickname sigue visible) */
+    .tc-row.hide-username .tc-username {
+      display: none;
+    }
+
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       MODO COMPACTO â€” filas mÃ¡s delgadas (â‰ˆ32px), 1 lÃ­nea, avatar
+       pequeÃ±o. Pedido para que quepan varios tops en pantalla sin que
+       ocupen tanto espacio vertical.
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    /* Compacto con CSS Grid: pos / avatar ocupan 2 filas verticalmente,
+       nick en fila 1 de la columna "info", valor en fila 2 de esa columna.
+       AsÃ­ el valor SIEMPRE queda bajo el nick sin depender de flex-wrap y
+       sin mezclarse con la fila de abajo. */
+    .tc-widget.compact .tc-row {
+      display: grid;
+      grid-template-columns: 20px 30px 1fr;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "pos avatar info"
+        "pos avatar value";
+      column-gap: 8px;
+      row-gap: 0;
+      padding: 4px 10px;
+      min-height: 0;
+      align-items: center;
+    }
+
+    .tc-widget.compact .tc-pos {
+      grid-area: pos;
+      align-self: center;
+      justify-self: center;
+      min-width: 0;
+      height: auto;
+      font-size: 13px;
+    }
+
+    .tc-widget.compact .tc-avatar,
+    .tc-widget.compact .tc-avatar-fallback {
+      grid-area: avatar;
+      align-self: center;
+      justify-self: center;
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .tc-widget.compact .tc-info {
+      grid-area: info;
+      align-self: end;
+      min-width: 0;
+      gap: 0;
+    }
+
+    .tc-widget.compact .tc-name {
+      font-size: 0.9em;
+      line-height: 1.15;
+      /* Espacio para que el stroke/contorno del primer glyph no se
+         recorte con overflow:hidden (necesario cuando la fuente custom
+         tiene left-bearing negativo o hay stroke-width > 0). */
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-username {
+      font-size: 9px;
+      line-height: 1.1;
+      margin-top: 0;
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-value {
+      grid-area: value;
+      align-self: start;
+      justify-self: start;
+      text-align: left;
+      min-width: 0;
+      font-size: 0.8em;
+      line-height: 1.1;
+      font-weight: 700;
+      margin: 0;
+      padding-left: 4px;
+    }
+
+    /* SeparaciÃ³n clara entre filas para que el valor no se mezcle
+       visualmente con el siguiente usuario. */
+    .tc-widget.compact .tc-list {
+      gap: 6px;
+    }
+
+    /* Si el @username estÃ¡ oculto en compacto, el valor pega bajo el nick
+       (sin hueco del username). */
+    .tc-widget.compact .tc-row.hide-username .tc-info {
+      align-self: center;
+    }
+
+    /* Si el nickname COMPLETO estÃ¡ oculto en compacto, colapsamos a una
+       sola fila: valor se queda al lado del avatar. */
+    .tc-widget.compact .tc-row.hide-names {
+      grid-template-rows: auto;
+      grid-template-areas: "pos avatar value";
+    }
+
+    .tc-widget.compact .tc-row.hide-names .tc-value {
+      align-self: center;
+      justify-self: start;
+    }
+
+    .tc-widget.compact .tc-row.top-1.has-crown {
+      margin-top: 18px;
+    }
+
+    /* Compact (grid): padding-left(10) + pos(20) + gap(8) + avatar/2(15) = 53px */
+    .tc-widget.compact .tc-row.top-1.has-crown::before {
+      left: 53px;
+      top: -16px;
+      width: 18px;
+      height: 14px;
+    }
+
+    /* Loading state */
+    .tc-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      opacity: 0.5;
+    }
+
+    .tc-loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--tc-value-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tc-widget" id="widget">
+    <div class="tc-title has-star" id="title">TOP PUNTOS</div>
+    <div class="tc-list" id="list">
+      <div class="tc-loading">
+        <div class="tc-loading-spinner"></div>
+        <div style="margin-top:10px;font-size:12px">Conectando con AWS...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TikControl Widget System -->
+  <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+  <script src="core/font-loader.js?v=20260526-storage-token-fix"></script>
+  <script src="core/tikcontrol-widget.js?v=1.0.18"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // ESTADO DEL WIDGET
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      const state = {
+        users: [],
+        // TÃ­tulo
+        title: 'TOP PUNTOS',
+        showTitle: true,
+        titleSize: 34,
+        titleColor: '#ffffff',
+        // Texto
+        textColor: '#ffffff',
+        valueColor: '#fbbf24',
+        fontSize: 22,
+        fontFamily: '',
+        fontUrl: '',
+        // Display
+        rows: 5,
+        nameMaxLen: 20,
+        showAvatars: true,
+        avatarFrameStyle: 'classic',
+        showNicknames: true,
+        showUsername: true,
+        compactMode: false,
+        showCrown: true,
+        showBg: false,
+        showRowBg: true,
+        // Colores Podio
+        colorTop1: '#ffd700',
+        colorTop2: '#c0c0c0',
+        colorTop3: '#cd7f32',
+        // Animaciones
+        animIcon: 'none',
+        animTop1: 'none',
+        // Efectos
+        titleEffect: 'none',
+        effectText: 'none',
+        showMedals: true,
+        // Contorno
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 2,
+        // Nombre personalizable de puntos
+        pointsName: 'Puntos',
+        pointsIcon: 'star',
+        // Control
+        connected: false,
+        refreshInterval: null
+      };
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // ELEMENTOS DOM
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      const widgetEl = document.getElementById('widget');
+      const titleEl = document.getElementById('title');
+      const listEl = document.getElementById('list');
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // INICIALIZAR TIKCONTROL
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.init('top-points', {
+        persistent: false,  // No guardamos datos locales, vienen de AWS
+        sessionBased: false
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // CONFIGURACIÃ“N
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      TikControl.onConfig((config) => {
+        // [log cleaned]
+        // TÃ­tulo
+        if (config.title !== undefined) state.title = config.title;
+        if (config.showTitle !== undefined) state.showTitle = config.showTitle;
+        if (config.titleSize !== undefined) state.titleSize = parseInt(config.titleSize);
+        if (config.titleColor !== undefined) state.titleColor = config.titleColor;
+
+        // Texto
+        if (config.textColor !== undefined) state.textColor = config.textColor;
+        if (config.valueColor !== undefined) state.valueColor = config.valueColor;
+        if (config.fontSize !== undefined) state.fontSize = parseInt(config.fontSize);
+        if (config.fontFamily !== undefined) state.fontFamily = config.fontFamily;
+        if (config.fontUrl !== undefined) state.fontUrl = config.fontUrl;
+
+        // Display
+        if (config.rows !== undefined) state.rows = parseInt(config.rows);
+        if (config.maxDisplay !== undefined) state.rows = parseInt(config.maxDisplay);
+        if (config.nameMaxLen !== undefined) state.nameMaxLen = parseInt(config.nameMaxLen);
+        if (config.showAvatars !== undefined) state.showAvatars = config.showAvatars;
+        if (config.avatarFrameStyle !== undefined) state.avatarFrameStyle = config.avatarFrameStyle || 'none';
+        if (config.showNicknames !== undefined) state.showNicknames = config.showNicknames;
+        if (config.showUsername !== undefined) state.showUsername = config.showUsername;
+        if (config.compactMode !== undefined) state.compactMode = config.compactMode;
+        if (config.showCrown !== undefined) state.showCrown = config.showCrown;
+        if (config.showBg !== undefined) state.showBg = config.showBg;
+        if (config.showRowBg !== undefined) state.showRowBg = config.showRowBg;
+
+        // Colores Podio
+        if (config.colorTop1 !== undefined) state.colorTop1 = config.colorTop1;
+        if (config.colorTop2 !== undefined) state.colorTop2 = config.colorTop2;
+        if (config.colorTop3 !== undefined) state.colorTop3 = config.colorTop3;
+
+        // Animaciones
+        if (config.animIcon !== undefined) state.animIcon = config.animIcon;
+        if (config.animTop1 !== undefined) state.animTop1 = config.animTop1;
+
+        // Efectos
+        if (config.titleEffect !== undefined) state.titleEffect = config.titleEffect;
+        if (config.effectText !== undefined) state.effectText = config.effectText;
+        if (config.showMedals !== undefined) state.showMedals = config.showMedals;
+
+        // Contorno
+        if (config.strokeEnabled !== undefined) state.strokeEnabled = config.strokeEnabled;
+        if (config.strokeColor !== undefined) state.strokeColor = config.strokeColor;
+        if (config.strokeWidth !== undefined) state.strokeWidth = parseInt(config.strokeWidth);
+
+        // Nombre de puntos
+        if (config.pointsName !== undefined) state.pointsName = config.pointsName;
+        if (config.pointsIcon !== undefined) state.pointsIcon = 'star';
+
+        // Cargar fuente personalizada
+        if (state.fontFamily) {
+          loadCustomFont(state.fontFamily, state.fontUrl);
+        }
+
+        applyStyles();
+        render();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // DATOS DE PUNTOS DESDE AWS
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      
+      // OK Flag para trackear datos reales
+      // OK Acumulador para paginaciÃ³n
+      let _pointsChunks = [];
+      
+      // OK Helper para aplicar proxy a avatares de usuarios
+      const applyProxyToUsers = (users) => {
+        return users.map(u => {
+          if (u.avatar) u.avatar = proxyAvatar(u.avatar);
+          if (u.profilePictureUrl) u.profilePictureUrl = proxyAvatar(u.profilePictureUrl);
+          return u;
+        });
+      };
+
+      TikControl.on('points:data', (data) => {
+        if (data.users && Array.isArray(data.users)) {
+          // OK Soporte para paginaciÃ³n
+          if (data.totalChunks > 1) {
+            _pointsChunks.push(...applyProxyToUsers(data.users));
+            // [log cleaned]
+            if (data.isComplete) {
+              // [log cleaned]
+              state.users = _pointsChunks.slice(0, state.rows);
+              state.connected = true;
+              _pointsChunks = [];
+              render();
+            }
+          } else {
+            state.users = applyProxyToUsers(data.users).slice(0, state.rows);
+            state.connected = true;
+            render();
+          }
+        }
+      });
+
+      // OK Fallback: TambiÃ©n escuchar points:loaded (alternativo de Lambda)
+      TikControl.on('points:loaded', (data) => {
+        // Log silenciado - muy frecuente
+        if (data.users && Array.isArray(data.users)) {
+          // OK Soporte para paginaciÃ³n
+          if (data.totalChunks > 1) {
+            _pointsChunks.push(...applyProxyToUsers(data.users));
+            if (data.isComplete) {
+              state.users = _pointsChunks.slice(0, state.rows);
+              state.connected = true;
+              _pointsChunks = [];
+              render();
+            }
+          } else {
+            state.users = applyProxyToUsers(data.users).slice(0, state.rows);
+            state.connected = true;
+            render();
+          }
+        }
+      });
+
+      // TambiÃ©n escuchar el evento de ranking cargado
+      TikControl.on('ranking', (data) => {
+        // Log silenciado - muy frecuente
+        if (data.users && Array.isArray(data.users)) {
+          state.users = applyProxyToUsers(data.users).slice(0, state.rows);
+          state.connected = true;
+          render();
+        }
+      });
+
+      // OK FunciÃ³n para solicitar datos de puntos
+      function requestPointsData() {
+        if (TikControl._instance && TikControl._instance.socket && TikControl._instance.socket.readyState === WebSocket.OPEN) {
+          // [log cleaned]
+          TikControl._instance.socket.send(JSON.stringify({
+            type: 'points:load',
+            uid: TikControl.getUserId(),
+            source: 'widget'
+          }));
+          return true;
+        }
+        return false;
+      }
+
+      // OK Solicitar datos de puntos al conectar
+      TikControl.on('connect', () => {
+        // [log cleaned]
+        requestPointsData();
+        
+        // OK Fallback: Si no recibimos datos en 3 segundos, reintentar
+        setTimeout(() => {
+          if (!state.connected) {
+            // [log cleaned]
+            requestPointsData();
+          }
+        }, 3000);
+      });
+      
+      // OK Fallback adicional: Si despuÃ©s de 10s no hay conexiÃ³n, marcar como conectado pero vacÃ­o
+      setTimeout(() => {
+        if (!state.connected && TikControl._instance && TikControl._instance.connected) {
+          // [log cleaned]
+          state.connected = true;
+          render();
+        }
+      }, 10000);
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // RESET
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      function showTestPoints(data) {
+        state.connected = true;
+        state.users = ((data && data.users) || [
+          { nickname: 'TikControl', uniqueId: 'tikcontrol', points: 12000 },
+          { nickname: 'TestAlpha', uniqueId: 'testalpha', points: 8400 },
+          { nickname: 'Viewer123', uniqueId: 'viewer123', points: 5100 }
+        ]).slice(0, state.rows);
+        render();
+      }
+
+      TikControl.on('widget:test', (data) => {
+        if (!data || data.widget !== 'top-points') return;
+        showTestPoints(data.data);
+      });
+
+      window.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (data.type !== 'TOP_POINTS_TEST') return;
+        showTestPoints(data.data);
+      });
+
+      TikControl.on('reset', () => {
+        state.users = [];
+        render();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // FUNCIONES
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // PROXY DE AVATARES - Evita el bloqueo 403 de TikTok
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // Regex: extrae `tos-xxxx-avt-NNNN/HASH` de cualquier URL TikTok
+      // con template `~tplv-`. Ese path ES el mUri.
+      var _TPLV_RE = /\/\/[^/]*tiktokcdn[^/]*\.com\/([^~?]+)~tplv-/i;
+
+      function proxyAvatar(url) {
+        if (!url) return '';
+        // Anti-doble-proxy: desenvolver URLs ya pasadas por weserv.
+        if (url.indexOf('images.weserv.nl') !== -1) {
+          try {
+            var inner = new URL(url).searchParams.get('url');
+            if (inner) url = decodeURIComponent(inner);
+          } catch (_) {}
+        }
+        // URLs TikTok con template â†’ estable de Akamai (cache 1 aÃ±o).
+        var m = url.match(_TPLV_RE);
+        if (m) {
+          return 'https://p16-common.tiktokcdn-us.com/' + m[1] + '~tplv-tiktokx-cropcenter:100:100.webp';
+        }
+        if (url.includes('tiktokcdn') || url.includes('tiktok.com')) {
+          return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + '&default=1';
+        }
+        return url;
+      }
+
+      const SYSTEM_FONTS = ['Arial', 'Verdana', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Segoe UI', 'Tahoma', 'Palatino'];
+
+      function loadCustomFont(fontFamily, fontUrl) {
+        if (!fontFamily) return;
+        if (!fontUrl && fontFamily.match(/\.(otf|ttf|woff|woff2)$/i)) {
+          var uid = new URLSearchParams(window.location.search).get('uid');
+          fontUrl = ((window.__tcEnv && window.__tcEnv.st) ? window.__tcEnv.st() : '') + '/users-data/' + uid + '/fonts/' + fontFamily;
+        }
+        if (window.__tcLoadFont) {
+          var cssVal = window.__tcLoadFont(fontFamily, fontUrl);
+          if (cssVal) document.body.style.fontFamily = cssVal;
+        } else if (fontUrl) {
+          document.body.style.fontFamily = '"' + fontFamily + '", system-ui, sans-serif';
+        }
+      }
+
+      function applyStyles() {
+        const root = document.documentElement;
+        root.style.setProperty('--tc-title-size', `${state.titleSize}px`);
+        root.style.setProperty('--tc-title-color', state.titleColor);
+        root.style.setProperty('--tc-text-color', state.textColor);
+        root.style.setProperty('--tc-value-color', state.valueColor);
+        root.style.setProperty('--tc-font-size', `${state.fontSize}px`);
+        root.style.setProperty('--tc-top1-color', state.colorTop1);
+        root.style.setProperty('--tc-top2-color', state.colorTop2);
+        root.style.setProperty('--tc-top3-color', state.colorTop3);
+        root.style.setProperty('--tc-stroke-color', state.strokeColor);
+        root.style.setProperty('--tc-stroke-width', `${state.strokeWidth}px`);
+
+        // Fuente: la pone loadCustomFont() con el nombre limpio del font-loader.
+        // No pisar aquÃ­ â€” si usamos fontFamily a pelo (solo sin extensiÃ³n)
+        // no coincide con el family del @font-face y cae al fallback.
+
+        widgetEl.classList.toggle('has-bg', state.showBg);
+
+        // Modo compacto: reduce tamaÃ±o de avatar + padding + @username.
+        widgetEl.classList.toggle('compact', !!state.compactMode);
+
+        widgetEl.classList.toggle('stroke-enabled', state.strokeEnabled);
+
+        titleEl.textContent = state.title;
+        titleEl.style.display = state.showTitle === false ? 'none' : '';
+        titleEl.style.fontSize = `${state.titleSize}px`;
+
+        let titleClasses = ['tc-title'];
+        if (state.pointsIcon === 'star') titleClasses.push('has-star');
+        if (state.titleEffect && state.titleEffect !== 'none') {
+          titleClasses.push(`tc-effect-${state.titleEffect}`);
+        }
+        if (state.strokeEnabled) {
+          titleClasses.push('tc-stroke');
+        }
+        titleEl.className = titleClasses.join(' ');
+
+        if (state.titleEffect !== 'rainbow') {
+          titleEl.style.color = state.titleColor;
+          titleEl.style.webkitTextFillColor = '';
+        } else {
+          titleEl.style.color = '';
+          titleEl.style.webkitTextFillColor = 'transparent';
+        }
+      }
+
+      function render() {
+        const sorted = state.users.slice(0, state.rows);
+
+        if (sorted.length === 0) {
+          if (!state.connected) {
+            listEl.innerHTML = `
+              <div class="tc-loading">
+                <div class="tc-loading-spinner"></div>
+                <div style="margin-top:10px;font-size:12px">Conectando con AWS...</div>
+              </div>
+            `;
+          } else {
+            // Si el creador deja el pointsIcon por defecto (star), pintamos
+            // el SVG vÃ­a CSS (.star). Si lo ha cambiado (p.ej. Diamonds), mostramos
+            // su emoji tal cual.
+            const emptyIconHtml = '<div class="tc-empty-icon star"></div>';
+            listEl.innerHTML = `
+              <div class="tc-empty">
+                ${emptyIconHtml}
+                <div class="tc-empty-text">Sin ${state.pointsName.toLowerCase()}...</div>
+              </div>
+            `;
+          }
+          return;
+        }
+
+        listEl.innerHTML = sorted.map((user, index) => {
+          const pos = index + 1;
+          const medal = state.showMedals && pos <= 3
+            ? ''
+            : pos;
+
+          let rowClasses = ['tc-row'];
+
+          if (pos <= 3) rowClasses.push(`top-${pos}`);
+          if (pos === 1 && state.showCrown) rowClasses.push('has-crown');
+          if (pos === 1 && state.animTop1 && state.animTop1 !== 'none') {
+            rowClasses.push(`tc-anim-${state.animTop1}`);
+          }
+          if (!state.showNicknames) rowClasses.push('hide-names');
+          if (!state.showUsername) rowClasses.push('hide-username');
+          if (!state.showRowBg) rowClasses.push('no-bg');
+
+          let valueClasses = ['tc-value'];
+          if (state.effectText && state.effectText !== 'none') {
+            valueClasses.push(`tc-effect-${state.effectText}`);
+          }
+
+          let posClasses = ['tc-pos'];
+          if (state.showMedals && pos <= 3) posClasses.push('medal');
+
+          let displayName = user.nickname || user.uniqueId || 'Usuario';
+          if (displayName.length > state.nameMaxLen) {
+            displayName = displayName.substring(0, state.nameMaxLen) + '...';
+          }
+
+          let iconClass = 'tc-icon';
+          if (state.animIcon && state.animIcon !== 'none') {
+            iconClass += ` tc-anim-${state.animIcon}`;
+          }
+
+          // pointsIcon: si es la estrella por defecto, aÃ±adimos la clase
+          // .star y el CSS pinta el SVG (consistente en todos los
+          // dispositivos). Si el creador ha puesto un emoji custom, se
+          // muestra su emoji tal cual.
+          const iconExtra = ' star';
+          const iconText = '';
+
+          const avatar = proxyAvatar(user.avatar || user.profilePictureUrl || '');
+          const points = user.points || 0;
+          const avatarHtml = renderTopAvatar({ avatar, initial: user.nickname || user.uniqueId || '?', gradient: 'linear-gradient(135deg,#fbbf24 0%,#d97706 100%)', pos });
+
+
+
+          return `
+            <div class="${rowClasses.join(' ')}" data-user="${user.uniqueId}">
+              <div class="${posClasses.join(' ')}">${medal}</div>
+              ${state.showAvatars ? avatarHtml : ''}
+              ${state.showNicknames
+              ? `<div class="tc-info">
+                    <div class="tc-name">${escapeHtml(displayName)}</div>
+                    <div class="tc-username">@${escapeHtml(user.uniqueId || '')}</div>
+                  </div>`
+              : ''
+            }
+              <div class="${valueClasses.join(' ')}">
+                ${formatNumber(points)} <span class="${iconClass}${iconExtra}">${iconText}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      function createTopAvatarFramePack(slug, aspects, avatar) {
+        const avatarConfig = avatar || { left: '50%', top: '47%', size: '62%' };
+        return aspects.reduce((pack, aspect, index) => {
+          const pos = index + 1;
+          pack[pos] = {
+            src: 'top-frames/' + slug + '/top' + pos + '.png',
+            aspect: aspect,
+            avatar: avatarConfig
+          };
+          return pack;
+        }, {});
+      }
+
+      const TOP_AVATAR_FRAME_PACK = {
+        classic: {
+          1: {
+            src: 'top-frames/podium-classic/top1.png',
+            aspect: 157 / 168,
+            avatar: { left: '49.7%', top: '48.5%', size: '55%' }
+          }
+        },
+        'caos-dimensional': createTopAvatarFramePack('caos-dimensional', [172 / 168, 157 / 178, 150 / 187, 157 / 197, 155 / 186]),
+        'corazon-de-dragon': createTopAvatarFramePack('corazon-de-dragon', [152 / 158, 154 / 170, 154 / 170, 153 / 181, 152 / 177]),
+        'cristales-arcanos': createTopAvatarFramePack('cristales-arcanos', [155 / 159, 153 / 172, 150 / 175, 150 / 184, 151 / 177]),
+        'fenix-inmortal': createTopAvatarFramePack('fenix-inmortal', [158 / 158, 145 / 168, 143 / 173, 146 / 171, 161 / 188]),
+        'galaxia-infinita': createTopAvatarFramePack('galaxia-infinita', [154 / 161, 146 / 176, 149 / 177, 151 / 177, 151 / 173]),
+        'jardin-encantado': createTopAvatarFramePack('jardin-encantado', [151 / 159, 155 / 161, 154 / 169, 154 / 175, 148 / 174]),
+        'oceano-profundo': createTopAvatarFramePack('oceano-profundo', [152 / 169, 157 / 179, 149 / 180, 148 / 175, 151 / 177]),
+        'rayos-celestiales': createTopAvatarFramePack('rayos-celestiales', [151 / 177, 153 / 169, 151 / 176, 150 / 173, 157 / 175]),
+        'viento-libre': createTopAvatarFramePack('viento-libre', [154 / 152, 154 / 160, 158 / 162, 150 / 169, 148 / 173])
+      };
+
+
+      function widgetAssetUrl(assetPath) {
+        return '/widgets/' + assetPath.replace(/^\/+/, '');
+      }
+
+      function getTopAvatarFrame(pos) {
+        const style = state.avatarFrameStyle || 'none';
+        if (style === 'none') return null;
+        const pack = TOP_AVATAR_FRAME_PACK[style] || {};
+        return pack[pos] || null;
+      }
+
+      function renderTopAvatar({ avatar, initial, gradient, pos }) {
+        const frame = getTopAvatarFrame(pos);
+        const safeInitial = escapeHtml((initial || '?').charAt(0).toUpperCase());
+        const safeAvatar = avatar ? escapeHtml(avatar) : '';
+        const fallbackBase = 'background:' + gradient + ';color:#fff;font-weight:700;font-size:14px;align-items:center;justify-content:center;';
+        const hiddenFallbackStyle = frame ? 'display:none;' + fallbackBase : 'display:none;width:40px;height:40px;border-radius:50%;' + fallbackBase;
+        const visibleFallbackStyle = frame ? 'display:flex;' + fallbackBase : 'width:40px;height:40px;border-radius:50%;display:flex;' + fallbackBase;
+        const avatarMarkup = safeAvatar
+          ? '<img class="tc-avatar" src="' + safeAvatar + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=&#39;&#39;;this.style.display=&#39;none&#39;;this.nextElementSibling&&this.nextElementSibling.classList.contains(&#39;tc-avatar-fallback&#39;)&&(this.nextElementSibling.style.display=&#39;flex&#39;)"><div class="tc-avatar-fallback" style="' + hiddenFallbackStyle + '">' + safeInitial + '</div>'
+          : '<div class="tc-avatar-fallback" style="' + visibleFallbackStyle + '">' + safeInitial + '</div>';
+
+        if (!frame) return avatarMarkup;
+        const style = [
+          '--top-frame-aspect:' + (frame.aspect || 1),
+          '--top-frame-avatar-left:' + (frame.avatar && frame.avatar.left ? frame.avatar.left : '50%'),
+          '--top-frame-avatar-top:' + (frame.avatar && frame.avatar.top ? frame.avatar.top : '50%'),
+          '--top-frame-avatar-size:' + (frame.avatar && frame.avatar.size ? frame.avatar.size : '55%')
+        ].join(';');
+        return '<div class="tc-avatar-frame top-frame-' + pos + '" style="' + style + '">' + avatarMarkup + '<img class="tc-avatar-frame-img" src="' + widgetAssetUrl(frame.src) + '" alt="" loading="lazy"></div>';
+      }
+
+      function formatNumber(num) {
+        return String(Math.floor(Number(num) || 0));
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Render inicial
+      applyStyles();
+      render();
+
+    })();
+  </script>
+</body>
+
+</html>
+

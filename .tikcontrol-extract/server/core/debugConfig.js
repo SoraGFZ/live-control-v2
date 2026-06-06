@@ -1,0 +1,1 @@
+function E(module){return T.GLOBAL_DEBUG&&T[module]||!1}function O(module){E(module)}const T={GLOBAL_DEBUG:!1,GIFT_CANNON:!1,GIFT_BATTLE:!1,WINLIFE:!1,TIMER:!1,RANKS:!1,TOP_DONORS:!1,FIREWORK:!1,ROULETTE:!1,COMBO:!1,GIFT_EVENTS:!1,SCORE_UPDATES:!1,STATE_SAVES:!1,DEV_MODE:!1};module.exports={DEBUG_CONFIG:T,shouldLog:E,debugLog:O};

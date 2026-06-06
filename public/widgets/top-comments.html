@@ -1,0 +1,1141 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Comentarios - TikControl</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- TikControl Widget System -->
+  <link rel="stylesheet" href="tikcontrol-widget.css">
+
+  <style>
+    :root {
+      --tc-primary: #66d9ff;
+      --tc-accent: #66d9ff;
+      --tc-title-color: #ffffff;
+      --tc-text-color: #ffffff;
+      --tc-value-color: #66d9ff;
+      --tc-top1-color: #ffd700;
+      --tc-top2-color: #c0c0c0;
+      --tc-top3-color: #cd7f32;
+      --tc-font-size: 22px;
+      --tc-title-size: 34px;
+      --tc-stroke-color: #000000;
+      --tc-stroke-width: 2px;
+    }
+
+    /* OK Por defecto: TRANSPARENTE (para OBS) */
+    .tc-widget {
+      background: transparent;
+    }
+
+    /* OK Con fondo activado: gradiente oscuro */
+    .tc-widget.has-bg {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 40, 0.9) 100%);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .tc-title {
+      font-size: var(--tc-title-size);
+      color: var(--tc-title-color);
+    }
+
+    .tc-row {
+      font-size: var(--tc-font-size);
+      gap: 14px;
+      min-height: 68px;
+      padding: 12px 16px;
+    }
+
+    .tc-list {
+      gap: 10px;
+    }
+
+    .tc-pos {
+      min-width: 38px;
+      height: 38px;
+      font-size: 1.05em;
+    }
+
+    .tc-avatar,
+    .tc-avatar-fallback {
+      width: 56px;
+      height: 56px;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .tc-name {
+      font-weight: 800;
+      font-size: 1em;
+      line-height: 1.12;
+    }
+
+    .tc-username {
+      font-size: 0.72em;
+      line-height: 1.15;
+    }
+
+    .tc-value {
+      min-width: 96px;
+      font-size: 1.05em;
+      line-height: 1;
+    }
+
+    .tc-name,
+    .tc-username {
+      color: var(--tc-text-color);
+    }
+
+    .tc-value {
+      color: var(--tc-value-color);
+    }
+
+    /* Colores del Podio - PosiciÃ³n y Nombre */
+    .tc-row.top-1 {
+      border-left-color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-pos {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-1 .tc-name {
+      color: var(--tc-top1-color);
+    }
+
+    .tc-row.top-2 {
+      border-left-color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-pos {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-2 .tc-name {
+      color: var(--tc-top2-color);
+    }
+
+    .tc-row.top-3 {
+      border-left-color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-pos {
+      color: var(--tc-top3-color);
+    }
+
+    .tc-row.top-3 .tc-name {
+      color: var(--tc-top3-color);
+    }
+
+    /* Efectos de texto */
+    .tc-effect-glow {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+
+    .tc-effect-neon {
+      text-shadow:
+        0 0 5px currentColor,
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 40px currentColor;
+      animation: neon-flicker 2s infinite alternate;
+    }
+
+    @keyframes neon-flicker {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    .tc-effect-rainbow {
+      background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0080ff, #8000ff);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-shift 3s linear infinite;
+    }
+
+    @keyframes rainbow-shift {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 200% 50%;
+      }
+    }
+
+    /* Contorno de texto - Individual */
+    .tc-stroke {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* OK Contorno GLOBAL - Aplica a TODO el texto cuando estÃ¡ activado */
+    .tc-widget.stroke-enabled .tc-title,
+    .tc-widget.stroke-enabled .tc-pos,
+    .tc-widget.stroke-enabled .tc-name,
+    .tc-widget.stroke-enabled .tc-username,
+    .tc-widget.stroke-enabled .tc-value {
+      -webkit-text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      text-stroke: var(--tc-stroke-width) var(--tc-stroke-color);
+      paint-order: stroke fill;
+    }
+
+    /* Corona SVG para #1 â€” centrada ENCIMA DEL AVATAR.
+       Offset normal (flex): padding-left(14) + pos(32) + gap(12) + avatar/2(20) = 78px */
+    .tc-row.top-1.has-crown {
+      margin-top: 22px;
+      position: relative;
+    }
+
+    .tc-row.top-1.has-crown::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      left: 78px;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 18px;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20' fill='%23ffd700' stroke='%23b8860b' stroke-width='0.7' stroke-linejoin='round'%3E%3Cpath d='M2 17l2-12 5 5 3-7 3 7 5-5 2 12z'/%3E%3Ccircle cx='4' cy='5' r='1.2' fill='%23fff'/%3E%3Ccircle cx='12' cy='3' r='1.2' fill='%23fff'/%3E%3Ccircle cx='20' cy='5' r='1.2' fill='%23fff'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      z-index: 10;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,.4));
+    }
+
+    @keyframes crown-bounce {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(-3px);
+      }
+    }
+
+    .tc-pos {
+      position: relative;
+    }
+
+    /* Icono de burbuja SVG â€” reemplaza el emoji comment. Render idÃ©ntico en
+       cualquier dispositivo sin depender de fuentes de emoji. */
+    .tc-icon.comment,
+    .tc-empty-icon.comment,
+    .tc-title.has-comment::before {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%224%22%20y1%3D%223%22%20x2%3D%2220%22%20y2%3D%2220%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%239cf7ff%22%2F%3E%3Cstop%20offset%3D%22.45%22%20stop-color%3D%22%2322d3ee%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%231d4ed8%22%2F%3E%3C%2FlinearGradient%3E%3CradialGradient%20id%3D%22s%22%20cx%3D%227%22%20cy%3D%226%22%20r%3D%2211%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%3Cstop%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.85%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Cpath%20d%3D%22M3%205.6A2.6%202.6%200%200%201%205.6%203h12.8A2.6%202.6%200%200%201%2021%205.6v8.95a2.6%202.6%200%200%201-2.6%202.6h-5.25L7.6%2021.25v-4.1h-2A2.6%202.6%200%200%201%203%2014.55Z%22%20fill%3D%22url(%23g)%22%20stroke%3D%22%230b3f91%22%20stroke-width%3D%221.1%22%20stroke-linejoin%3D%22round%22%2F%3E%3Cpath%20d%3D%22M4.6%207.2A2.45%202.45%200%200%201%207.05%204.75h8.6%22%20fill%3D%22none%22%20stroke%3D%22url(%23s)%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%228.6%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2215.4%22%20cy%3D%2210.4%22%20r%3D%221.45%22%20fill%3D%22%23fff%22%2F%3E%3C%2Fsvg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: inline-block;
+      vertical-align: -0.15em;
+      filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.72)) drop-shadow(0 0 8px var(--tc-value-color));
+    }
+    .tc-icon.comment { width: 1.45rem; height: 1.45rem; }
+    .tc-empty-icon.comment { width: 56px; height: 56px; vertical-align: baseline; }
+    .tc-title.has-comment::before {
+      content: '';
+      width: 1.35rem;
+      height: 1.35rem;
+      margin-right: 0.35em;
+    }
+
+    /* Medallas SVG â€” reemplazan goldsilverbronze. */
+    .tc-row.top-1 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23facc15' stroke='%23a16207' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23a16207' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23f59e0b'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-2 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23e5e7eb' stroke='%236b7280' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%236b7280' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%239ca3af'/%3E%3C/svg%3E");
+    }
+    .tc-row.top-3 .tc-pos.medal {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23d97706' stroke='%2378350f' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%2378350f' stroke-width='0.8'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%2392400e'/%3E%3C/svg%3E");
+    }
+    .tc-pos.medal {
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: transparent;
+      font-size: 0;
+      user-select: none;
+      min-width: 32px;
+      height: 32px;
+      filter: drop-shadow(0 1px 1.5px rgba(0,0,0,0.35));
+    }
+    .tc-widget.compact .tc-pos.medal {
+      min-width: 20px;
+      height: 30px;
+    }
+
+    /* Animaciones */
+    .tc-anim-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .tc-anim-bounce {
+      animation: bounce 1s ease infinite;
+    }
+
+    .tc-anim-wiggle {
+      animation: wiggle 0.5s ease-in-out infinite;
+    }
+
+    .tc-anim-glow {
+      animation: glow-pulse 2s ease-in-out infinite;
+    }
+
+    .tc-anim-spin {
+      animation: tc-spin 1.3s linear infinite;
+    }
+
+    .tc-anim-heartbeat {
+      animation: heartbeat 1.2s ease-in-out infinite;
+    }
+
+    .tc-anim-float {
+      animation: float 2.6s ease-in-out infinite;
+    }
+
+    .tc-anim-shake {
+      animation: shake 0.45s ease-in-out infinite;
+    }
+
+    @keyframes tc-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @keyframes wiggle {
+
+      0%,
+      100% {
+        transform: rotate(-3deg);
+      }
+
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+
+    @keyframes glow-pulse {
+
+      0%,
+      100% {
+        filter: drop-shadow(0 0 5px currentColor);
+      }
+
+      50% {
+        filter: drop-shadow(0 0 15px currentColor);
+      }
+    }
+
+    @keyframes heartbeat {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      14% {
+        transform: scale(1.18);
+      }
+
+      28% {
+        transform: scale(1);
+      }
+
+      42% {
+        transform: scale(1.12);
+      }
+
+      70% {
+        transform: scale(1);
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-6px);
+      }
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-2px);
+      }
+
+      40% {
+        transform: translateX(2px);
+      }
+
+      60% {
+        transform: translateX(-1px);
+      }
+
+      80% {
+        transform: translateX(1px);
+      }
+    }
+    /* Marcos de avatar para rankings. El pack actual solo incluye Top 1;
+       al anadir top2-top5 basta con publicar los PNG y registrar la ruta. */
+    .tc-avatar-frame {
+      position: relative;
+      width: 64px;
+      aspect-ratio: var(--top-frame-aspect, 1) / 1;
+      flex: 0 0 64px;
+      display: block;
+      align-self: center;
+    }
+
+    .tc-avatar-frame .tc-avatar,
+    .tc-avatar-frame .tc-avatar-fallback {
+      position: absolute;
+      left: var(--top-frame-avatar-left, 50%);
+      top: var(--top-frame-avatar-top, 50%);
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -50%);
+      border: 0;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .tc-avatar-frame-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tc-widget.compact .tc-avatar-frame {
+      grid-area: avatar;
+      width: 48px;
+      flex-basis: 48px;
+      align-self: center;
+      justify-self: center;
+    }
+
+    .tc-widget.compact .tc-avatar-frame .tc-avatar,
+    .tc-widget.compact .tc-avatar-frame .tc-avatar-fallback {
+      width: var(--top-frame-avatar-size, 55%);
+      height: auto;
+      font-size: 12px;
+    }
+
+    .tc-avatar.hidden {
+      display: none;
+    }
+
+    .tc-row.hide-names .tc-info {
+      display: none;
+    }
+
+    /* @username oculto (nickname sigue visible) */
+    .tc-row.hide-username .tc-username {
+      display: none;
+    }
+
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       MODO COMPACTO â€” filas mÃ¡s delgadas (â‰ˆ32px), 1 lÃ­nea, avatar
+       pequeÃ±o. Pedido para que quepan varios tops en pantalla sin que
+       ocupen tanto espacio vertical.
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+    /* Compacto con CSS Grid: pos / avatar ocupan 2 filas verticalmente,
+       nick en fila 1 de la columna "info", valor en fila 2 de esa columna.
+       AsÃ­ el valor SIEMPRE queda bajo el nick sin depender de flex-wrap y
+       sin mezclarse con la fila de abajo. */
+    .tc-widget.compact .tc-row {
+      display: grid;
+      grid-template-columns: 20px 30px 1fr;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+        "pos avatar info"
+        "pos avatar value";
+      column-gap: 8px;
+      row-gap: 0;
+      padding: 4px 10px;
+      min-height: 0;
+      align-items: center;
+    }
+
+    .tc-widget.compact .tc-pos {
+      grid-area: pos;
+      align-self: center;
+      justify-self: center;
+      min-width: 0;
+      height: auto;
+      font-size: 13px;
+    }
+
+    .tc-widget.compact .tc-avatar,
+    .tc-widget.compact .tc-avatar-fallback {
+      grid-area: avatar;
+      align-self: center;
+      justify-self: center;
+      width: 30px;
+      height: 30px;
+      font-size: 12px;
+    }
+
+    .tc-widget.compact .tc-info {
+      grid-area: info;
+      align-self: end;
+      min-width: 0;
+      gap: 0;
+    }
+
+    .tc-widget.compact .tc-name {
+      font-size: 0.9em;
+      line-height: 1.15;
+      /* Espacio para que el stroke/contorno del primer glyph no se
+         recorte con overflow:hidden (necesario cuando la fuente custom
+         tiene left-bearing negativo o hay stroke-width > 0). */
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-username {
+      font-size: 9px;
+      line-height: 1.1;
+      margin-top: 0;
+      padding-left: 4px;
+    }
+
+    .tc-widget.compact .tc-value {
+      grid-area: value;
+      align-self: start;
+      justify-self: start;
+      text-align: left;
+      min-width: 0;
+      font-size: 0.8em;
+      line-height: 1.1;
+      font-weight: 700;
+      margin: 0;
+      padding-left: 4px;
+    }
+
+    /* SeparaciÃ³n clara entre filas para que el valor no se mezcle
+       visualmente con el siguiente usuario. */
+    .tc-widget.compact .tc-list {
+      gap: 6px;
+    }
+
+    /* Si el @username estÃ¡ oculto en compacto, el valor pega bajo el nick
+       (sin hueco del username). */
+    .tc-widget.compact .tc-row.hide-username .tc-info {
+      align-self: center;
+    }
+
+    /* Si el nickname COMPLETO estÃ¡ oculto en compacto, colapsamos a una
+       sola fila: valor se queda al lado del avatar. */
+    .tc-widget.compact .tc-row.hide-names {
+      grid-template-rows: auto;
+      grid-template-areas: "pos avatar value";
+    }
+
+    .tc-widget.compact .tc-row.hide-names .tc-value {
+      align-self: center;
+      justify-self: start;
+    }
+
+    .tc-widget.compact .tc-row.top-1.has-crown {
+      margin-top: 18px;
+    }
+
+    /* Compact (grid): padding-left(10) + pos(20) + gap(8) + avatar/2(15) = 53px */
+    .tc-widget.compact .tc-row.top-1.has-crown::before {
+      left: 53px;
+      top: -16px;
+      width: 18px;
+      height: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="tc-widget" id="widget">
+    <div class="tc-title has-comment" id="title">TOP COMENTARIOS</div>
+    <div class="tc-list" id="list">
+      <div class="tc-empty">
+        <div class="tc-empty-icon comment"></div>
+        <div class="tc-empty-text">Esperando comentarios...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TikControl Widget System -->
+  <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+  <script src="core/font-loader.js?v=1.0.29-cache7"></script>
+  <script src="core/tikcontrol-widget.js?v=1.0.18"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const state = {
+        users: new Map(),
+        title: 'TOP COMENTARIOS',
+        showTitle: true,
+        titleSize: 34,
+        titleColor: '#ffffff',
+        textColor: '#ffffff',
+        valueColor: '#66d9ff',
+        fontSize: 22,
+        fontFamily: '',
+        fontUrl: '',
+        rows: 5,
+        nameMaxLen: 20,
+        showAvatars: true,
+        avatarFrameStyle: 'classic',
+        showNicknames: true,
+        showUsername: true,
+        compactMode: false,
+        showCrown: false,
+        showBg: false,
+        showRowBg: true, // OK Fondo de cada fila
+        _forceFullRender: true,
+        colorTop1: '#ffd700',
+        colorTop2: '#c0c0c0',
+        colorTop3: '#cd7f32',
+        animIcon: 'none',
+        animTop1: 'none',
+        titleEffect: 'none',
+        effectText: 'none',
+        showMedals: false,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 2
+      };
+
+      const widgetEl = document.getElementById('widget');
+      const titleEl = document.getElementById('title');
+      const listEl = document.getElementById('list');
+
+      TikControl.init('top-comments', {
+        persistent: false,
+        sessionBased: true
+      });
+
+      TikControl.onConfig((config) => {
+        // [log cleaned]
+        if (config.title !== undefined) state.title = config.title;
+        if (config.showTitle !== undefined) state.showTitle = config.showTitle;
+        if (config.titleSize !== undefined) state.titleSize = parseInt(config.titleSize);
+        if (config.titleColor !== undefined) state.titleColor = config.titleColor;
+        if (config.textColor !== undefined) state.textColor = config.textColor;
+        if (config.valueColor !== undefined) state.valueColor = config.valueColor;
+        if (config.fontSize !== undefined) state.fontSize = parseInt(config.fontSize);
+        if (config.fontFamily !== undefined) state.fontFamily = config.fontFamily;
+        if (config.fontUrl !== undefined) state.fontUrl = config.fontUrl;
+        if (config.rows !== undefined) state.rows = parseInt(config.rows);
+        if (config.maxDisplay !== undefined) state.rows = parseInt(config.maxDisplay);
+        if (config.nameMaxLen !== undefined) state.nameMaxLen = parseInt(config.nameMaxLen);
+        if (config.showAvatars !== undefined) state.showAvatars = config.showAvatars;
+        if (config.avatarFrameStyle !== undefined) state.avatarFrameStyle = config.avatarFrameStyle || 'none';
+        if (config.showNicknames !== undefined) state.showNicknames = config.showNicknames;
+        if (config.showUsername !== undefined) state.showUsername = config.showUsername;
+        if (config.compactMode !== undefined) state.compactMode = config.compactMode;
+        if (config.showCrown !== undefined) state.showCrown = config.showCrown;
+        if (config.showBg !== undefined) state.showBg = config.showBg;
+        if (config.showRowBg !== undefined) state.showRowBg = config.showRowBg;
+        if (config.colorTop1 !== undefined) state.colorTop1 = config.colorTop1;
+        if (config.colorTop2 !== undefined) state.colorTop2 = config.colorTop2;
+        if (config.colorTop3 !== undefined) state.colorTop3 = config.colorTop3;
+        if (config.animIcon !== undefined) state.animIcon = config.animIcon;
+        if (config.animTop1 !== undefined) state.animTop1 = config.animTop1;
+        // Efectos - SOLO usar titleEffect (el campo correcto del panel)
+        if (config.titleEffect !== undefined) state.titleEffect = config.titleEffect;
+        if (config.effectText !== undefined) state.effectText = config.effectText;
+        if (config.showMedals !== undefined) state.showMedals = config.showMedals;
+        if (config.strokeEnabled !== undefined) state.strokeEnabled = config.strokeEnabled;
+        if (config.strokeColor !== undefined) state.strokeColor = config.strokeColor;
+        if (config.strokeWidth !== undefined) state.strokeWidth = parseInt(config.strokeWidth);
+
+        // [log cleaned]
+        // OK Cargar fuente personalizada
+        if (state.fontFamily) {
+          if (state.fontFamily.match(/\.(otf|ttf|woff|woff2)$/i)) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uid = urlParams.get('uid') || urlParams.get('userId');
+            const correctUrl = `${(window.__tcEnv && window.__tcEnv.st) ? window.__tcEnv.st() : ''}/users-data/${uid}/fonts/${state.fontFamily}`;
+            loadCustomFont(state.fontFamily, correctUrl);
+          } else if (state.fontUrl) {
+            loadCustomFont(state.fontFamily, state.fontUrl);
+          } else {
+            loadCustomFont(state.fontFamily, null);
+          }
+        }
+
+        applyStyles();
+        state._forceFullRender = true;
+        render();
+      });
+
+      TikControl.onData((data) => {
+        if (data.users && typeof data.users === 'object') {
+          Object.entries(data.users).forEach(([uniqueId, userData]) => {
+            // OK Aplicar proxy a avatares al cargar datos persistidos
+            if (userData.avatar) {
+              userData.avatar = proxyAvatar(userData.avatar);
+            }
+            state.users.set(uniqueId, userData);
+          });
+          render();
+        }
+      });
+
+      TikControl.on('chat', (data) => {
+        const user = data.user || data;
+        const uniqueId = user.uniqueId || data.uniqueId;
+        const nickname = user.nickname || data.nickname || uniqueId;
+        
+        // OK Extraer avatar - ESTRUCTURA REAL DE TIKTOK
+        // user.profilePicture.url es un ARRAY, no string
+        let avatarUrl = '';
+        
+        // Prioridad 1: profilePictureUrl directo (string)
+        if (user.profilePictureUrl && typeof user.profilePictureUrl === 'string') {
+          avatarUrl = user.profilePictureUrl;
+        }
+        // Prioridad 2: data.profilePictureUrl (string)
+        else if (data.profilePictureUrl && typeof data.profilePictureUrl === 'string') {
+          avatarUrl = data.profilePictureUrl;
+        }
+        // Prioridad 3: user.profilePicture.url (ARRAY - formato real TikTok!)
+        else if (user.profilePicture && typeof user.profilePicture === 'object') {
+          if (Array.isArray(user.profilePicture.url) && user.profilePicture.url.length > 0) {
+            avatarUrl = user.profilePicture.url[0];
+          } else if (typeof user.profilePicture.url === 'string') {
+            avatarUrl = user.profilePicture.url;
+          } else if (Array.isArray(user.profilePicture.urls) && user.profilePicture.urls.length > 0) {
+            avatarUrl = user.profilePicture.urls[0];
+          }
+        }
+        // Prioridad 4: avatarThumb o avatarMedium
+        else if (user.avatarThumb || user.avatarMedium) {
+          const avatarObj = user.avatarThumb || user.avatarMedium;
+          if (typeof avatarObj === 'object') {
+            if (Array.isArray(avatarObj.url) && avatarObj.url.length > 0) {
+              avatarUrl = avatarObj.url[0];
+            } else if (typeof avatarObj.url === 'string') {
+              avatarUrl = avatarObj.url;
+            } else if (Array.isArray(avatarObj.urls) && avatarObj.urls.length > 0) {
+              avatarUrl = avatarObj.urls[0];
+            }
+          } else if (typeof avatarObj === 'string') {
+            avatarUrl = avatarObj;
+          }
+        }
+        // Prioridad 5: avatarUrl directo
+        else if (user.avatarUrl && typeof user.avatarUrl === 'string') {
+          avatarUrl = user.avatarUrl;
+        }
+        
+        // console.log('[Top Comments] Avatar Avatar extraÃ­do:', avatarUrl ? avatarUrl.substring(0, 60) + '...' : 'NINGUNO');
+
+        if (!uniqueId) return;
+
+        const existing = state.users.get(uniqueId) || {
+          nickname: nickname,
+          avatar: proxyAvatar(avatarUrl),
+          comments: 0
+        };
+
+        existing.comments += 1;
+        existing.lastUpdate = Date.now();
+        if (nickname) existing.nickname = nickname;
+        if (avatarUrl) existing.avatar = proxyAvatar(avatarUrl);
+
+        state.users.set(uniqueId, existing);
+
+        saveData();
+        scheduleRender();
+      });
+
+      TikControl.on('reset', () => {
+        clearSessionData();
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // PROBAR EN OVERLAY (botÃ³n del editor)
+      // Inyecta usuarios test temporalmente (5s) y restaura. El test
+      // no debe contaminar el ranking real del live.
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      let _topCommentsTestRestoreTimer = null;
+      TikControl.on('widget:test', (d) => {
+        if (!d || d.widget !== 'top-comments' || d.type !== 'TOP_COMMENTS_TEST') return;
+        if (_topCommentsTestRestoreTimer) clearTimeout(_topCommentsTestRestoreTimer);
+        const prevUsers = new Map();
+        state.users.forEach((v, k) => prevUsers.set(k, v));
+        const fakeAvatar = 'https://tikcontrol.live/assets/xCousito.png';
+        const fakeUsers = [
+          { uniqueId: 'test_alpha', nickname: 'TestAlpha', comments: 42 },
+          { uniqueId: 'test_beta',  nickname: 'TestBeta',  comments: 31 },
+          { uniqueId: 'test_gamma', nickname: 'TestGamma', comments: 18 },
+          { uniqueId: 'test_delta', nickname: 'TestDelta', comments: 9  },
+          { uniqueId: 'test_omega', nickname: 'TestOmega', comments: 4  }
+        ];
+        const now = Date.now();
+        fakeUsers.forEach(u => {
+          state.users.set(u.uniqueId, {
+            nickname: u.nickname,
+            avatar: fakeAvatar,
+            comments: u.comments,
+            lastUpdate: now
+          });
+        });
+        render();
+        _topCommentsTestRestoreTimer = setTimeout(() => {
+          state.users = prevUsers;
+          render();
+          _topCommentsTestRestoreTimer = null;
+        }, 5000);
+      });
+
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // PROXY DE AVATARES - Evita el bloqueo 403 de TikTok
+      // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      // Regex: extrae `tos-xxxx-avt-NNNN/HASH` de cualquier URL TikTok
+      // con template `~tplv-`. Ese path ES el mUri.
+      var _TPLV_RE = /\/\/[^/]*tiktokcdn[^/]*\.com\/([^~?]+)~tplv-/i;
+
+      function proxyAvatar(url) {
+        if (!url) return '';
+        // Anti-doble-proxy: desenvolver URLs ya pasadas por weserv.
+        if (url.indexOf('images.weserv.nl') !== -1) {
+          try {
+            var inner = new URL(url).searchParams.get('url');
+            if (inner) url = decodeURIComponent(inner);
+          } catch (_) {}
+        }
+        // URLs TikTok con template â†’ estable de Akamai (cache 1 aÃ±o).
+        var m = url.match(_TPLV_RE);
+        if (m) {
+          return 'https://p16-common.tiktokcdn-us.com/' + m[1] + '~tplv-tiktokx-cropcenter:100:100.webp';
+        }
+        if (url.includes('tiktokcdn') || url.includes('tiktok.com')) {
+          return 'https://images.weserv.nl/?url=' + encodeURIComponent(url) + '&default=1';
+        }
+        return url;
+      }
+
+      // Fuentes del sistema
+      const SYSTEM_FONTS = ['Arial', 'Verdana', 'Helvetica', 'Times New Roman', 'Georgia', 'Courier New', 'Comic Sans MS', 'Impact', 'Trebuchet MS', 'Segoe UI', 'Tahoma', 'Palatino'];
+
+      function loadCustomFont(fontFamily, fontUrl) {
+        if (!fontFamily) return;
+        if (!fontUrl && fontFamily.match(/\.(otf|ttf|woff|woff2)$/i)) {
+          var uid = new URLSearchParams(window.location.search).get('uid');
+          fontUrl = ((window.__tcEnv && window.__tcEnv.st) ? window.__tcEnv.st() : '') + '/users-data/' + uid + '/fonts/' + fontFamily;
+        }
+        if (window.__tcLoadFont) {
+          var cssVal = window.__tcLoadFont(fontFamily, fontUrl);
+          if (cssVal) document.body.style.fontFamily = cssVal;
+        } else if (fontUrl) {
+          document.body.style.fontFamily = '"' + fontFamily + '", system-ui, sans-serif';
+        }
+      }
+
+      function applyStyles() {
+        // [log cleaned]
+        const root = document.documentElement;
+        root.style.setProperty('--tc-title-size', `${state.titleSize}px`);
+        root.style.setProperty('--tc-title-color', state.titleColor);
+        root.style.setProperty('--tc-text-color', state.textColor);
+        root.style.setProperty('--tc-value-color', state.valueColor);
+        root.style.setProperty('--tc-font-size', `${state.fontSize}px`);
+        root.style.setProperty('--tc-top1-color', state.colorTop1);
+        root.style.setProperty('--tc-top2-color', state.colorTop2);
+        root.style.setProperty('--tc-top3-color', state.colorTop3);
+        root.style.setProperty('--tc-stroke-color', state.strokeColor);
+        root.style.setProperty('--tc-stroke-width', `${state.strokeWidth}px`);
+
+        // Fuente: la pone loadCustomFont() con el nombre limpio del font-loader.
+        // No pisar aquÃ­ â€” si usamos fontFamily a pelo (solo sin extensiÃ³n)
+        // no coincide con el family del @font-face y cae al fallback.
+
+        widgetEl.classList.toggle('has-bg', state.showBg);
+
+        // Modo compacto: reduce tamaÃ±o de avatar + padding + @username.
+        widgetEl.classList.toggle('compact', !!state.compactMode);
+
+        // OK Contorno GLOBAL - Aplica a TODO el texto
+        widgetEl.classList.toggle('stroke-enabled', state.strokeEnabled);
+
+        // OK TÃ­tulo - RECONSTRUIR con todas las clases
+        titleEl.textContent = state.title;
+        titleEl.style.display = state.showTitle === false ? 'none' : '';
+        titleEl.style.fontSize = `${state.titleSize}px`;
+
+        // Limpiar clases y reconstruir
+        // `has-comment` fija el icono SVG de burbuja antes del texto del tÃ­tulo.
+        let titleClasses = ['tc-title', 'has-comment'];
+
+        // Efecto del tÃ­tulo
+        if (state.titleEffect && state.titleEffect !== 'none') {
+          titleClasses.push(`tc-effect-${state.titleEffect}`);
+          // [log cleaned]
+        }
+
+        // Contorno del tÃ­tulo
+        if (state.strokeEnabled) {
+          titleClasses.push('tc-stroke');
+        }
+
+        titleEl.className = titleClasses.join(' ');
+
+        // Color del tÃ­tulo (excepto si tiene efecto rainbow que usa background)
+        if (state.titleEffect !== 'rainbow') {
+          titleEl.style.color = state.titleColor;
+          titleEl.style.webkitTextFillColor = '';
+        } else {
+          titleEl.style.color = '';
+          titleEl.style.webkitTextFillColor = 'transparent';
+        }
+      }
+
+      // OK Cache para evitar re-renders completos
+      let isFirstRender = true;
+
+      // Coalesce renders: rÃ¡fagas de comentarios causaban innerHTML
+      // rebuild por evento â†’ parpadeo y avatar refetch. 300ms agrupa.
+      let _renderScheduled = false;
+      function scheduleRender(){
+        if (_renderScheduled) return;
+        _renderScheduled = true;
+        setTimeout(() => { _renderScheduled = false; render(); }, 300);
+      }
+
+      function render() {
+        const sorted = Array.from(state.users.entries())
+          .sort((a, b) => b[1].comments - a[1].comments)
+          .slice(0, state.rows);
+
+        if (sorted.length === 0) {
+          if (listEl.querySelector('.tc-empty')) return;
+          listEl.innerHTML = `
+            <div class="tc-empty">
+              <div class="tc-empty-icon comment"></div>
+              <div class="tc-empty-text">Esperando comentarios...</div>
+            </div>
+          `;
+          return;
+        }
+
+        // OK OPTIMIZACIÃ“N: Solo actualizar valores si usuarios son los mismos
+        const currentIds = sorted.map(([id]) => id).join(',');
+        const existingRows = listEl.querySelectorAll('.tc-row[data-user]');
+        const existingIds = Array.from(existingRows).map(r => r.dataset.user).join(',');
+
+        if (!state._forceFullRender && !isFirstRender && currentIds === existingIds && existingRows.length === sorted.length) {
+          sorted.forEach(([uniqueId, user]) => {
+            const row = listEl.querySelector(`[data-user="${uniqueId}"]`);
+            if (row) {
+              const valueEl = row.querySelector('.tc-value');
+              if (valueEl) {
+                const newValue = formatNumber(user.comments);
+                const iconHtml = valueEl.querySelector('.tc-icon')?.outerHTML || '<span class="tc-icon comment"></span>';
+                const currentText = valueEl.textContent.trim().split(' ')[0];
+                if (currentText !== newValue) {
+                  valueEl.innerHTML = `${newValue} ${iconHtml}`;
+                }
+              }
+            }
+          });
+          return;
+        }
+
+        isFirstRender = false;
+        state._forceFullRender = false;
+
+        listEl.innerHTML = sorted.map(([uniqueId, user], index) => {
+          const pos = index + 1;
+          const medal = state.showMedals && pos <= 3 ? '' : pos;
+
+          let rowClasses = ['tc-row'];
+          if (pos <= 3) rowClasses.push(`top-${pos}`);
+          if (pos === 1 && state.showCrown) rowClasses.push('has-crown');
+          if (pos === 1 && state.animTop1 && state.animTop1 !== 'none') rowClasses.push(`tc-anim-${state.animTop1}`);
+          if (!state.showNicknames) rowClasses.push('hide-names');
+          if (!state.showUsername) rowClasses.push('hide-username');
+          if (!state.showRowBg) rowClasses.push('no-bg');
+
+          let valueClasses = ['tc-value'];
+          if (state.effectText && state.effectText !== 'none') valueClasses.push(`tc-effect-${state.effectText}`);
+
+          let posClasses = ['tc-pos'];
+          if (state.showMedals && pos <= 3) posClasses.push('medal');
+
+          let displayName = user.nickname || uniqueId;
+          if (displayName.length > state.nameMaxLen) displayName = displayName.substring(0, state.nameMaxLen) + '...';
+
+          let iconClass = 'tc-icon comment';
+          if (state.animIcon && state.animIcon !== 'none') iconClass += ` tc-anim-${state.animIcon}`;
+          const avatarHtml = renderTopAvatar({ avatar: user.avatar, initial: user.nickname || uniqueId || '?', gradient: 'linear-gradient(135deg,#66d9ff 0%,#3399cc 100%)', pos });
+
+
+
+          return `
+            <div class="${rowClasses.join(' ')}" data-user="${uniqueId}">
+              <div class="${posClasses.join(' ')}">${medal}</div>
+              ${state.showAvatars ? avatarHtml : ''}
+              ${state.showNicknames ? `<div class="tc-info"><div class="tc-name">${escapeHtml(displayName)}</div><div class="tc-username">@${escapeHtml(uniqueId)}</div></div>` : ''}
+              <div class="${valueClasses.join(' ')}">${formatNumber(user.comments)} <span class="${iconClass}"></span></div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Coalesce chat spam (10-30 msg/s) into one D1 write per 5 s window.
+      // These rows are live-session data and are cleared on live start/end.
+      const PERSIST_DEBOUNCE_MS = 5000;
+      let _saveTimer = null;
+
+      function saveDataNow() {
+        if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+        const usersObj = {};
+        state.users.forEach((value, key) => usersObj[key] = value);
+        TikControl.saveData({ users: usersObj });
+      }
+
+      function saveData() {
+        if (_saveTimer) return;
+        _saveTimer = setTimeout(() => {
+          _saveTimer = null;
+          const usersObj = {};
+          state.users.forEach((value, key) => usersObj[key] = value);
+          TikControl.saveData({ users: usersObj });
+        }, PERSIST_DEBOUNCE_MS);
+      }
+
+      function clearSessionData() {
+        if (_saveTimer) { clearTimeout(_saveTimer); _saveTimer = null; }
+        state.users.clear();
+        try { TikControl.saveData({ users: {} }); } catch (_) {}
+        render();
+      }
+
+      try { TikControl.on('liveStart', clearSessionData); } catch (_) {}
+      try { TikControl.on('live:start', clearSessionData); } catch (_) {}
+      try { TikControl.on('liveEnd', clearSessionData); } catch (_) {}
+      try { TikControl.on('live:end', clearSessionData); } catch (_) {}
+      const TOP_AVATAR_FRAME_PACK = {
+        classic: {
+          1: {
+            src: 'top-frames/podium-classic/top1.png',
+            aspect: 157 / 168,
+            avatar: { left: '49.7%', top: '48.5%', size: '55%' }
+          }
+        }
+      };
+
+      function widgetAssetUrl(assetPath) {
+        return '/widgets/' + assetPath.replace(/^\/+/, '');
+      }
+
+      function getTopAvatarFrame(pos) {
+        const style = state.avatarFrameStyle || 'none';
+        if (style === 'none') return null;
+        const pack = TOP_AVATAR_FRAME_PACK[style] || {};
+        return pack[pos] || null;
+      }
+
+      function renderTopAvatar({ avatar, initial, gradient, pos }) {
+        const frame = getTopAvatarFrame(pos);
+        const safeInitial = escapeHtml((initial || '?').charAt(0).toUpperCase());
+        const safeAvatar = avatar ? escapeHtml(avatar) : '';
+        const fallbackBase = 'background:' + gradient + ';color:#fff;font-weight:700;font-size:14px;align-items:center;justify-content:center;';
+        const hiddenFallbackStyle = frame ? 'display:none;' + fallbackBase : 'display:none;width:40px;height:40px;border-radius:50%;' + fallbackBase;
+        const visibleFallbackStyle = frame ? 'display:flex;' + fallbackBase : 'width:40px;height:40px;border-radius:50%;display:flex;' + fallbackBase;
+        const avatarMarkup = safeAvatar
+          ? '<img class="tc-avatar" src="' + safeAvatar + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=&#39;&#39;;this.style.display=&#39;none&#39;;this.nextElementSibling&&this.nextElementSibling.classList.contains(&#39;tc-avatar-fallback&#39;)&&(this.nextElementSibling.style.display=&#39;flex&#39;)"><div class="tc-avatar-fallback" style="' + hiddenFallbackStyle + '">' + safeInitial + '</div>'
+          : '<div class="tc-avatar-fallback" style="' + visibleFallbackStyle + '">' + safeInitial + '</div>';
+
+        if (!frame) return avatarMarkup;
+        const style = [
+          '--top-frame-aspect:' + (frame.aspect || 1),
+          '--top-frame-avatar-left:' + (frame.avatar && frame.avatar.left ? frame.avatar.left : '50%'),
+          '--top-frame-avatar-top:' + (frame.avatar && frame.avatar.top ? frame.avatar.top : '50%'),
+          '--top-frame-avatar-size:' + (frame.avatar && frame.avatar.size ? frame.avatar.size : '55%')
+        ].join(';');
+        return '<div class="tc-avatar-frame top-frame-' + pos + '" style="' + style + '">' + avatarMarkup + '<img class="tc-avatar-frame-img" src="' + widgetAssetUrl(frame.src) + '" alt="" loading="lazy"></div>';
+      }
+
+      function formatNumber(num) {
+        return String(Math.floor(Number(num) || 0));
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      applyStyles();
+      render();
+
+    })();
+  </script>
+</body>
+
+</html>
+

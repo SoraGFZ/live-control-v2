@@ -1,0 +1,34 @@
+services:
+  live-control:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      LIVE_CONTROL_BIND_HOST: 0.0.0.0
+      LIVE_CONTROL_STORAGE_DIR: /data
+    volumes:
+      - live-control-data:/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - live-control
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env.oracle, example: livecontrol.duckdns.org}
+      ACME_AGREE: "true"
+    volumes:
+      - ./deploy/oracle/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  live-control-data:
+  caddy-data:
+  caddy-config:

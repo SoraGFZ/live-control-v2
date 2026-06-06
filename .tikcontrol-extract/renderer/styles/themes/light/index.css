@@ -1,0 +1,32 @@
+/*
+ * TikControl - Light Theme Index
+ * Reemplaza light-theme.css — importa todos los archivos por sección
+ * Debe cargarse al final de main.css para ganar por cascada
+ */
+
+/* Variables globales + Header + Nav + Componentes base */
+@import './global.css';
+
+/* Overrides de modo claro para componentes compartidos */
+
+/* Vistas */
+@import './home.css';
+@import './actions.css';
+@import './action-panels.css';
+@import './sounds.css';
+@import './tts.css';
+@import './events.css';
+@import './gifts.css';
+@import './widgets.css';
+@import './overlay.css';
+@import './spotify.css';
+@import './agencies.css';
+@import './account.css';
+@import './points.css';
+@import './goals.css';
+@import './soporte.css';
+@import './storage.css';
+@import './integraciones.css';
+@import './gaming.css';
+@import './perfiles.css';
+@import './battles.css';

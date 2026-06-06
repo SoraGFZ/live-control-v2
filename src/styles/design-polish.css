@@ -1,0 +1,2080 @@
+/*
+  Live Control Studio — capa visual global (carga al final).
+  Refina tipografía, espaciado, tarjetas y estados sin tocar lógica de negocio.
+*/
+
+/* ── Secciones y cabeceras ── */
+.panel-section {
+  display: grid;
+  gap: 1.35rem;
+  animation: lc-section-enter 0.42s cubic-bezier(0.22, 0.9, 0.32, 1) both;
+}
+
+@keyframes lc-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.section-header-main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.section-header .eyebrow {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+  opacity: 0.9;
+}
+
+.section-title {
+  margin: 0 0 6px 0;
+  font-family: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(1.35rem, 2.1vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #f1e7ff;
+}
+
+.section-description {
+  margin: 0;
+  font-size: 0.925rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  max-width: 68ch;
+}
+
+.section-header-action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.section-header p {
+  margin: 0.55rem 0 0;
+  max-width: 52rem;
+  color: var(--lc-muted, #94a3b8);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* ── Métricas y tarjetas ── */
+.metric-card,
+.tc-feature-card,
+.tc-widget-card {
+  border-radius: var(--lc-radius-md, 14px);
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.metric-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.metric-card strong {
+  font-family: var(--lc-font-display, 'Sora', system-ui, sans-serif);
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+}
+
+.metric-label {
+  color: var(--lc-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tc-widgets-stats {
+  gap: 14px;
+}
+
+/* ── Galería de widgets ── */
+.tc-widget-card--preview {
+  overflow: hidden;
+  border: 1px solid rgba(167, 139, 250, 0.14);
+  background: linear-gradient(180deg, rgba(18, 14, 32, 0.92), rgba(10, 10, 16, 0.96));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+}
+
+.tc-widget-card--preview:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.28);
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+.tc-widget-card--preview.is-featured {
+  border-color: rgba(250, 204, 21, 0.28);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.24),
+    0 0 32px rgba(250, 204, 21, 0.08);
+}
+
+.tc-widget-card-head strong {
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+}
+
+.tc-widget-card-body .row-subcopy {
+  color: #94a3b8;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+/* ── Banner de módulo ── */
+.lc-intro-banner.tc-intro-banner {
+  border-color: rgba(167, 139, 250, 0.16);
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.1) 0%,
+    rgba(34, 211, 238, 0.06) 55%,
+    rgba(15, 23, 42, 0.4) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.lc-intro-banner .tc-intro-icon {
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.35), rgba(34, 211, 238, 0.12));
+  color: #e9d5ff;
+}
+
+/* ── Botones ── */
+.primary-button {
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 28px rgba(124, 58, 237, 0.28);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(124, 58, 237, 0.34);
+}
+
+.secondary-button,
+.ghost-button {
+  border-radius: 12px;
+}
+
+.compact-button {
+  min-height: 36px;
+}
+
+/* ── Formularios ── */
+.field-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+input[type='text'],
+input[type='number'],
+input[type='password'],
+input[type='url'],
+input[type='color'],
+select,
+textarea {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(8, 12, 20, 0.65);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: rgba(167, 139, 250, 0.45);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+/* ── Chips y tags ── */
+.status-chip {
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.tag,
+.muted-pill {
+  border-radius: 999px;
+  font-size: 0.7rem;
+}
+
+/* ── Sidebar (desktop) ── */
+.sidebar-nav-button {
+  border-radius: 12px;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.sidebar-nav-button.is-active {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.22), rgba(34, 211, 238, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.22);
+}
+
+/* ── Hero inicio ── */
+.hero-panel-v2 {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, rgba(15, 18, 28, 0.95), rgba(8, 10, 18, 0.98));
+  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Listas densas (acciones, eventos) ── */
+.dense-table-row {
+  border-radius: 18px;
+}
+
+.list-toolbar {
+  border-radius: 18px;
+}
+
+/* ── Preview frames TikControl en app ── */
+.tikcontrol-widget-frame--preview,
+.tikcontrol-widget-frame--gallery-preview {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* ── Scroll suave en workspace ── */
+.workspace-main {
+  scroll-behavior: smooth;
+}
+
+/* ── Musica / Spotify — Senior premium redesign ── */
+#music .music-quickstart-card,
+#music .game-mode-card,
+#music .spotify-connect-card {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(15, 23, 42, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+#music .spotify-connect-card {
+  border-left: 3px solid rgba(30, 215, 96, 0.65);
+}
+
+.music-quickstart-steps {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 0.2rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  font-size: 0.9rem;
+}
+
+.music-quickstart-steps li.done {
+  color: #4ade80;
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.music-redirect-snippet {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.music-redirect-snippet code {
+  display: block;
+  padding: 0.6rem 0.7rem;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.76rem;
+  word-break: break-all;
+  color: #a5b4fc;
+}
+
+/* Premium Spotify connect/login button */
+.spotify-connect-btn,
+#music .primary-button.spotify-connect-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1ed760, #1db954);
+  color: #0a0f1a;
+  border: none;
+  box-shadow: 0 6px 18px rgba(30, 215, 96, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.spotify-connect-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(30, 215, 96, 0.45);
+  filter: brightness(1.03);
+}
+
+.spotify-connect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spotify-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Current track — beautiful now playing */
+.music-now-playing.premium-music-track {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: linear-gradient(145deg, rgba(30, 215, 96, 0.08), rgba(15, 23, 42, 0.75));
+  border: 1px solid rgba(30, 215, 96, 0.18);
+  border-radius: 14px;
+  margin: 8px 0 4px;
+}
+
+.music-cover-wrap {
+  flex-shrink: 0;
+}
+
+.music-cover-large {
+  width: 78px;
+  height: 78px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.music-cover-large.music-cover-fallback {
+  width: 78px;
+  height: 78px;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1ed760;
+  border: 1px solid rgba(30, 215, 96, 0.25);
+}
+
+.music-now-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.now-playing-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1ed760;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.music-song-title-large {
+  display: block;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #f1e7ff;
+  line-height: 1.15;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-artists {
+  font-size: 0.88rem;
+  color: #c0d0ff;
+  margin-bottom: 2px;
+}
+
+.music-album-line {
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.music-now-actions {
+  flex-shrink: 0;
+}
+
+.music-skip-btn {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  background: rgba(30, 215, 96, 0.12);
+  border-color: rgba(30, 215, 96, 0.3);
+  color: #86efac;
+}
+
+.music-skip-btn:hover:not(:disabled) {
+  background: rgba(30, 215, 96, 0.22);
+  border-color: rgba(30, 215, 96, 0.5);
+  color: #fff;
+}
+
+/* Tester form */
+.music-tester {
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.tester-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.tester-row {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.tester-user,
+.tester-query {
+  font-size: 0.88rem;
+}
+
+.music-test-btn {
+  white-space: nowrap;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.music-feedback {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #a5b4fc;
+  background: rgba(167, 139, 250, 0.08);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Queue items — modern premium */
+.music-queue-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.music-queue-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px !important;
+  border-radius: 11px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.music-queue-item:hover {
+  border-color: rgba(167, 139, 250, 0.2);
+  transform: translateX(1px);
+}
+
+.music-thumb-mini {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.music-thumb-mini.music-thumb-fallback {
+  background: rgba(15, 23, 42, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.music-item-body {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.music-item-title {
+  font-weight: 600;
+  color: #f1e7ff;
+  font-size: 0.9rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-item-artist {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-item-meta {
+  font-size: 0.7rem;
+  color: #64748b;
+  display: flex;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.music-item-meta .requester {
+  color: #a5b4fc;
+}
+
+.music-item-meta .explicit {
+  color: #f87171;
+  font-size: 0.65rem;
+}
+
+.music-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.music-item-duration {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.music-list-header {
+  margin-bottom: 2px;
+}
+
+/* History rows */
+.music-history-list {
+  display: grid;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.music-history-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px !important;
+  border-radius: 9px;
+  background: rgba(15, 23, 42, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.82rem;
+}
+
+.music-thumb-history {
+  width: 32px;
+  height: 32px;
+}
+
+.music-history-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.music-history-title {
+  font-weight: 600;
+  color: #e0e7ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-history-sub {
+  font-size: 0.7rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.music-history-time {
+  font-size: 0.68rem;
+  color: #64748b;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-left: 6px;
+}
+
+/* Widget preview + links area */
+.music-spotify-preview-shell {
+  margin: 4px 0 8px;
+}
+
+.music-links code {
+  font-size: 0.72rem;
+}
+
+.music-widget-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* Subtle hint box instead of only error */
+.hint-box {
+  margin-top: 8px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: #fde047;
+  font-size: 0.82rem;
+}
+
+/* Value emphasis */
+.value-strong {
+  font-weight: 600;
+  color: #f1e7ff;
+}
+
+/* Device field */
+.music-device-field {
+  margin: 6px 0 2px;
+}
+
+/* Spotify setup error/hint box improvements */
+.spotify-setup-box {
+  text-align: left;
+  line-height: 1.5;
+}
+
+.spotify-setup-box strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #f1e7ff;
+}
+
+.spotify-setup-box p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.env-path-hint {
+  margin: 8px 0 4px;
+  font-weight: 600;
+  color: #a5b4fc;
+  font-size: 0.82rem;
+}
+
+.env-path {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: #e0e7ff;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.env-path .path-example {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.env-example {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  margin: 8px 0;
+}
+
+.env-example code {
+  display: block;
+  color: #86efac;
+  font-size: 0.8rem;
+}
+
+.spotify-setup-box .small-note {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+.spotify-setup-box a {
+  color: #a5b4fc;
+  text-decoration: underline;
+}
+
+/* New interactive Spotify credentials form (auto write desktop.env) */
+.spotify-credentials-form {
+  margin-top: 8px;
+  padding: 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  border-radius: 12px;
+}
+
+.spotify-credentials-form .form-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.spotify-credentials-form .form-head strong {
+  color: #f1e7ff;
+  font-size: 0.95rem;
+}
+
+.spotify-credentials-form .form-sub {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.spotify-creds-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.spotify-save-btn {
+  width: 100%;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.spotify-save-success {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #4ade80;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.manual-fallback {
+  margin-top: 10px;
+  font-size: 0.78rem;
+}
+
+.manual-fallback summary {
+  cursor: pointer;
+  color: #94a3b8;
+  user-select: none;
+}
+
+.manual-fallback .manual-instructions {
+  margin-top: 6px;
+  padding-left: 4px;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.manual-fallback .path-hint {
+  display: block;
+  margin: 6px 0;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+/* Preview shell + overall music grid polish */
+.music-spotify-preview-shell {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+#music .game-mode-grid.music-grid {
+  align-items: start;
+}
+
+#music .music-span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 1100px) {
+  #music .music-span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Integraciones / bridges ── */
+#bridges .surface-card,
+.panel-section#bridges .integration-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(8, 12, 20, 0.9));
+}
+
+#bridges .snippet-block code {
+  font-size: 0.78rem;
+  color: #a5b4fc;
+}
+
+/* ── Live hub ── */
+#live-hub .commercial-hero-strip {
+  border-radius: 20px;
+  border: 1px solid rgba(167, 139, 250, 0.16);
+  background: linear-gradient(120deg, rgba(139, 92, 246, 0.12), rgba(34, 211, 238, 0.08));
+  padding: 1.25rem 1.35rem;
+}
+
+#live-hub .commercial-hero-strip {
+  display: grid;
+  gap: 20px;
+}
+
+#live-hub .hero-content {
+  max-width: 620px;
+}
+
+#live-hub .hero-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.15);
+  color: #c4b5fd;
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+#live-hub .commercial-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+#live-hub .commercial-quick-card {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.55);
+  text-align: left;
+  transition: all 160ms ease;
+}
+
+#live-hub .commercial-quick-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+#live-hub .quick-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+#live-hub .commercial-quick-card strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+#live-hub .commercial-quick-card span {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+/* Global premium intro banners and hero strips for consistency across sections (acciones, games, etc.) */
+.tab-intro-banner,
+.commercial-hero-strip {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.65));
+  border: 1px solid rgba(167, 139, 250, 0.12);
+  border-radius: 16px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-intro-banner::before,
+.commercial-hero-strip::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -20%;
+  width: 50%;
+  height: 160%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.tab-intro-banner .tab-intro-icon-box,
+.commercial-hero-strip .hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.tab-intro-banner h2,
+.commercial-hero-strip h3 {
+  margin: 0 0 6px;
+  color: #f1e7ff;
+}
+
+.tab-intro-banner p,
+.commercial-hero-strip p {
+  color: #94a3b8;
+  margin: 0 0 12px;
+  max-width: 60ch;
+}
+
+.tab-intro-banner .tab-intro-chip,
+.commercial-hero-strip .quick-icon {
+  background: rgba(167, 139, 250, 0.12);
+  color: #c4b5fd;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.live-hub-status-card {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(15, 23, 42, 0.6);
+  padding: 14px 16px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.live-hub-status-card:hover {
+  border-color: rgba(167, 139, 250, 0.2);
+  transform: translateY(-2px);
+}
+
+.live-hub-status-card .status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748b;
+  display: inline-block;
+}
+
+.status-dot.ok {
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.2);
+}
+
+.status-dot.off {
+  background: #f87171;
+}
+
+.live-hub-status-card strong {
+  font-size: 1.05rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.live-hub-status-card .status-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Live ops / TikTok ── */
+#live-ops .surface-card {
+  border-radius: 16px;
+}
+
+#live-ops .ops-card .form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+#live-ops .auth-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#live-ops .card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#live-ops .card-actions .primary-button.large {
+  min-width: 180px;
+}
+
+/* LiveOps connect/login buttons premium */
+.liveops-connect-btn {
+  box-shadow: 0 4px 16px rgba(167, 139, 250, 0.28);
+}
+
+.liveops-login-btn {
+  background: rgba(30, 215, 96, 0.1);
+  border-color: rgba(30, 215, 96, 0.25);
+  color: #86efac;
+}
+
+.liveops-login-btn:hover:not(:disabled) {
+  background: rgba(30, 215, 96, 0.18);
+  border-color: rgba(30, 215, 96, 0.4);
+  color: #fff;
+}
+
+.liveops-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── Galeria widgets ── */
+#widgets-gallery .tc-widget-gallery-grid--preview {
+  gap: 18px;
+}
+
+/* ── Regalos hub ── */
+#gifts-hub .tc-widget-card--preview.is-featured {
+  border-color: rgba(255, 214, 120, 0.32);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SUPER BONITO POLISH — premium dark studio vibes
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Buttons — more tactile and premium */
+button,
+.btn,
+.nav-button,
+.section-header button,
+.tc-btn {
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), 
+              box-shadow 120ms ease, 
+              background 120ms ease, 
+              border-color 120ms ease;
+  will-change: transform;
+}
+
+button:hover:not(:disabled),
+.nav-button:hover:not(.active) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled),
+.nav-button:active {
+  transform: translateY(0);
+}
+
+/* Primary action buttons get violet glow */
+button.primary,
+.tc-btn-primary,
+#live-ops button[aria-label*="Conectar"],
+button[data-variant="primary"] {
+  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.25);
+}
+
+button.primary:hover,
+.tc-btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Global ae-op-btn (small action buttons used across sections: actions, tts, music, overlay) */
+.ae-op-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  line-height: 1;
+}
+
+.ae-op-btn:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.16);
+  border-color: rgba(167, 139, 250, 0.38);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.ae-op-btn.danger {
+  color: #f87171;
+}
+
+.ae-op-btn.danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.14);
+  border-color: rgba(248, 113, 113, 0.38);
+  color: #fecaca;
+}
+
+.ae-op-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Cards — deeper premium polish */
+.surface-card,
+.integration-card,
+.tc-widget-card,
+.commercial-quick-card,
+.onboarding-step,
+.goal-widget,
+.widget-preview,
+.empty-state-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 160ms ease,
+              border-color 160ms ease;
+}
+
+.surface-card:hover,
+.integration-card:hover,
+.tc-widget-card:hover:not(.is-disabled),
+.empty-state-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.22);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+}
+
+/* Empty states más bonitos y consistentes */
+.empty-state-card {
+  padding: 28px 20px;
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.empty-state-card .empty-state-icon {
+  font-size: 2rem;
+  opacity: 0.6;
+}
+
+.empty-state-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #e0e7ff;
+}
+
+.empty-state-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  max-width: 38ch;
+  line-height: 1.4;
+}
+
+/* Sidebar nav — crisper active + hover */
+.nav-button.active {
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.18), rgba(167, 139, 250, 0.08));
+  border-color: rgba(167, 139, 250, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.2);
+}
+
+.nav-button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Inputs & selects — refined focus */
+input,
+select,
+textarea,
+.tc-input {
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.tc-input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+  outline: none;
+}
+
+/* Status / pills */
+.sidebar-stat-pill.active,
+.status-ok,
+.live-badge {
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.3);
+}
+
+/* Subtle custom scrollbar for the app */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.35);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.5);
+}
+
+/* Modals — nicer backdrop + scale in */
+.modal,
+.dashboard-modal {
+  animation: lc-modal-pop 0.2s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+@keyframes lc-modal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Section enter polish already good, enhance some headers */
+.section-header h2 {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Make sure overlays stay clean when transparent */
+html[data-route='overlay'] .surface-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+/* Small text refinements */
+small,
+.nav-button small {
+  opacity: 0.8;
+  letter-spacing: 0.01em;
+}
+
+/* Nice URL displays for overlays */
+.url-display {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 6px 0;
+  font-size: 0.78rem;
+  word-break: break-all;
+}
+
+.url-display .overlay-link {
+  color: #a5b4fc;
+}
+
+/* Media thumb cards in Overlay (super bonito) */
+.media-thumb-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.media-thumb-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+.media-thumb {
+  aspect-ratio: 16 / 9;
+  background: #0a0f1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.media-thumb img,
+.media-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-info {
+  padding: 8px 10px;
+  flex: 1;
+}
+
+.media-info strong {
+  font-size: 0.78rem;
+  display: block;
+  color: #e0e7ff;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.media-kind {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.media-thumb-card .ae-op-btn {
+  margin: 6px;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+}
+
+/* Premium link cards in Overlay editor */
+.premium-link-card {
+  padding: 18px;
+}
+
+.premium-link-card .link-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.premium-link-card .signal-label {
+  font-weight: 600;
+  color: #e0e7ff;
+}
+
+.premium-link-card .link-item {
+  margin-bottom: 12px;
+}
+
+.premium-link-card .link-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.premium-link-card .link-badge {
+  font-size: 0.65rem;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.premium-link-card .link-badge.ok {
+  background: rgba(52, 211, 153, 0.15);
+  color: #4ade80;
+}
+
+.premium-link-card .link-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 8px 0 14px;
+}
+
+/* Overlay settings form polish */
+.overlay-grid .settings-card .form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.overlay-grid .settings-card .form-grid.two-col {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.overlay-grid .settings-card .field-label {
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+  display: block;
+  color: #94a3b8;
+}
+
+/* Focus visible for accessibility + beauty */
+:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Premium profile cards */
+.tc-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.tc-profile-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px 16px;
+  border-left: 4px solid var(--profile-accent, #a78bfa);
+  transition: all 0.15s ease;
+}
+
+.tc-profile-card.is-active {
+  border-color: var(--profile-accent, #a78bfa);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.3);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.tc-profile-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167, 139, 250, 0.25);
+}
+
+.tc-profile-card .profile-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.tc-profile-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--profile-accent, #a78bfa);
+  flex-shrink: 0;
+}
+
+/* Simulations section - super bonito pickers */
+.sim-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.sim-card {
+  padding: 16px;
+}
+
+.sim-button-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.sim-inline-fields {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.sim-gift-picker,
+.sim-emote-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+  margin: 8px 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sim-gift-item,
+.sim-emote-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-align: center;
+}
+
+.sim-gift-item:hover,
+.sim-emote-item:hover {
+  background: rgba(167, 139, 250, 0.1);
+  border-color: rgba(167, 139, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+.sim-gift-item.selected,
+.sim-emote-item.selected {
+  background: rgba(167, 139, 250, 0.2);
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.4);
+}
+
+.sim-gift-thumb,
+.sim-emote-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #111827;
+}
+
+.sim-gift-fallback,
+.sim-emote-fallback {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.sim-gift-info {
+  font-size: 0.7rem;
+  line-height: 1.1;
+}
+
+.sim-gift-info strong {
+  display: block;
+  color: #e0e7ff;
+}
+
+.sim-gift-info span {
+  color: #fde047;
+  font-size: 0.65rem;
+}
+
+.sim-emote-name {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  max-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sim-action-btn {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.sim-empty {
+  grid-column: 1 / -1;
+  padding: 12px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+/* Integraciones / Bridges premium cards */
+.integraciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.integracion-card {
+  padding: 16px;
+  border-left: 4px solid #a78bfa;
+}
+
+.integracion-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.integracion-card-head h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.integracion-card p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.integracion-card .field-label {
+  font-size: 0.75rem;
+  margin-top: 8px;
+}
+
+/* Gaming section - super bonito premium cards */
+.game-launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.game-launcher-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0f172a;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+  height: 140px;
+}
+
+.game-launcher-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--game-accent, #a78bfa);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.game-launcher-card.selected {
+  border-color: var(--game-accent, #a78bfa);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.3);
+}
+
+.game-launcher-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+  transition: transform 0.3s ease;
+}
+
+.game-launcher-card:hover .game-launcher-cover {
+  transform: scale(1.05);
+}
+
+.game-launcher-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 20%, rgba(15, 23, 42, 0.3) 60%);
+}
+
+.game-launcher-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-launcher-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1e7ff;
+  z-index: 1;
+}
+
+.game-launcher-pill {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  align-self: flex-start;
+  z-index: 1;
+}
+
+.game-launcher-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  z-index: 1;
+}
+
+.game-detail-shell {
+  padding: 18px;
+  border-left: 5px solid var(--game-accent, #a78bfa);
+}
+
+.game-detail-hero {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.game-detail-poster {
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.game-detail-banner {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6)), var(--game-banner-image);
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px 10px;
+  transition: transform 0.1s ease;
+}
+
+.game-stat-card:hover {
+  transform: translateY(-1px);
+}
+
+.game-mode-card {
+  padding: 14px;
+  border-left: 3px solid var(--game-accent, #a78bfa);
+}
+
+/* Sidebar commercial card polish */
+.premium-sidebar-card {
+  border: 1px solid rgba(167, 139, 250, 0.15);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.6));
+}
+
+.premium-sidebar-card strong {
+  color: #e0e7ff;
+  font-size: 1.05rem;
+}
+
+.premium-sidebar-card .sidebar-product-meta {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+/* Workspace header polish */
+.premium-workspace-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.premium-workspace-header .workspace-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.premium-workspace-header .workspace-section-icon {
+  color: #a78bfa;
+}
+
+/* Final premium sidebar polish for super bonito */
+.sidebar {
+  background: linear-gradient(180deg, rgba(10, 15, 25, 0.98) 0%, rgba(8, 12, 20, 0.99) 100%);
+}
+
+.brand-block {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.brand-title {
+  background: linear-gradient(90deg, #fff, #e0e7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+.sidebar-nav .nav-button {
+  transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1);
+  border-radius: 10px;
+  margin-bottom: 2px;
+}
+
+.sidebar-nav .nav-button.active {
+  background: linear-gradient(90deg, rgba(167, 139, 250, 0.28), rgba(167, 139, 250, 0.12));
+  border-color: #a78bfa;
+  box-shadow: 0 4px 14px rgba(167, 139, 250, 0.25);
+  color: #fff;
+}
+
+.sidebar-nav .nav-button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.07);
+  transform: translateX(3px);
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+.premium-sidebar-card {
+  background: linear-gradient(160deg, rgba(167, 139, 250, 0.1), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Final global super bonito polish for buttons, inputs, and cards */
+button,
+.btn,
+.primary-button,
+.secondary-button,
+.ghost-button {
+  transition: all 0.12s cubic-bezier(0.23, 1, 0.32, 1);
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+button:hover:not(:disabled),
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.text-field,
+input,
+select,
+textarea {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.1s ease;
+}
+
+.text-field:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.surface-card,
+.tc-profile-card,
+.music-current,
+.tts-profile-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.surface-card:hover,
+.tc-profile-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* TTSSection premium polish */
+.tts-profile-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px;
+  transition: all 0.15s ease;
+  border-left: 4px solid var(--profile-color, #a78bfa);
+}
+
+.tts-profile-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(167, 139, 250, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.tts-profile-card[data-selected="true"] {
+  border-color: var(--profile-color, #a78bfa);
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.3);
+}
+
+.tts-profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.tts-profile-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.tts-profile-title {
+  flex: 1;
+}
+
+.tts-profile-title strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #f1e7ff;
+}
+
+.tts-profile-tagline {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.tts-profile-active-badge {
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.2);
+  color: #c4b5fd;
+  align-self: flex-start;
+}
+
+.tts-profile-params {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.tts-param-chip {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #cbd5e1;
+}
+
+.tts-param-chip strong {
+  color: #e0e7ff;
+  margin-left: 3px;
+}
+
+.tts-profile-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.tts-profile-select-btn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  transition: all 0.1s ease;
+}
+
+.tts-profile-select-btn.active {
+  background: rgba(167, 139, 250, 0.2);
+  border-color: #a78bfa;
+  color: #fff;
+}
+
+.tts-profile-test-btn {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a5b4fc;
+}
+
+.tts-profile-test-btn:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.1);
+}
+
+/* MusicSection legacy rules cleaned — now handled by the rich premium block above */
+
+/* Premium boot/auth screen */
+.premium-boot {
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.85));
+}
+
+.premium-boot .commercial-boot-logo {
+  background: linear-gradient(135deg, #a78bfa, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.premium-boot .boot-hint {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+/* TikControl Module Shell - refinamientos finales */
+.tc-module-shell .tc-module-content {
+  display: grid;
+  gap: 22px;
+}
+
+.tc-widgets-stats .metric-card strong {
+  font-size: 1.6rem;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+}

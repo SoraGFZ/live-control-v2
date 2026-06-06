@@ -1,0 +1,509 @@
+/*
+ * TikControl - Actions View
+ */
+
+#view-acciones {
+    padding: var(--view-tab-padding-y) var(--view-tab-padding-x);
+}
+
+#acciones-root {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Encabezado explicativo pestaña Acciones (acento azul marca / dismiss + colapsar) ── */
+.tab-intro-banner {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(35, 123, 255, 0.22);
+    box-shadow:
+        0 0 0 1px rgba(35, 123, 255, 0.08) inset,
+        0 0 32px rgba(35, 123, 255, 0.14),
+        0 8px 28px rgba(0, 0, 0, 0.45);
+    background: linear-gradient(145deg, #080c18 0%, #060a12 48%, #0a1022 100%);
+}
+
+.tab-intro-banner-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 80% 50% at 12% 20%, rgba(35, 123, 255, 0.1), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 88% 80%, rgba(15, 90, 204, 0.08), transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(35, 123, 255, 0.05), transparent 45%);
+    opacity: 0.95;
+}
+
+/* Grid + display:contents en .tab-intro-content: fila 1 = icono + título (centrados entre sí); fila 2 = cuerpo a ancho completo */
+.tab-intro-banner-inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    column-gap: 18px;
+    row-gap: 10px;
+    align-items: start;
+    padding: 18px 20px 20px;
+    z-index: 1;
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.3s ease,
+                row-gap 0.3s ease;
+}
+
+.tab-intro-banner.is-collapsed .tab-intro-banner-inner {
+    grid-template-rows: auto 0fr;
+    padding-bottom: 18px;
+    row-gap: 0;
+}
+
+.tab-intro-icon-box {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    color: var(--accent-primary);
+    background: rgba(35, 123, 255, 0.08);
+    border: 1px solid rgba(35, 123, 255, 0.42);
+    box-shadow:
+        0 0 16px rgba(35, 123, 255, 0.22),
+        0 0 40px rgba(35, 123, 255, 0.06);
+}
+
+.tab-intro-icon-svg {
+    filter: none;
+}
+
+.tab-intro-content {
+    display: contents;
+}
+
+.tab-intro-head-row {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+.tab-intro-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #f0f6fc;
+    line-height: 1.2;
+    min-width: 0;
+    flex: 1;
+}
+
+.tab-intro-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.tab-intro-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: rgba(35, 123, 255, 0.1);
+    color: rgba(200, 220, 255, 0.95);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tab-intro-btn:hover {
+    background: rgba(35, 123, 255, 0.18);
+    box-shadow: 0 0 12px rgba(35, 123, 255, 0.22);
+}
+
+.tab-intro-chevron {
+    transition: transform 0.2s ease;
+    transform: rotate(180deg);
+}
+
+.tab-intro-banner.is-collapsed .tab-intro-chevron {
+    transform: rotate(0deg);
+}
+
+.tab-intro-body {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding-top: 2px;
+    opacity: 1;
+    transition: opacity 0.25s ease,
+                padding-top 0.3s ease;
+}
+
+.tab-intro-banner.is-collapsed .tab-intro-body {
+    opacity: 0;
+    padding-top: 0;
+}
+
+.tab-intro-desc {
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: rgba(232, 241, 255, 0.82);
+}
+
+.tab-intro-desc .tab-intro-brand {
+    color: inherit;
+    font-weight: inherit;
+}
+
+.tab-intro-desc strong:not(.tab-intro-brand) {
+    font-weight: inherit;
+}
+
+.tab-intro-desc .tab-intro-ul {
+    font-weight: 700;
+    color: #fff;
+}
+
+.tab-intro-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 8px;
+}
+
+.tab-intro-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e8f4ff;
+    background: rgba(10, 16, 34, 0.55);
+    border: 1px solid rgba(35, 123, 255, 0.32);
+    box-shadow: 0 0 14px rgba(35, 123, 255, 0.1);
+}
+
+.tab-intro-chip svg {
+    flex-shrink: 0;
+    opacity: 0.95;
+    color: var(--accent-primary);
+}
+
+.tab-intro-chip svg[fill="currentColor"] {
+    color: var(--accent-primary);
+}
+
+.tab-intro-arrow {
+    color: rgba(120, 175, 255, 0.85);
+    filter: drop-shadow(0 0 6px rgba(35, 123, 255, 0.3));
+    display: flex;
+    align-items: center;
+}
+
+@media (max-width: 640px) {
+    /* Misma fila que escritorio: icono | título + botones; debajo el cuerpo */
+    .tab-intro-banner-inner {
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        row-gap: 10px;
+        padding: 14px 14px 16px;
+    }
+
+    .tab-intro-icon-box {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .tab-intro-head-row {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    .tab-intro-body {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .tab-intro-icon-svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .tab-intro-title {
+        font-size: 1.12rem;
+    }
+
+    .tab-intro-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Flujo Evento → Acción → Pantalla: horizontal con flechas (scroll si no cabe) */
+    .tab-intro-flow {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 6px;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .tab-intro-arrow {
+        display: flex;
+        flex-shrink: 0;
+    }
+
+    .tab-intro-chip {
+        width: auto;
+        flex-shrink: 0;
+        justify-content: center;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .tab-intro-chip svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+/* Título partido (acento azul marca) — compartido entre pestañas */
+.tab-intro-title-gap {
+    white-space: pre;
+    user-select: none;
+}
+
+.tab-intro-title.tab-intro-title--split {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    min-width: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    color: #f0f6fc;
+}
+
+.tab-intro-title-accent {
+    background: linear-gradient(180deg, #a8ccff 0%, var(--accent-primary) 48%, var(--accent-secondary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--accent-primary);
+}
+
+@supports not (-webkit-background-clip: text) {
+    .tab-intro-title-accent {
+        -webkit-text-fill-color: unset;
+        color: var(--accent-primary);
+    }
+}
+
+.tab-intro-title--long {
+    font-size: 1.05rem;
+    line-height: 1.3;
+}
+
+@media (min-width: 641px) {
+    .tab-intro-title--long {
+        font-size: 1.2rem;
+    }
+}
+
+.tab-intro-desc .tab-intro-ul strong {
+    color: #fff;
+    font-weight: 700;
+}
+
+/* Banners hermanos del contenido principal (Galería, Editor, etc.) */
+#view-widgets > .tab-intro-banner--page,
+#view-overlay > .tab-intro-banner--page,
+#view-regalos > .tab-intro-banner--page,
+#view-batallas > .tab-intro-banner--page,
+#view-eventos > .tab-intro-banner--page,
+#view-integraciones > .tab-intro-banner--page,
+#view-tts > .tab-intro-banner--page,
+#view-spotify > .tab-intro-banner--page {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+    /* Vistas en columna flex: sin esto el banner puede encogerse y recortar el texto (p. ej. Galería) */
+    flex-shrink: 0;
+}
+
+#view-gaming > .tab-intro-banner--page {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    margin-bottom: 12px;
+}
+
+#view-puntos .tab-intro-banner--page {
+    width: 100%;
+    max-width: none;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.pantalla-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #0f1822;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.pantalla-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pantalla-card-title {
+    font-weight: 600;
+    color: var(--text-white);
+}
+
+.pantalla-card-badge {
+    font-size: 10px;
+    opacity: 0.6;
+    color: var(--text-muted);
+    align-self: center;
+}
+
+.pantalla-card-url-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) 32px 32px;
+    gap: 6px;
+    align-items: center;
+}
+
+.pantalla-card-input {
+    min-width: 0;
+    background: #121b2a;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #cfe0ff;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+.pantalla-card-icon-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #93c5fd;
+    background: rgba(35, 123, 255, 0.08);
+    border: 1px solid rgba(35, 123, 255, 0.22);
+    border-radius: 8px;
+}
+
+.pantalla-card-icon-btn svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    flex: 0 0 16px;
+}
+
+/* ===== Sub-tabs: Este perfil / Global ===== */
+#view-acciones .ae-subtabs {
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(35, 123, 255, 0.12);
+    border-radius: 14px;
+    margin: 0;
+}
+
+#view-acciones .ae-subtab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text-muted);
+}
+
+#view-acciones .ae-subtab-btn:hover {
+    background: rgba(35, 123, 255, 0.08);
+    color: #93c5fd;
+}
+
+#view-acciones .ae-subtab-btn.active {
+    background: linear-gradient(135deg, rgba(35, 123, 255, 0.2), rgba(15, 90, 204, 0.15));
+    color: #fff;
+    border: 1px solid rgba(35, 123, 255, 0.3);
+    box-shadow: 0 2px 12px rgba(35, 123, 255, 0.2);
+}
+
+#view-acciones .premium-badge {
+    background: linear-gradient(135deg, #ffb432 0%, #ff8800 100%);
+    color: #000;
+    box-shadow: 0 2px 6px rgba(255, 180, 50, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 6px;
+}
+
+#view-acciones .ae-scope-hint {
+    margin: 0;
+    padding: 0 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+}

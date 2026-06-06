@@ -1,8 +1,8 @@
 {
   "name": "live-control-app",
   "private": true,
-  "version": "0.1.0-beta.1",
-  "description": "App para conectar TikTok LIVE con overlays, juegos y music request en una beta desktop.",
+  "version": "0.2.0-beta.32",
+  "description": "Live Control Studio — plataforma comercial para automatizar TikTok LIVE con overlays, acciones e integraciones.",
   "author": "SoraGFZ",
   "type": "module",
   "main": "electron/main.cjs",
@@ -10,28 +10,37 @@
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
     "dev:client": "vite",
     "dev:server": "node server/index.js",
+    "brand:icon": "powershell -ExecutionPolicy Bypass -File scripts/generate-brand-icon.ps1",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server/index.js",
     "bridge:start": "node bridge/index.js",
-    "tunnel": "node scripts/run-ngrok.mjs",
+    "tunnel": "node scripts/run-cloudflared.mjs",
+    "tunnel:ngrok": "node scripts/run-ngrok.mjs",
     "tunnel:auth": "node scripts/configure-ngrok.mjs",
     "tunnel:localtunnel": "node scripts/run-localtunnel.mjs",
     "tunnel:cloudflare": "node scripts/run-cloudflared.mjs",
+    "tunnel:live": "node scripts/run-cloudflared.mjs",
     "public": "npm run build && concurrently -k \"npm:start\" \"npm:tunnel\"",
-    "desktop:start": "npm run build && electron .",
-    "desktop:pack": "npm run build && electron-builder --dir",
-    "desktop:dist": "npm run build && electron-builder --win nsis"
+    "iniciar": "npm run desktop:start",
+    "desktop:start": "npm run brand:icon && npm run build && electron .",
+    "desktop:pack": "npm run brand:icon && npm run build && electron-builder --dir",
+    "desktop:dist": "npm run brand:icon && npm run build && electron-builder --win nsis",
+    "build:exe": "npm run rebuild:installer",
+    "rebuild:installer": "powershell -ExecutionPolicy Bypass -File scripts/build-desktop-exe.ps1"
   },
   "dependencies": {
     "express": "^5.2.1",
     "ffmpeg-static": "^5.3.0",
     "localtunnel": "^2.0.2",
+    "lucide-react": "^1.8.0",
     "multer": "^2.1.1",
+    "obs-websocket-js": "^5.0.7",
     "rcon-client": "^4.2.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "socket.io": "^4.8.1",
     "tiktok-live-connector": "^2.1.1-beta1",
     "ws": "^8.20.0"
   },
@@ -51,29 +60,41 @@
   },
   "build": {
     "appId": "io.soragfz.livecontrol.beta",
-    "productName": "Live Control Beta",
+    "productName": "Live Control Studio",
     "directories": {
       "output": "release"
     },
     "files": [
       "dist/**/*",
       "server/**/*",
+      "server/integrations/**/*",
       "bridge/**/*",
       "electron/**/*",
       "src/live-control.js",
       "src/chaosmod.js",
+      "src/dashboardShared.js",
+      "src/dashboardViewHelpers.js",
+      "src/config/**/*",
+      "src/ttsProfiles.js",
       "public/event-art/**/*",
       "public/game-covers/**/*",
+      "public/widgets/**/*",
+      "public/goals/**/*",
       "bridge-config.example.json",
       "package.json"
     ],
     "asarUnpack": [
       "dist/**/*",
       "server/**/*",
+      "server/integrations/**/*",
       "bridge/**/*",
       "node_modules/**/*",
       "src/live-control.js",
       "src/chaosmod.js",
+      "src/dashboardShared.js",
+      "src/dashboardViewHelpers.js",
+      "src/config/**/*",
+      "src/ttsProfiles.js",
       "bridge-config.example.json",
       "package.json"
     ],
@@ -81,15 +102,20 @@
       "target": [
         "nsis"
       ],
+      "icon": "build/icon.ico",
       "signAndEditExecutable": false,
       "verifyUpdateCodeSignature": false,
-      "artifactName": "${productName}-Setup-${version}.${ext}"
+      "artifactName": "Live Control Studio-Setup-${version}.${ext}",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "shortcutName": "Live Control Beta"
+      "shortcutName": "Live Control Studio",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
     }
   }
 }

@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firework Widget</title>
+    <!-- OK Solo cargar base UNA vez - el mock de socket.io se crea aquÃ­ -->
+    <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+    <script src="core/font-loader.js?v=20260526-storage-token-fix"></script>
+    <script src="tikcontrol-widget-base.js?v=20260526-storage-token-fix"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" crossorigin="anonymous"></script>
+    <!-- OK NO cargar socket.io real - usar el mock del base -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: transparent;
+            position: relative;
+            height: 100vh;
+            contain: layout style paint;
+        }
+
+        #imagePreload {
+            display: none;
+            position: absolute;
+        }
+
+        .rocket {
+            position: absolute;
+            width: 8vmin;
+            height: 8vmin;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            bottom: -10vmin;
+            left: 50%;
+            will-change: transform, bottom;
+            animation: rocketAppear 0.5s ease-in-out forwards, rocketLaunch var(--rocket-launch-duration) ease-in-out forwards;
+        }
+
+        .rocket::before {
+            content: '';
+            position: absolute;
+            width: 2vmin;
+            height: 10vmin;
+            background: linear-gradient(to bottom, rgba(255, 165, 0, 0.8), rgba(255, 69, 0, 0));
+            bottom: -10vmin;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: fireTail 0.1s infinite, fireTailHide 0.8s ease-out forwards calc(var(--rocket-launch-duration) - 0.5s);
+        }
+
+        @keyframes rocketAppear {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes fireTail {
+            0% { background: linear-gradient(to bottom, rgba(255, 165, 0, 0.8), rgba(255, 69, 0, 0)); }
+            50% { background: linear-gradient(to bottom, rgba(255, 165, 0, 0.8), rgba(255, 69, 0, 0), rgba(255, 69, 0, 0)); }
+            100% { background: linear-gradient(to bottom, rgba(255, 165, 0, 0.8), rgba(255, 69, 0, 0)); }
+        }
+
+        @keyframes fireTailHide {
+            0% { opacity: 0.8; }
+            100% { opacity: 0; }
+        }
+
+        .username {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            min-width: 80vmin;
+            text-align: center;
+            background-color: transparent;
+            min-height: 20vmin;
+            margin-left: -39vmin;
+            margin-bottom: -8vmin;
+            vertical-align: middle;
+            line-height: 20vmin;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            animation: usernameZoom 1s ease-out forwards, usernameHide 1.5s ease-in-out forwards 1.5s;
+        }
+
+        @keyframes usernameZoom {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes usernameHide {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes rocketLaunch {
+            0% { bottom: 0; transform: translateX(-50%); }
+            100% { bottom: var(--rocket-offset-bottom); transform: translateX(calc(-60% + var(--rocket-offset))); }
+        }
+
+        @keyframes rocketExplode {
+            0% { bottom: var(--rocket-offset-bottom); transform: translateX(calc(-60% + var(--rocket-offset))) scale(1); }
+            100% { bottom: var(--rocket-offset-bottom); transform: translateX(calc(-60% + var(--rocket-offset))) scale(1.5); }
+        }
+
+        @keyframes rocketHide {
+            0% { bottom: var(--rocket-offset-bottom); transform: translateX(calc(-60% + var(--rocket-offset))) scale(1.5); opacity: 1; }
+            100% { bottom: var(--rocket-offset-bottom); transform: translateX(calc(-60% + var(--rocket-offset))) scale(1.5); opacity: 0; }
+        }
+
+        .explosion {
+            position: absolute;
+            width: 4vmin;
+            height: 4vmin;
+            background-size: cover;
+            border-radius: 50%;
+            will-change: transform, opacity;
+            animation: explosionEffect 2s ease-out forwards;
+        }
+
+        @keyframes explosionEffect {
+            0% { transform: scale(0.5); opacity: 1; }
+            30% { transform: translate(calc(var(--x) * 8vw), calc(var(--y) * 8vh)) scale(1.5); opacity: 1; }
+            60% { transform: translate(calc(var(--x) * 15vw), calc(var(--y) * 15vh)) scale(1.8); opacity: 0.8; }
+            100% { transform: translate(calc(var(--x) * 20vw), calc(var(--y) * 20vh)) scale(0.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="imagePreload"></div>
+    <script src="firework.js"></script>
+</body>
+</html>
+
+

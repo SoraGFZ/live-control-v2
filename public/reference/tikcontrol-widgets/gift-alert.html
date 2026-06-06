@@ -1,0 +1,44 @@
+﻿<!doctype html>
+<meta charset="utf-8" />
+<title>Alerta de regalo</title>
+<style>
+  html,body{ margin:0; background:transparent; }
+  #root{ position:fixed; inset:0; overflow:hidden; }
+  /* Anchor at center; transform offset applied within keyframes to avoid override */
+  .blimp{ position:absolute; top:var(--blimpTop, 20%); left:50%; will-change:transform; }
+  .blimp-inner{ position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .blimp-img{ width:min(320px, 40vw); height:auto; transform-origin:center; image-rendering:auto; z-index:2; }
+  /* OK Banner pegado directamente al zepelÃ­n (sin cuerda) */
+  .banner{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.22); background:rgba(0,0,0,.55); color:#fff; font: 20px/1.2 system-ui,Segoe UI,Roboto,sans-serif; box-shadow:0 2px 8px rgba(0,0,0,.2); position:relative; z-index:1; margin-top: -6px; /* Pegado al zepelÃ­n */ }
+  /* NO CUERDA ELIMINADA */
+  .gift-img{ width:32px; height:32px; object-fit:contain; }
+  .hidden{ display:none; }
+  /* Horizontal flight with soft fade in/out */
+  /* Translate relative to centered anchor: negative moves left from center, positive right */
+  @keyframes fly-left {
+    0%   { transform: translateX(calc(-50% + var(--fromCenter, -50vw))); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateX(calc(-50% + var(--toCenter, 50vw))); opacity: 0; }
+  }
+  @keyframes fly-right {
+    0%   { transform: translateX(calc(-50% + var(--fromCenter, 50vw))); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateX(calc(-50% + var(--toCenter, -50vw))); opacity: 0; }
+  }
+  /* Bobbing up-down */
+  @keyframes bob { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(calc(var(--bobAmp, 10px) * -1)) } }
+  /* Dev controls */
+  #ga-controls{ position:fixed; top:8px; left:8px; z-index:9999; display:flex; gap:6px; align-items:center; background:rgba(0,0,0,.55); color:#fff; padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,.2); font: 12px/1 system-ui,Segoe UI,Roboto,sans-serif; }
+  #ga-controls .ga-btn{ appearance:none; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.12); color:#fff; border-radius:6px; padding:4px 8px; cursor:pointer; font: inherit; }
+  #ga-controls .ga-btn:hover{ background:rgba(255,255,255,.2); }
+  #ga-controls .ga-val{ opacity:.9; margin-left:4px; min-width:48px; text-align:right; }
+</style>
+<div id="root"></div>
+  <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+  <script src="core/font-loader.js?v=1.0.29-cache7"></script>
+  <script src="tikcontrol-widget-base.js?v=1.0.29-cache7"></script>
+<script src="gift-alert.js?v=20260507-gift-alert-image"></script>
+
+

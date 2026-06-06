@@ -1,0 +1,169 @@
+﻿ACUERDO DE LICENCIA DE SOFTWARE DE TIKCONTROL
+
+IMPORTANTE: LEA ATENTAMENTE ESTE ACUERDO ANTES DE UTILIZAR EL SOFTWARE
+
+Este Acuerdo de Licencia de Usuario Final (End User License Agreement, "EULA") regula el acceso y uso del software TikControl (en adelante, el "Software"), proporcionado por:
+
+TIKCONTROL TECHNOLOGIES S.L.
+(en adelante, "TikControl")
+
+Al acceder, registrarse o utilizar el Software, el usuario (en adelante, el "Usuario") acepta quedar legalmente vinculado por los términos de este Acuerdo.
+
+Si no está de acuerdo con estos términos, no debe utilizar el Software.
+
+
+1. NATURALEZA DEL SOFTWARE
+
+TikControl es un software ofrecido en modalidad Software as a Service (SaaS), diseñado para la producción, control y gestión de emisiones en TikTok LIVE.
+
+El Software:
+   - No se vende al Usuario
+   - Se licencia para su uso limitado
+   - Puede requerir conexión a servicios de terceros (incluyendo TikTok)
+
+TikControl no es:
+   - Un software descargable tradicional
+   - Un servicio de monetización
+   - Un sistema que garantice resultados
+
+
+2. CONCESIÓN DE LICENCIA
+
+Sujeto al cumplimiento de este Acuerdo, TikControl concede al Usuario una licencia:
+   - Limitada
+   - No exclusiva
+   - No transferible
+   - No sublicenciable
+   - Revocable
+
+para acceder y utilizar el Software exclusivamente para su uso interno conforme a la finalidad del producto.
+
+Esta licencia no implica la transferencia de ningún derecho de propiedad sobre el Software.
+
+
+3. ALCANCE DE LA LICENCIA
+
+El uso del Software puede estar sujeto a:
+   - Tipo de usuario (creador, agencia o Manager de TikTok)
+   - Plan contratado o asignado
+   - Configuración y permisos dentro del sistema
+
+TikControl podrá modificar en cualquier momento el alcance de las funcionalidades disponibles.
+
+
+4. RESTRICCIONES DE USO
+
+El Usuario se compromete a no:
+   - Copiar, modificar o crear obras derivadas del Software
+   - Descompilar, desensamblar o realizar ingeniería inversa
+   - Distribuir, sublicenciar, alquilar o comercializar el Software
+   - Acceder o intentar acceder a partes no autorizadas del sistema
+   - Utilizar el Software para actividades ilícitas o no autorizadas
+   - Interferir en el funcionamiento o seguridad del Software
+
+Cualquier incumplimiento podrá dar lugar a la terminación inmediata de la licencia.
+
+
+5. INTEGRACIÓN CON SERVICIOS DE TERCEROS
+
+El Software puede integrarse con servicios externos, incluyendo TikTok.
+
+El Usuario reconoce que:
+   - TikControl es independiente de TikTok
+   - TikControl no controla ni influye en las decisiones de TikTok
+   - TikControl no es responsable de sanciones, limitaciones o bloqueos de cuentas
+
+El uso del Software no garantiza resultados en plataformas de terceros.
+
+
+6. PROPIEDAD INTELECTUAL
+
+El Software, incluyendo:
+   - Código fuente
+   - Diseño
+   - Interfaces
+   - Funcionalidades
+
+es propiedad exclusiva de TIKCONTROL TECHNOLOGIES S.L.
+
+El Usuario únicamente adquiere un derecho de uso limitado conforme a este Acuerdo.
+
+
+7. GARANTÍA LIMITADA
+
+El Software se proporciona "tal cual" ("as is") y "según disponibilidad".
+
+TikControl no garantiza:
+   - Funcionamiento continuo o ininterrumpido
+   - Ausencia de errores
+   - Compatibilidad con todos los sistemas o entornos
+
+
+8. LIMITACIÓN DE RESPONSABILIDAD
+
+En la máxima medida permitida por la ley, TikControl no será responsable de:
+   - Daños directos, indirectos o consecuentes
+   - Pérdidas económicas o de ingresos
+   - Interrupciones del servicio
+   - Errores o fallos técnicos
+   - Sanciones o baneos en TikTok u otras plataformas
+
+El Usuario utiliza el Software bajo su propia responsabilidad.
+
+
+9. DISPONIBILIDAD Y MODIFICACIONES
+
+TikControl podrá:
+   - Actualizar, modificar o eliminar funcionalidades
+   - Suspender temporal o permanentemente el acceso al Software
+
+sin necesidad de previo aviso.
+
+
+10. DURACIÓN Y TERMINACIÓN
+
+Este Acuerdo estará vigente mientras el Usuario utilice el Software.
+
+TikControl podrá suspender o terminar la licencia de forma inmediata en caso de:
+   - Incumplimiento del Acuerdo
+   - Uso indebido del Software
+   - Riesgos técnicos o legales
+
+Tras la terminación, el Usuario deberá cesar inmediatamente el uso del Software.
+
+
+11. INDEMNIZACIÓN
+
+El Usuario acepta defender, indemnizar y mantener indemne a TikControl frente a cualquier reclamación, daño o coste derivado de:
+   - El uso del Software
+   - El incumplimiento de este Acuerdo
+   - El uso del Software en plataformas de terceros
+   - La vulneración de derechos de terceros
+
+Esta obligación permanecerá vigente tras la terminación del Acuerdo.
+
+
+12. RELACIÓN CON OTROS DOCUMENTOS
+
+Este Acuerdo regula exclusivamente el uso del Software.
+
+El uso de la plataforma TikControl también puede estar sujeto a:
+   - Términos de Uso
+   - Política de Privacidad
+
+En caso de conflicto, prevalecerán las disposiciones más restrictivas en relación con el uso del Software.
+
+
+13. LEY APLICABLE Y JURISDICCIÓN
+
+Este Acuerdo se regirá por la legislación española.
+
+Para la resolución de cualquier controversia derivada de este Acuerdo, las partes se someten expresamente a los Juzgados y Tribunales de Madrid (España), renunciando a cualquier otro fuero que pudiera corresponderles.
+
+
+14. ACEPTACIÓN
+
+El acceso o uso del Software implica la aceptación íntegra de este Acuerdo de Licencia de Software (EULA).
+
+
+© 2026 TIKCONTROL TECHNOLOGIES S.L. Todos los derechos reservados.

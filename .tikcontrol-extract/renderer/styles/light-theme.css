@@ -1,0 +1,26 @@
+/*
+ * TikControl - light-theme.css
+ *
+ * ARCHIVO VACÍO — mantenido por compatibilidad con referencias externas.
+ * El contenido ha sido dividido en:
+ *
+ *   renderer/styles/themes/light/
+ *     ├── index.css          ← punto de entrada (importado desde main.css)
+ *     ├── global.css         ← variables, scrollbar, nav, header
+ *     ├── home.css
+ *     ├── actions.css
+ *     ├── action-panels.css
+ *     ├── sounds.css
+ *     ├── tts.css
+ *     ├── events.css
+ *     ├── gifts.css
+ *     ├── widgets.css
+ *     ├── overlay.css
+ *     ├── spotify.css
+ *     ├── agencies.css
+ *     ├── account.css
+ *     ├── points.css
+ *     └── goals.css
+ *
+ * main.css ya importa './themes/light/index.css' directamente.
+ */

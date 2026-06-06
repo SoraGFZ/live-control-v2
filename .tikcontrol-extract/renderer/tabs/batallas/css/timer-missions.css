@@ -1,0 +1,243 @@
+/**
+ * timer-missions.css - Timer de batalla, multiplicadores x2/x3, misiones
+ */
+
+/* === MULTIPLIER BADGE === */
+.multiplier-badge {
+  display: none;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.multiplier-badge.active {
+  display: flex;
+  animation: multiplierBounce 0.5s ease;
+}
+
+@keyframes multiplierBounce {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.multiplier-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.multiplier-content.x2 {
+  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  box-shadow: 0 4px 20px rgba(255, 107, 0, 0.5);
+}
+
+.multiplier-content.x3 {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.45);
+}
+
+.multiplier-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.95);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  animation: fireFlicker 0.6s ease-in-out infinite alternate;
+}
+
+.multiplier-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes fireFlicker {
+  from { transform: scale(1); }
+  to { transform: scale(1.15); }
+}
+
+.multiplier-value {
+  font-size: 22px;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  letter-spacing: 1px;
+}
+
+.multiplier-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  background: rgba(0,0,0,0.2);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* === MISSION CARD === */
+.mission-card {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-light);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.mission-card.active {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(245, 158, 11, 0.06));
+  animation: missionPulse 2s infinite;
+}
+
+.mission-card.completed {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(34, 197, 94, 0.06));
+}
+
+.mission-card.failed {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(239, 68, 68, 0.06));
+}
+
+@keyframes missionPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.25); }
+  50% { box-shadow: 0 0 12px 0 rgba(245, 158, 11, 0.18); }
+}
+
+.mission-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mission-icon { font-size: 16px; }
+
+.mission-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.mission-multiplier {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  animation: multiplierGlow 1.5s infinite alternate;
+}
+
+.mission-multiplier.x2 {
+  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  color: white;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.mission-multiplier.x3 {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+@keyframes multiplierGlow {
+  from { box-shadow: 0 0 6px rgba(255, 107, 0, 0.4); }
+  to { box-shadow: 0 0 14px rgba(255, 107, 0, 0.7); }
+}
+
+.mission-description {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.mission-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.mission-progress-bar {
+  flex: 1;
+  min-width: 0;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mission-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 0;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+}
+
+.mission-card.completed .mission-progress-fill {
+  background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+.mission-card.failed .mission-progress-fill {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+  box-shadow: none;
+}
+
+.mission-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fbbf24;
+  min-width: 72px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mission-card.completed .mission-progress-text { color: #4ade80; }
+.mission-card.failed .mission-progress-text { color: #f87171; }
+
+/* === REWARD ACTIVE (multiplicador x2/x3 corriendo) === */
+.mission-card.reward-active {
+  border-color: rgba(34, 197, 94, 0.6);
+  background: linear-gradient(135deg, var(--bg-elevated), rgba(34, 197, 94, 0.08));
+  animation: rewardGlow 1.5s infinite alternate;
+}
+
+@keyframes rewardGlow {
+  from { box-shadow: 0 0 6px rgba(34, 197, 94, 0.25); }
+  to { box-shadow: 0 0 16px rgba(34, 197, 94, 0.45); }
+}
+
+.mission-card.reward-active .mission-description {
+  color: #86efac;
+  font-weight: 500;
+}
+
+.mission-card.reward-active .mission-progress-bar {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.15);
+}
+
+.mission-card.reward-active .mission-progress-fill.reward-countdown {
+  background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+  border-radius: 0;
+  transition: width 1s linear;
+}
+
+.mission-card.reward-active .mission-progress-text.reward-timer {
+  color: #4ade80;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 60px;
+}

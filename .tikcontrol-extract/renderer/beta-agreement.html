@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TikControl – Acuerdo BETA</title>
+  <link rel="icon" href="./logo.png" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(160deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+      color: #e2edf5;
+      overflow: auto;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+    .logo-row {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .logo-row h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #237BFF 0%, #A346FF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #A346FF;
+      background: rgba(163, 70, 255, 0.15);
+      border-radius: 6px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .control-group label {
+      font-size: 0.8rem;
+      color: rgba(226, 237, 245, 0.7);
+    }
+    select {
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      color: #e2edf5;
+      background: rgba(35, 123, 255, 0.12);
+      border: 1px solid rgba(35, 123, 255, 0.35);
+      border-radius: 10px;
+      min-width: 160px;
+      cursor: pointer;
+    }
+    select:hover, select:focus {
+      border-color: rgba(35, 123, 255, 0.6);
+      outline: none;
+    }
+    .agreement-card {
+      background: rgba(22, 33, 62, 0.6);
+      border: 1px solid rgba(35, 123, 255, 0.2);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      max-height: 42vh;
+      overflow-y: auto;
+    }
+    .agreement-card h2 {
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+    .agreement-card .section {
+      margin-bottom: 18px;
+    }
+    .agreement-card .section:last-child { margin-bottom: 0; }
+    .agreement-card .section h3 {
+      font-size: 0.9rem;
+      color: #237BFF;
+      margin-bottom: 6px;
+    }
+    .agreement-card .section p {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: rgba(226, 237, 245, 0.9);
+    }
+    .accept-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .accept-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: #237BFF;
+      cursor: pointer;
+    }
+    .accept-row label {
+      font-size: 0.95rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn-accept {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #237BFF 0%, #A346FF 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-accept:hover:not(:disabled) {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+    .btn-accept:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(226, 237, 245, 0.7);
+    }
+    .error-msg {
+      padding: 12px;
+      margin-bottom: 16px;
+      background: rgba(220, 53, 69, 0.15);
+      border: 1px solid rgba(220, 53, 69, 0.4);
+      border-radius: 8px;
+      color: #f8a5b2;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .error-msg.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-row">
+      <h1>TikControl</h1>
+      <span class="badge">BETA</span>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="category">Participación como</label>
+        <select id="category">
+          <option value="creator">Creador</option>
+          <option value="agency">Agencia</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="lang">Idioma</label>
+        <select id="lang">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="error-msg" class="error-msg"></div>
+
+    <div class="agreement-card">
+      <div id="content-loading" class="loading">Cargando acuerdo…</div>
+      <div id="content-body" style="display: none;">
+        <h2 id="agreement-title"></h2>
+        <div id="agreement-sections"></div>
+      </div>
+    </div>
+
+    <div class="accept-row">
+      <input type="checkbox" id="accept-check" />
+      <label for="accept-check" id="accept-label">Acepto los términos y condiciones del Acuerdo BETA</label>
+    </div>
+    <button type="button" class="btn-accept" id="btn-accept" disabled>Aceptar y continuar</button>
+  </div>
+
+  <script>
+    (function () {
+      const categorySelect = document.getElementById('category');
+      const langSelect = document.getElementById('lang');
+      const contentLoading = document.getElementById('content-loading');
+      const contentBody = document.getElementById('content-body');
+      const agreementTitle = document.getElementById('agreement-title');
+      const agreementSections = document.getElementById('agreement-sections');
+      const acceptCheck = document.getElementById('accept-check');
+      const acceptLabel = document.getElementById('accept-label');
+      const btnAccept = document.getElementById('btn-accept');
+      const errorMsg = document.getElementById('error-msg');
+
+      const labels = {
+        es: { accept: 'Acepto los términos y condiciones del Acuerdo BETA', acceptBtn: 'Aceptar y continuar', loading: 'Cargando acuerdo…' },
+        en: { accept: 'I accept the terms and conditions of the BETA Agreement', acceptBtn: 'Accept and continue', loading: 'Loading agreement…' },
+        tr: { accept: 'BETA Sözleşmesinin şartlarını ve koşullarını kabul ediyorum', acceptBtn: 'Kabul et ve devam et', loading: 'Sözleşme yükleniyor…' },
+      };
+
+      function showError(msg) {
+        errorMsg.textContent = msg || '';
+        errorMsg.classList.toggle('visible', !!msg);
+      }
+
+      function setLabels(lang) {
+        const L = labels[lang] || labels.es;
+        acceptLabel.textContent = L.accept;
+        btnAccept.textContent = L.acceptBtn;
+        contentLoading.textContent = L.loading;
+      }
+
+      async function loadContent() {
+        const category = categorySelect.value;
+        const lang = langSelect.value;
+        contentBody.style.display = 'none';
+        contentLoading.style.display = 'block';
+        showError('');
+        setLabels(lang);
+
+        const api = window.tikcontrol && window.tikcontrol.betaAgreement;
+        if (!api) {
+          contentLoading.textContent = 'Error: API no disponible.';
+          return;
+        }
+
+        const content = await api.getContent(category, lang);
+        contentLoading.style.display = 'none';
+        if (!content || !content.sections) {
+          contentBody.style.display = 'block';
+          agreementTitle.textContent = category === 'agency' ? 'Acuerdo BETA – Agencia' : 'Acuerdo BETA – Creador';
+          agreementSections.innerHTML = '<p>No se pudo cargar el texto del acuerdo. Por favor, reinicia la aplicación.</p>';
+          return;
+        }
+
+        agreementTitle.textContent = content.title || 'Acuerdo BETA';
+        agreementSections.innerHTML = content.sections.map(function (s) {
+          return '<div class="section"><h3>' + escapeHtml(s.heading) + '</h3><p>' + escapeHtml(s.body) + '</p></div>';
+        }).join('');
+        contentBody.style.display = 'block';
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      async function populateLanguages() {
+        const api = window.tikcontrol && window.tikcontrol.betaAgreement;
+        if (!api) return;
+        const category = categorySelect.value;
+        const currentLang = langSelect.value;
+        const langs = await api.getAvailableLanguages(category);
+        const list = langs && langs.length ? langs : ['es', 'en'];
+        const names = { es: 'Español', en: 'English', fr: 'Français', de: 'Deutsch', pt: 'Português', tr: 'T\u00fcrk\u00e7e' };
+        langSelect.innerHTML = list.map(function (code) {
+          return '<option value="' + escapeHtml(code) + '">' + (names[code] || code) + '</option>';
+        }).join('');
+        if (list.indexOf(currentLang) !== -1) langSelect.value = currentLang;
+        loadContent();
+      }
+
+      categorySelect.addEventListener('change', function () {
+        populateLanguages();
+      });
+      langSelect.addEventListener('change', loadContent);
+
+      acceptCheck.addEventListener('change', function () {
+        btnAccept.disabled = !acceptCheck.checked;
+      });
+
+      btnAccept.addEventListener('click', async function () {
+        if (!acceptCheck.checked) return;
+        const api = window.tikcontrol && window.tikcontrol.betaAgreement;
+        if (!api) {
+          showError('API no disponible.');
+          return;
+        }
+        btnAccept.disabled = true;
+        btnAccept.textContent = 'Guardando…';
+        showError('');
+
+        let ip = null;
+        try {
+          const r = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout(3000) });
+          const j = await r.json();
+          if (j && j.ip) ip = j.ip;
+        } catch (_) {}
+
+        const termsVersion = await api.getTermsVersion();
+        const result = await api.accept({ termsVersion, ip });
+
+        if (result && result.ok) {
+          btnAccept.textContent = 'Listo. Cargando TikControl…';
+        } else {
+          btnAccept.disabled = false;
+          btnAccept.textContent = document.getElementById('lang').value === 'en' ? 'Accept and continue' : 'Aceptar y continuar';
+          showError(result && result.error ? result.error : 'Error al guardar la aceptación.');
+        }
+      });
+
+      if (window.tikcontrol && window.tikcontrol.betaAgreement) {
+        populateLanguages();
+      } else {
+        contentLoading.textContent = 'Esperando conexión…';
+        contentLoading.style.display = 'block';
+        var check = setInterval(function () {
+          if (window.tikcontrol && window.tikcontrol.betaAgreement) {
+            clearInterval(check);
+            populateLanguages();
+          }
+        }, 200);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -2,12 +2,13 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, session, shell } = require('e
 const { randomBytes } = require('node:crypto')
 const fs = require('node:fs')
 const http = require('node:http')
+const net = require('node:net')
 const path = require('node:path')
-const { spawn } = require('node:child_process')
+const { spawn, execSync } = require('node:child_process')
 
 const APP_HOST = '127.0.0.1'
-const APP_PORT = Number(process.env.LIVE_CONTROL_DESKTOP_PORT || 5123)
-const APP_URL = `http://${APP_HOST}:${APP_PORT}`
+let APP_PORT = Number(process.env.LIVE_CONTROL_DESKTOP_PORT || 5123)
+let APP_URL = `http://${APP_HOST}:${APP_PORT}`
 const WINDOW_BACKGROUND = '#071018'
 const PRODUCT_NAME = 'Live Control Beta'
 const DESKTOP_BRIDGE_TOKEN = randomBytes(24).toString('hex')
@@ -20,18 +21,102 @@ let tikTokLoginWindow = null
 let tikTokLoginPromise = null
 let isShuttingDown = false
 
-function getAppRoot() {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked')
-    : path.resolve(__dirname, '..')
+function isRunningAsAdministrator() {
+  try {
+    execSync('net session', { stdio: 'ignore' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function ensureAdministratorPrivileges() {
+  if (process.platform !== 'win32') {
+    return
+  }
+
+  if (!isRunningAsAdministrator()) {
+    dialog.showErrorBox(
+      PRODUCT_NAME,
+      'Esta aplicación necesita ejecutarse como administrador para controlar ChaosMod y el bridge local.\n\nPor favor, reinicia la aplicación como administrador.',
+    )
+    app.quit()
+  }
 }
 
 function getUserDataPath(...segments) {
   return path.join(app.getPath('userData'), ...segments)
 }
 
+function findAvailablePort(startPort) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(null)
+      } else {
+        reject(err)
+      }
+    })
+
+    server.once('listening', () => {
+      const port = server.address().port
+      server.close(() => resolve(port))
+    })
+
+    server.listen(startPort, APP_HOST)
+  })
+}
+
+async function ensureAvailablePort() {
+  const initialPort = Number(process.env.LIVE_CONTROL_DESKTOP_PORT || 5123)
+  let port = initialPort
+  const maxPort = initialPort + 20
+
+  while (port <= maxPort) {
+    const available = await findAvailablePort(port)
+    if (available) {
+      APP_PORT = available
+      APP_URL = `http://${APP_HOST}:${APP_PORT}`
+      return
+    }
+    port += 1
+  }
+
+  throw new Error(
+    `No se pudo encontrar un puerto libre para la app desktop entre ${initialPort} y ${maxPort}.`,
+  )
+}
+
+function getAppRoot() {
+  // In packaged app with proper asarUnpack config, unpacked directory should exist
+  const unpackedPath = path.join(process.resourcesPath, 'app.asar.unpacked')
+  if (fs.existsSync(unpackedPath)) {
+    return unpackedPath
+  }
+
+  // Fallback for development or misconfigured packaged app
+  return path.resolve(__dirname, '..')
+}
+
 function getPreloadPath() {
   return path.join(__dirname, 'preload.cjs')
+}
+
+function getWindowIconPath() {
+  const packagedDistIconPath = path.join(getAppRoot(), 'dist', 'favicon.png')
+  const sourcePublicIconPath = path.join(getAppRoot(), 'public', 'favicon.png')
+
+  if (fs.existsSync(packagedDistIconPath)) {
+    return packagedDistIconPath
+  }
+
+  if (fs.existsSync(sourcePublicIconPath)) {
+    return sourcePublicIconPath
+  }
+
+  return undefined
 }
 
 function getDefaultWebPreferences(extraPreferences = {}) {
@@ -80,25 +165,115 @@ function writeJsonFile(filePath, value) {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
 }
 
-function seedBridgeConfigIfNeeded() {
-  const targetBridgeConfigPath = getUserDataPath('bridge-config.json')
-
-  if (fs.existsSync(targetBridgeConfigPath)) {
-    return
+function readEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return {}
   }
 
-  const sourceCandidates = [
-    path.join(getAppRoot(), 'bridge-config.json'),
-    path.join(getAppRoot(), 'bridge-config.example.json'),
-  ]
-  const sourcePath = sourceCandidates.find((candidate) => fs.existsSync(candidate))
-  const nextConfig = sourcePath ? readJsonFile(sourcePath) : {}
+  const fileContents = fs.readFileSync(filePath, 'utf8')
 
-  writeJsonFile(targetBridgeConfigPath, {
+  return fileContents.split(/\r?\n/).reduce((envMap, line) => {
+    const trimmedLine = line.trim()
+
+    if (!trimmedLine || trimmedLine.startsWith('#')) {
+      return envMap
+    }
+
+    const separatorIndex = trimmedLine.indexOf('=')
+
+    if (separatorIndex === -1) {
+      return envMap
+    }
+
+    const key = trimmedLine.slice(0, separatorIndex).trim()
+    const rawValue = trimmedLine.slice(separatorIndex + 1).trim()
+    const normalizedValue =
+      (rawValue.startsWith('"') && rawValue.endsWith('"')) || (rawValue.startsWith("'") && rawValue.endsWith("'"))
+        ? rawValue.slice(1, -1)
+        : rawValue
+
+    if (key) {
+      envMap[key] = normalizedValue
+    }
+
+    return envMap
+  }, {})
+}
+
+function getDesktopRuntimeEnv() {
+  const rootEnv = readEnvFile(path.join(getAppRoot(), '.env'))
+  const userEnv = readEnvFile(getUserDataPath('desktop.env'))
+
+  return {
+    ...rootEnv,
+    ...userEnv,
+  }
+}
+
+function getEnhancedChaosModDefaults() {
+  return {
+    modPath: 'C:\\Program Files\\Epic Games\\GTAVEnhanced\\chaosmod',
+    gtaProcessName: 'GTA5_Enhanced',
+  }
+}
+
+function hasEnhancedChaosModInstall() {
+  const { modPath } = getEnhancedChaosModDefaults()
+  return fs.existsSync(path.join(modPath, 'configs', 'effects.ini'))
+}
+
+function normalizeBridgeConfigForDesktop(nextConfig = {}) {
+  const normalizedConfig = {
     ...nextConfig,
     serverBaseUrl: APP_URL,
     localDashboardBaseUrl: APP_URL,
-  })
+  }
+
+  const currentChaosMod = {
+    ...(normalizedConfig.chaosmod || {}),
+  }
+  const enhancedDefaults = getEnhancedChaosModDefaults()
+  const configuredModPath = String(currentChaosMod.modPath || '').trim()
+  const configuredEffectsPath = configuredModPath
+    ? path.join(configuredModPath, 'configs', 'effects.ini')
+    : ''
+  const shouldPromoteEnhancedInstall =
+    hasEnhancedChaosModInstall()
+    && (!configuredModPath || !fs.existsSync(configuredEffectsPath) || configuredModPath !== enhancedDefaults.modPath)
+
+  if (shouldPromoteEnhancedInstall) {
+    normalizedConfig.chaosmod = {
+      ...currentChaosMod,
+      modPath: enhancedDefaults.modPath,
+      gtaProcessName: enhancedDefaults.gtaProcessName,
+    }
+  } else if (Object.keys(currentChaosMod).length > 0) {
+    normalizedConfig.chaosmod = currentChaosMod
+  }
+
+  return normalizedConfig
+}
+
+function seedBridgeConfigIfNeeded() {
+  const targetBridgeConfigPath = getUserDataPath('bridge-config.json')
+  let nextConfig = {}
+
+  if (fs.existsSync(targetBridgeConfigPath)) {
+    try {
+      nextConfig = readJsonFile(targetBridgeConfigPath)
+    } catch {
+      nextConfig = {}
+    }
+  } else {
+    const sourceCandidates = [
+      path.join(getAppRoot(), 'bridge-config.json'),
+      path.join(getAppRoot(), 'bridge-config.example.json'),
+    ]
+    const sourcePath = sourceCandidates.find((candidate) => fs.existsSync(candidate))
+    nextConfig = sourcePath ? readJsonFile(sourcePath) : {}
+  }
+
+  writeJsonFile(targetBridgeConfigPath, normalizeBridgeConfigForDesktop(nextConfig))
 }
 
 function ensureRuntimeFiles() {
@@ -130,6 +305,7 @@ function startNodeService(serviceName, relativeScriptPath, extraEnv = {}) {
     cwd: getAppRoot(),
     env: {
       ...process.env,
+      ...getDesktopRuntimeEnv(),
       ...extraEnv,
       ELECTRON_RUN_AS_NODE: '1',
     },
@@ -186,6 +362,38 @@ function stopNodeService(service) {
   } catch {
     // noop
   }
+}
+
+function waitForBridgeReady(timeoutMs = 12000) {
+  const startedAt = Date.now()
+
+  return new Promise((resolve) => {
+    function attempt() {
+      const request = http.get(`${APP_URL}/api/health/bridge`, (response) => {
+        response.resume()
+
+        if (response.statusCode && response.statusCode >= 200 && response.statusCode < 500) {
+          resolve()
+          return
+        }
+
+        scheduleRetry()
+      })
+
+      request.on('error', scheduleRetry)
+
+      function scheduleRetry() {
+        if (Date.now() - startedAt >= timeoutMs) {
+          resolve()
+          return
+        }
+
+        setTimeout(attempt, 500)
+      }
+    }
+
+    attempt()
+  })
 }
 
 function waitForBackendReady(timeoutMs = 30000) {
@@ -300,6 +508,7 @@ function createStandardWindow(options = {}) {
   return new BrowserWindow({
     autoHideMenuBar: true,
     backgroundColor: WINDOW_BACKGROUND,
+    icon: getWindowIconPath(),
     webPreferences: getDefaultWebPreferences(options.webPreferences || {}),
     ...options,
   })
@@ -325,12 +534,29 @@ function attachWindowRouting(windowInstance) {
   })
 
   windowInstance.webContents.on('will-navigate', (event, url) => {
-    if (isInternalAppUrl(url)) {
+    if (!isInternalAppUrl(url)) {
+      event.preventDefault()
+      shell.openExternal(url)
       return
     }
 
-    event.preventDefault()
-    shell.openExternal(url)
+    try {
+      const parsedUrl = new URL(url)
+      const isMainWindow = windowInstance === mainWindow
+      const isOverlayPath = parsedUrl.pathname.startsWith('/overlay/')
+      const isWidgetView = parsedUrl.searchParams.get('view') === 'widget'
+
+      if (isMainWindow && isOverlayPath && !isWidgetView) {
+        event.preventDefault()
+        const panel = parsedUrl.searchParams.get('panel') || 'overlay'
+        const nextPanel = panel && panel !== 'live-hub' ? panel : 'overlay'
+        void windowInstance.loadURL(
+          nextPanel === 'live-hub' ? `${APP_URL}/` : `${APP_URL}/?panel=${encodeURIComponent(nextPanel)}`,
+        )
+      }
+    } catch {
+      // Ignore malformed URLs and allow default navigation.
+    }
   })
 }
 
@@ -395,7 +621,8 @@ function createLoadingWindow() {
         <main class="panel">
           <p class="eyebrow">Beta Cerrada</p>
           <h1>Estamos levantando tu centro de control.</h1>
-          <p>Panel, backend y bridge local se están preparando para abrir la app completa.</p>
+          <p>En un solo clic: backend, bridge (Minecraft/GTA) y panel web. No hace falta abrir terminales aparte.</p>
+          <p style="margin-top:12px;font-size:0.92rem;">1. Backend · 2. Bridge local · 3. Panel listo</p>
         </main>
       </body>
     </html>
@@ -476,7 +703,7 @@ function openTikTokLoginWindow(options = {}) {
       height: 820,
       minWidth: 920,
       minHeight: 680,
-      show: false,
+      show: true,
       title: 'TikTok Login',
       parent: mainWindow || undefined,
       modal: Boolean(mainWindow),
@@ -524,15 +751,39 @@ function openTikTokLoginWindow(options = {}) {
   return tikTokLoginPromise
 }
 
+function updateDesktopSpotifyRedirectUri() {
+  const desktopEnvPath = getUserDataPath('desktop.env')
+  const existingEnv = readEnvFile(desktopEnvPath)
+  const redirectUri = `${APP_URL}/api/music/spotify/callback`
+  const nextEnv = {
+    ...existingEnv,
+    SPOTIFY_REDIRECT_URI: redirectUri,
+  }
+
+  const serializedEnv = Object.entries(nextEnv)
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n')
+
+  fs.writeFileSync(desktopEnvPath, `${serializedEnv}\n`, 'utf8')
+}
+
 async function bootDesktopApp() {
   ensureRuntimeFiles()
+  await ensureAvailablePort()
+  updateDesktopSpotifyRedirectUri()
+  console.log(`Seleccionado puerto desktop ${APP_PORT}`)
 
+  const desktopRuntimeEnv = getDesktopRuntimeEnv()
   backendService = startNodeService('backend', path.join('server', 'index.js'), {
     PORT: String(APP_PORT),
     LIVE_CONTROL_STORAGE_DIR: getUserDataPath('storage'),
+    LIVE_CONTROL_USER_DATA: getUserDataPath(),
     LIVE_CONTROL_DASHBOARD_URL: APP_URL,
     LIVE_CONTROL_DESKTOP_MODE: '1',
     LIVE_CONTROL_DESKTOP_TOKEN: DESKTOP_BRIDGE_TOKEN,
+    SPOTIFY_CLIENT_ID: desktopRuntimeEnv.SPOTIFY_CLIENT_ID || '',
+    SPOTIFY_CLIENT_SECRET: desktopRuntimeEnv.SPOTIFY_CLIENT_SECRET || '',
+    SPOTIFY_REDIRECT_URI: desktopRuntimeEnv.SPOTIFY_REDIRECT_URI || `${APP_URL}/api/music/spotify/callback`,
   })
 
   await waitForBackendReady()
@@ -540,7 +791,11 @@ async function bootDesktopApp() {
 
   bridgeService = startNodeService('bridge', path.join('bridge', 'index.js'), {
     LIVE_CONTROL_BRIDGE_CONFIG: getUserDataPath('bridge-config.json'),
+    LIVE_CONTROL_BACKEND_URL: APP_URL,
+    LIVE_CONTROL_DASHBOARD_URL: APP_URL,
   })
+
+  await waitForBridgeReady()
 }
 
 async function createMainWindow() {
@@ -548,7 +803,35 @@ async function createMainWindow() {
 
   try {
     await bootDesktopApp()
-    await mainWindow.loadURL(APP_URL)
+    await mainWindow.loadURL(`${APP_URL}/?panel=live-hub`)
+
+    mainWindow.webContents.on('before-input-event', (_event, input) => {
+      if (input.type === 'keyDown' && input.key === 'F12') {
+        mainWindow.webContents.toggleDevTools()
+      }
+    })
+
+    mainWindow.webContents.on('did-finish-load', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        return
+      }
+
+      mainWindow.webContents
+        .executeJavaScript(
+          `(function () {
+            if (!window.liveControlDesktop) return;
+            if (new URLSearchParams(location.search).get('view') === 'widget') return;
+            if (!location.pathname.startsWith('/overlay/')) return;
+            const next = new URL(location.href);
+            const panel = new URLSearchParams(location.search).get('panel') || 'overlay';
+            next.pathname = '/';
+            next.searchParams.set('panel', panel);
+            next.searchParams.delete('view');
+            history.replaceState({}, '', next.pathname + next.search);
+          })();`,
+        )
+        .catch(() => {})
+    })
   } catch (error) {
     dialog.showErrorBox(
       PRODUCT_NAME,
@@ -579,6 +862,30 @@ app.whenReady().then(async () => {
   ipcMain.handle('desktop:get-context', () => ({
     isDesktopApp: true,
   }))
+  ipcMain.handle('desktop:open-external', async (_event, url) => {
+    const nextUrl = String(url || '').trim()
+
+    if (!/^https?:\/\//i.test(nextUrl)) {
+      throw new Error('Solo puedo abrir enlaces http o https desde la app desktop.')
+    }
+
+    await shell.openExternal(nextUrl)
+    return { opened: true }
+  })
+  ipcMain.handle('desktop:open-path', async (_event, targetPath) => {
+    const nextPath = String(targetPath || '').trim()
+
+    if (!nextPath) {
+      throw new Error('Ruta vacia.')
+    }
+
+    const openResult = await shell.openPath(nextPath)
+    if (openResult) {
+      throw new Error(openResult)
+    }
+
+    return { opened: true, path: nextPath }
+  })
   ipcMain.handle('desktop:start-tiktok-login', async (_event, options = {}) => {
     return openTikTokLoginWindow(options || {})
   })

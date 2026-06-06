@@ -1,0 +1,696 @@
+/*
+ * TikControl - Goals View (2x2 Grid Layout)
+ */
+
+:is(#view-goals, .widgets-goals-container).view,
+.widgets-goals-container {
+  padding: 20px;
+}
+
+/* ─── Grid ─── */
+:is(#view-goals, .widgets-goals-container) .goals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ─── Card ─── */
+:is(#view-goals, .widgets-goals-container) .goal-card {
+  background: linear-gradient(165deg, rgba(22, 22, 30, 0.95) 0%, rgba(12, 12, 16, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 2px solid currentColor;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-icon {
+  display: flex;
+  align-items: center;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-white, #e6eef6);
+  flex: 1;
+  letter-spacing: 0.3px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-btn-icon {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted, #8b95a5);
+  cursor: pointer;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-btn-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white, #e6eef6);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Card Body ─── */
+:is(#view-goals, .widgets-goals-container) .goal-card-body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted, #8b95a5);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-field input,
+:is(#view-goals, .widgets-goals-container) .goal-field select {
+  width: 100%;
+  padding: 7px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-white, #e6eef6);
+  font-size: 12px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-field input:focus,
+:is(#view-goals, .widgets-goals-container) .goal-field select:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+/* Placeholder más legible (default era casi invisible). */
+:is(#view-goals, .widgets-goals-container) .goal-field input::placeholder {
+  color: rgba(230, 238, 246, 0.5);
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-field select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238b95a5' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+/* ─── URL Bar ─── */
+:is(#view-goals, .widgets-goals-container) .gc-active-value {
+  opacity: 0.65;
+  cursor: default;
+  border-style: dashed;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-active-value:not(.gc-locked) {
+  opacity: 1;
+  cursor: text;
+  border-style: solid;
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-row:has(.gc-active-goal-field:not([style*="display: none"]):not([style*="display:none"])) {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+:is(#view-goals, .widgets-goals-container) .goal-card-url {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-url {
+  flex: 1;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: var(--text-muted, #8b95a5);
+  font-size: 10px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-btn-sm {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted, #8b95a5);
+  cursor: pointer;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-btn-sm:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white, #e6eef6);
+}
+
+/* ─── Variant toggle (Barra | Radial) ─── */
+:is(#view-goals, .widgets-goals-container) .goal-card-variant {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-variant-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: var(--text-muted, #8b95a5);
+  cursor: pointer;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-variant-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-white, #e6eef6);
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-variant-btn.gc-variant-active {
+  background: rgba(0, 217, 255, 0.12);
+  border-color: rgba(0, 217, 255, 0.45);
+  color: #00d9ff;
+}
+
+/* ─── Preview ─── */
+:is(#view-goals, .widgets-goals-container) .goal-card-preview {
+  background: linear-gradient(165deg, rgba(18, 18, 24, 0.98) 0%, rgba(8, 8, 10, 0.99) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px 30px 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-nav-style {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  color: var(--text-muted, #8b95a5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  z-index: 2;
+  padding: 0;
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-prev-style { left: 4px; }
+:is(#view-goals, .widgets-goals-container) .gc-next-style { right: 4px; }
+
+:is(#view-goals, .widgets-goals-container) .gc-nav-style:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-white, #e6eef6);
+}
+
+:is(#view-goals, .widgets-goals-container) .gc-style-indicator {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted, #8b95a5);
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* ─── Widget Preview (progress bar with overlay support) ─── */
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview {
+  width: 100%;
+  position: relative;
+}
+
+/* Conmutar Bar/Radial dentro del preview de la card según data-mode. */
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview .goals-compact-preview { display: none; }
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview[data-mode="compact"] .goals-bar-container { display: none; }
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview[data-mode="compact"] .goals-compact-preview { display: flex; }
+
+/* Compact preview — versión reducida del widget radial real (anillo + label/value/target). */
+:is(#view-goals, .widgets-goals-container) .goals-compact-preview {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(15, 18, 25, 0.9);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 70px;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring .ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 7;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring .ring-fill {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset .4s ease;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring .ring-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-ring .ring-icon svg {
+  width: 24px;
+  height: 24px;
+  transform: none;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+:is(#view-goals, .widgets-goals-container) .goals-compact-target {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 8 / 1;
+  min-height: 40px;
+  max-height: 80px;
+  background: transparent;
+  overflow: hidden;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-metas {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  aspect-ratio: 1472 / 150;
+  min-height: 0;
+  max-height: none;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 2;
+  pointer-events: none;
+  display: none;
+  visibility: hidden;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-progress-wrapper {
+  position: absolute;
+  top: 28%;
+  left: 7%;
+            right: 7%;
+  bottom: 28%;
+  width: unset;
+  height: unset;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-metas .goals-bar-progress-wrapper {
+  top: 11%;
+  left: 2.55%;
+  right: 2.65%;
+  bottom: 46%;
+  border-radius: 999px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-metas .goals-bar-overlay {
+  height: 64%;
+  z-index: 4;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-metas .goals-bar-text {
+  top: 31.5%;
+  z-index: 5;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-fantasy-frame {
+  width: min(100%, 1040px);
+  height: auto;
+  margin: 0 auto;
+  aspect-ratio: var(--goal-frame-aspect, 1472 / 91);
+  min-height: 0;
+  max-height: none;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-fantasy-frame .goals-bar-progress-wrapper {
+  top: var(--goal-frame-bar-top, 30%);
+  left: var(--goal-frame-bar-left, 7%);
+  right: var(--goal-frame-bar-right, 7%);
+  bottom: var(--goal-frame-bar-bottom, 20%);
+  border-radius: 999px;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-fantasy-frame .goals-bar-overlay {
+  height: 100%;
+  z-index: 4;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-container.style-fantasy-frame .goals-bar-text {
+  top: var(--goal-frame-text-top, 50%);
+  z-index: 5;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2cb2d4;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  transition: width 0.3s ease;
+  z-index: 1;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-fill.rainbow {
+  background: linear-gradient(90deg, #ff0000, #ff7700, #ffff00, #00ff00, #0000ff, #8b00ff, #ff0000);
+  background-size: 200% 100%;
+  animation: rainbowSlide 3s linear infinite;
+}
+
+@keyframes rainbowSlide {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* ─── Animations ─── */
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview.flip {
+  animation: goalFlip 0.8s ease;
+}
+
+:is(#view-goals, .widgets-goals-container) .goals-widget-preview.shake {
+  animation: goalShake 0.9s ease;
+}
+
+@keyframes goalFlip {
+  0%, 100% { transform: perspective(400px) rotateY(0); }
+  50% { transform: perspective(400px) rotateY(180deg); }
+}
+
+@keyframes goalShake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-1deg); }
+  20% { transform: translateX(4px) rotate(1deg); }
+  30% { transform: translateX(-4px) rotate(-1deg); }
+  40% { transform: translateX(4px) rotate(1deg); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-1px); }
+}
+
+/* ─── Responsive: single column on small widths ─── */
+@media (max-width: 700px) {
+  :is(#view-goals, .widgets-goals-container) .goals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL DE PERSONALIZACIÓN DE METAS
+   ═══════════════════════════════════════════════════════════ */
+.goals-customize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.goals-customize-modal {
+  background: #1e2330;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.gcm-title {
+  margin: 0 0 20px 0;
+  color: #e6eef6;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gcm-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.gcm-section {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.gcm-section-title {
+  margin: 0 0 12px 0;
+  color: #e6eef6;
+  font-size: 15px;
+}
+
+.gcm-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.gcm-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #b8c5d6;
+}
+
+.gcm-label-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b8c5d6;
+  cursor: pointer;
+}
+
+.gcm-input-sm {
+  width: 80px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e6eef6;
+}
+
+.gcm-color-input {
+  width: 80px;
+  height: 35px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.gcm-select {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e6eef6;
+  cursor: pointer;
+}
+
+.gcm-footer {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+
+.gcm-btn-cancel {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  color: #e6eef6;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.gcm-btn-save {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tc-font-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  background: #0e1622;
+  border: 1px solid #2a3b52;
+  border-radius: 10px;
+  padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gr-check-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-secondary, #8e9297);
+  cursor: pointer;
+  user-select: none;
+}
+.gr-check-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #00d9ff;
+  cursor: pointer;
+}
+.gr-premium-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  cursor: pointer;
+}
+.gr-premium-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 14px;
+}

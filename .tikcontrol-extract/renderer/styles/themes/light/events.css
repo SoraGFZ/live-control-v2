@@ -1,0 +1,412 @@
+/* --- EVENTS --- */
+html.modo-claro .ev-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-header {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-modal-backdrop,
+html.modo-claro .ev-detail-backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .ev-modal,
+html.modo-claro .ev-detail-modal {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-view-toggle button {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-view-toggle button.active {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+/* ---- EVENTS: Full view ---- */
+html.modo-claro .ev-header {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-card-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-card-dates {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-card-desc {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-calendar {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-calendar-month {
+  color: var(--text-white);
+}
+
+html.modo-claro .evc-weekday {
+  color: var(--text-muted);
+}
+
+html.modo-claro .evc-day-num {
+  color: var(--text-light);
+}
+
+html.modo-claro .evc-day-num.past {
+  color: rgba(100, 116, 139, 0.4);
+}
+
+html.modo-claro .evc-day-num.today {
+  color: #fff;
+}
+
+html.modo-claro .evc-more {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .evc-more:hover {
+  color: var(--text-white);
+  background: rgba(0, 0, 0, 0.07);
+}
+
+html.modo-claro .evc-more-tooltip {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: var(--border-subtle);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .evc-more-item + .evc-more-item {
+  border-top-color: var(--border-subtle);
+}
+
+html.modo-claro .evc-more-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .evc-more-dates {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-history-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-history-card-info h4 {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-history-card-info p {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-modal-backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .ev-modal {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-modal h3 {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-modal-field label {
+  color: var(--text-light);
+}
+
+html.modo-claro .ev-modal-cancel {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-light);
+}
+
+html.modo-claro .ev-detail-backdrop {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+html.modo-claro .ev-detail-modal {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .ev-detail-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-detail-label {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ev-detail-value {
+  color: var(--text-white);
+}
+
+html.modo-claro .ev-detail-desc {
+  color: var(--text-light);
+}
+
+html.modo-claro .ev-pdf-fullscreen {
+  background: rgba(0, 0, 0, 0.92);
+}
+
+html.modo-claro .ev-pdf-fs-header {
+  color: #fff;
+}
+
+html.modo-claro .ev-pdf-fs-close {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* â”€â”€ EVENT EDITOR v3 (uiEventEditor.js â€” CSS incrustado en JS) â”€â”€ */
+
+/* Hero header */
+html.modo-claro .ev-editor-v3 .ev-hero {
+  background: linear-gradient(135deg, rgba(35,123,255,0.07) 0%, rgba(35,123,255,0.03) 100%);
+  border-color: rgba(35, 123, 255, 0.18);
+}
+html.modo-claro .ev-editor-v3 .ev-hero-title {
+  background: none;
+  -webkit-text-fill-color: var(--text-white);
+  color: var(--text-white);
+}
+html.modo-claro .ev-editor-v3 .ev-hero-desc {
+  color: var(--text-muted);
+}
+html.modo-claro .ev-editor-v3 .ev-hero-icon {
+  background: rgba(35, 123, 255, 0.1);
+  border-color: rgba(35, 123, 255, 0.25);
+}
+
+/* Cards y Sections */
+html.modo-claro .ev-editor-v3 .ev-card,
+html.modo-claro .ev-editor-v3 .ev-section {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ev-editor-v3 .ev-card-header {
+  border-bottom-color: var(--border-subtle);
+  background: transparent;
+}
+html.modo-claro .ev-editor-v3 .ev-section-header {
+  background: rgba(35, 123, 255, 0.04);
+  border-bottom-color: var(--border-subtle);
+}
+html.modo-claro .ev-editor-v3 .ev-section-random .ev-section-header {
+  background: rgba(255, 62, 165, 0.04);
+}
+html.modo-claro .ev-editor-v3 .ev-card-title,
+html.modo-claro .ev-editor-v3 .ev-section-title {
+  color: var(--text-white);
+}
+html.modo-claro .ev-editor-v3 .ev-section-desc {
+  color: var(--text-muted);
+}
+
+/* Iconos de card/section */
+html.modo-claro .ev-editor-v3 .ev-card-icon,
+html.modo-claro .ev-editor-v3 .ev-card-icon.ev-icon-pink {
+  background: rgba(255, 62, 165, 0.08);
+  border-color: rgba(255, 62, 165, 0.2);
+}
+html.modo-claro .ev-editor-v3 .ev-card-icon.ev-icon-yellow {
+  background: rgba(255, 200, 0, 0.08);
+  border-color: rgba(255, 200, 0, 0.2);
+}
+html.modo-claro .ev-editor-v3 .ev-section-icon {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.2);
+  color: var(--accent-primary);
+}
+html.modo-claro .ev-editor-v3 .ev-section-icon.ev-icon-random {
+  background: rgba(255, 62, 165, 0.08);
+  border-color: rgba(255, 62, 165, 0.2);
+}
+
+/* Form labels */
+html.modo-claro .ev-editor-v3 .ev-form-label {
+  color: var(--text-muted);
+}
+
+/* Inputs, selects, search */
+html.modo-claro .ev-editor-v3 .ev-input,
+html.modo-claro .ev-editor-v3 .ev-select,
+html.modo-claro .ev-editor-v3 .ev-search-input {
+  background: var(--input-bg) !important;
+  border-color: var(--border-light) !important;
+  color: var(--text-white) !important;
+}
+html.modo-claro .ev-editor-v3 .ev-input:focus,
+html.modo-claro .ev-editor-v3 .ev-select:focus,
+html.modo-claro .ev-editor-v3 .ev-search-input:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(35, 123, 255, 0.12) !important;
+}
+html.modo-claro .ev-editor-v3 .ev-input::placeholder,
+html.modo-claro .ev-editor-v3 .ev-search-input::placeholder {
+  color: var(--text-muted) !important;
+}
+html.modo-claro .ev-editor-v3 .ev-select option {
+  background: var(--bg-card);
+  color: var(--text-white);
+}
+html.modo-claro .ev-editor-v3 .ev-input:hover,
+html.modo-claro .ev-editor-v3 .ev-select:hover,
+html.modo-claro .ev-editor-v3 .ev-search-input:hover {
+  border-color: rgba(35, 123, 255, 0.4) !important;
+}
+
+/* Select arrow */
+html.modo-claro .ev-editor-v3 .ev-select-arrow {
+  color: var(--accent-primary);
+}
+
+/* Toggle switch */
+html.modo-claro .ev-editor-v3 .ev-toggle-slider {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+}
+html.modo-claro .ev-editor-v3 .ev-toggle-slider::before {
+  background: var(--text-muted);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+html.modo-claro .ev-editor-v3 .ev-toggle-label {
+  color: var(--text-light);
+}
+
+/* Status indicator */
+html.modo-claro .ev-editor-v3 .ev-status-indicator {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+html.modo-claro .ev-editor-v3 .ev-status-text {
+  color: var(--text-muted);
+}
+
+/* Action cards */
+html.modo-claro .ev-editor-v3 .ev-action-card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ev-editor-v3 .ev-action-card:hover {
+  background: var(--bg-hover);
+  border-color: rgba(35, 123, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(35, 123, 255, 0.08);
+}
+html.modo-claro .ev-editor-v3 .ev-action-card.selected {
+  background: rgba(35, 123, 255, 0.07);
+  border-color: rgba(35, 123, 255, 0.4);
+  box-shadow: 0 0 0 2px rgba(35, 123, 255, 0.12);
+}
+html.modo-claro .ev-editor-v3 .ev-action-check {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+  color: var(--accent-primary);
+}
+html.modo-claro .ev-editor-v3 .ev-action-name {
+  color: var(--text-white);
+}
+html.modo-claro .ev-editor-v3 .ev-action-duration {
+  color: var(--text-muted);
+}
+
+/* Search icon */
+html.modo-claro .ev-editor-v3 .ev-search-icon {
+  color: var(--accent-primary);
+}
+
+/* Scrollbar de la grid */
+html.modo-claro .ev-editor-v3 .ev-actions-grid::-webkit-scrollbar-thumb {
+  background: rgba(35, 123, 255, 0.25);
+}
+
+/* Config box */
+html.modo-claro .ev-editor-v3 .ev-config-box {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+html.modo-claro .ev-editor-v3 .ev-config-help {
+  color: var(--text-muted);
+}
+
+/* Input suffix */
+html.modo-claro .ev-editor-v3 .ev-input-suffix {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: var(--border-light);
+}
+
+/* â”€â”€ GIFT SELECTOR (portal â€” renderiza en document.body con clase ev-gift-portal) â”€â”€ */
+
+/* BotÃ³n trigger dentro del modal */
+html.modo-claro .ev-gift-selector .ev-gift-btn {
+  background: #f3f4f6 !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1a1d23 !important;
+}
+
+/* Panel principal (portal en body) */
+html.modo-claro .ev-gift-portal .ev-gift-panel {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #1a1d23 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Cabecera de bÃºsqueda */
+html.modo-claro .ev-gift-portal .ev-gift-panel > div:first-child {
+  background: #f3f4f6 !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Inputs de bÃºsqueda */
+html.modo-claro .ev-gift-portal input[type="text"] {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1a1d23 !important;
+}
+html.modo-claro .ev-gift-portal input[type="text"]::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Texto "Ordenado: menor a mayor" */
+html.modo-claro .ev-gift-portal .ev-gift-panel span {
+  color: #4b5563 !important;
+}
+
+/* Botones de regalo */
+html.modo-claro .ev-gift-portal button[type="button"] {
+  color: #1a1d23 !important;
+}
+
+/* Imagen del regalo */
+html.modo-claro .ev-gift-portal img {
+  background: #f3f4f6 !important;
+}
+
+/* ========================================
+   8. EXTENDED COMPONENT OVERRIDES
+   ======================================== */

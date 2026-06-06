@@ -1,0 +1,1080 @@
+/* --- HOME --- */
+html.modo-claro .home-welcome {
+  background: linear-gradient(135deg, #237BFF 0%, #0F5ACC 100%);
+}
+
+/* --- BANNER BIENVENIDA --- */
+html.modo-claro .home-welcome-banner {
+  background-color: #f8fafc;
+  background-image:
+      radial-gradient(circle at 100% 0%, rgba(35, 123, 255, 0.06) 0%, transparent 60%),
+      radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.04) 0%, transparent 60%);
+  border-color: var(--border-subtle);
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+}
+html.modo-claro .home-welcome-banner::before {
+  box-shadow: 2px 0 10px rgba(35, 123, 255, 0.2);
+}
+html.modo-claro .home-welcome-banner--founder {
+  border-color: rgba(245, 158, 11, 0.28);
+  background-image:
+      radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 54%),
+      radial-gradient(circle at 0% 100%, rgba(35, 123, 255, 0.05) 0%, transparent 58%);
+}
+html.modo-claro .home-welcome-banner--founder::before {
+  box-shadow: 2px 0 12px rgba(245, 158, 11, 0.28);
+}
+html.modo-claro .home-welcome-founder {
+  background:
+      radial-gradient(circle at 18% 20%, rgba(245, 158, 11, 0.16), transparent 45%),
+      linear-gradient(180deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.9));
+  border-color: rgba(245, 158, 11, 0.34);
+  box-shadow:
+      inset 0 0 18px rgba(245, 158, 11, 0.08),
+      0 12px 28px rgba(148, 90, 0, 0.1);
+}
+html.modo-claro .home-welcome-founder-number {
+  color: #9a5a00;
+}
+html.modo-claro .home-welcome-banner--ambassador {
+  border-color: rgba(3, 129, 227, 0.34);
+  background-image:
+      radial-gradient(circle at 100% 0%, rgba(3, 129, 227, 0.12) 0%, transparent 54%),
+      radial-gradient(circle at 58% 0%, rgba(125, 77, 221, 0.1) 0%, transparent 56%),
+      radial-gradient(circle at 0% 100%, rgba(237, 83, 87, 0.08) 0%, transparent 58%);
+}
+html.modo-claro .home-welcome-banner--ambassador::before {
+  box-shadow:
+      2px 0 12px rgba(3, 129, 227, 0.28),
+      0 0 18px rgba(237, 83, 87, 0.12);
+}
+html.modo-claro .home-welcome-ambassador {
+  background:
+      radial-gradient(circle at 18% 22%, rgba(3, 129, 227, 0.14), transparent 44%) padding-box,
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 255, 0.92)) padding-box,
+      linear-gradient(105deg, #0381e3 0%, #7d4ddd 50%, #ed5357 78%, #ff8a3d 100%) border-box;
+  border-color: transparent;
+  box-shadow:
+      inset 0 0 18px rgba(125, 77, 221, 0.08),
+      0 12px 28px rgba(3, 129, 227, 0.1);
+}
+html.modo-claro .home-welcome-ambassador-number {
+  color: transparent;
+}
+html.modo-claro .home-welcome-avatar {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(35, 123, 255, 0.25);
+  box-shadow: 0 0 12px rgba(35, 123, 255, 0.08);
+}
+html.modo-claro .home-welcome-avatar-fallback {
+  color: var(--text-muted);
+}
+html.modo-claro .home-welcome-greeting {
+  color: var(--text-primary, #1a1a2e);
+}
+html.modo-claro .home-welcome-sub {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-changelog-sidebar {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .home-cl-item {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-white);
+}
+
+html.modo-claro .home-cl-item.active,
+html.modo-claro .home-cl-item:hover {
+  background: var(--bg-card);
+  border-color: rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro .home-changelog-detail {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  color: var(--text-white);
+}
+
+html.modo-claro .home-section-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-section-title::before {
+  box-shadow: 0 0 12px rgba(35, 123, 255, 0.25);
+}
+
+html.modo-claro .home-live-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+/* --- HOME HERO --- */
+html.modo-claro .home-hero {
+  background-color: var(--bg-card);
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(35, 123, 255, 0.06) 0%, transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(47, 200, 180, 0.04) 0%, transparent 60%),
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  border-color: var(--border-light);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .home-hero:hover {
+  border-color: rgba(35, 123, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+html.modo-claro .home-hero::before {
+  box-shadow: 2px 0 12px rgba(35, 123, 255, 0.3);
+}
+
+html.modo-claro .home-hero-title {
+  color: var(--text-white);
+  text-shadow: none;
+}
+
+html.modo-claro .home-hero-subtitle {
+  color: var(--text-muted);
+}
+
+/* --- HOME STEPS --- */
+html.modo-claro .home-step {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .home-step::before {
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(35, 123, 255, 0.08) 0%, transparent 70%);
+}
+
+html.modo-claro .home-step:hover {
+  border-color: rgba(35, 123, 255, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(35, 123, 255, 0.1);
+}
+
+html.modo-claro .home-step h3 {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-step p {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-step.step-active {
+  background: linear-gradient(165deg, rgba(0, 200, 100, 0.06) 0%, rgba(0, 160, 80, 0.03) 100%);
+  border-color: rgba(0, 200, 100, 0.4);
+  box-shadow: 0 0 16px rgba(0, 200, 100, 0.1);
+}
+
+/* --- DASHBOARD CARDS --- */
+html.modo-claro .dashboard-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .dashboard-card:hover {
+  border-color: rgba(35, 123, 255, 0.15);
+}
+
+html.modo-claro .dash-card-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .dash-title-bar {
+  box-shadow: 0 0 8px rgba(35, 123, 255, 0.25);
+}
+
+html.modo-claro .dash-refresh-btn {
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .dash-refresh-btn:hover {
+  color: var(--text-white);
+  border-color: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .dash-status-badge.offline {
+  background: rgba(100, 116, 139, 0.1);
+  color: #64748b;
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+/* --- TRENDS --- */
+html.modo-claro .trends-stats-row {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .trend-stat-value {
+  color: var(--text-white);
+}
+
+html.modo-claro .trend-stat-value small {
+  color: var(--text-muted);
+}
+
+html.modo-claro .trend-stat-label {
+  color: var(--text-muted);
+}
+
+html.modo-claro .trend-stat-divider {
+  background: var(--border-light);
+}
+
+html.modo-claro .trend-insight {
+  color: var(--text-muted);
+}
+
+html.modo-claro .trend-insight strong {
+  color: var(--text-white);
+}
+
+html.modo-claro .trends-recommendation {
+  background: linear-gradient(135deg, rgba(35, 123, 255, 0.04) 0%, rgba(47, 200, 180, 0.03) 100%);
+  border-color: rgba(35, 123, 255, 0.12);
+}
+
+html.modo-claro .trend-nav-btn {
+  border-color: var(--border-light);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-muted);
+}
+
+html.modo-claro .trend-nav-btn:hover {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.2);
+  color: var(--accent-primary);
+}
+
+html.modo-claro .trend-rec-content {
+  color: var(--text-muted);
+}
+
+/* --- REMINDERS --- */
+html.modo-claro .reminder-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .reminder-title {
+  color: var(--text-light);
+}
+
+html.modo-claro .reminder-title strong {
+  color: var(--text-white);
+}
+
+html.modo-claro .reminder-sub {
+  color: var(--text-muted);
+}
+
+html.modo-claro .reminder-arrow {
+  color: var(--text-muted);
+}
+
+html.modo-claro .reminder-empty,
+html.modo-claro .event-empty,
+html.modo-claro .community-empty {
+  color: var(--text-muted);
+}
+
+/* --- QUICK ACCESS --- */
+html.modo-claro .qa-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .qa-item:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .qa-item span {
+  color: var(--text-muted);
+}
+
+html.modo-claro .qa-item:hover span {
+  color: var(--text-white);
+}
+
+html.modo-claro .qa-customize-btn {
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .qa-customize-btn:hover {
+  border-color: rgba(35, 123, 255, 0.25);
+  color: var(--text-light);
+  background: rgba(35, 123, 255, 0.03);
+}
+
+html.modo-claro .qa-customize-dropdown {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .qa-toggle {
+  color: var(--text-light);
+}
+
+/* --- UPCOMING EVENTS --- */
+html.modo-claro .upcoming-event-card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .upcoming-event-card:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.03);
+}
+
+html.modo-claro .event-card-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .event-card-date {
+  color: var(--text-muted);
+}
+
+html.modo-claro .event-card-source {
+  border-top-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+html.modo-claro .upcoming-event-card.event-active {
+  border-color: rgba(34, 197, 94, 0.2);
+  background: rgba(34, 197, 94, 0.03);
+}
+
+/* --- COMMUNITY --- */
+html.modo-claro .community-period-tabs {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .community-tab {
+  border-color: var(--border-light);
+  color: var(--text-muted);
+}
+
+html.modo-claro .community-tab:hover {
+  color: var(--text-white);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+html.modo-claro .community-tab.active {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #b47d10;
+}
+
+html.modo-claro .fc-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .fc-avatar {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .fc-name {
+  color: var(--text-light);
+}
+
+html.modo-claro .fc-name strong {
+  color: var(--text-white);
+}
+
+html.modo-claro .fc-sub {
+  color: var(--text-muted);
+}
+
+html.modo-claro .fc-inactive-name {
+  color: var(--text-light);
+}
+
+html.modo-claro .fc-inactive-time {
+  color: var(--text-muted);
+}
+
+html.modo-claro .fc-inactive-detail {
+  color: var(--text-muted);
+}
+
+html.modo-claro .fc-item.highlight {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.05), rgba(245, 158, 11, 0.02));
+  border-color: rgba(234, 179, 8, 0.12);
+}
+
+html.modo-claro .fc-item.warning {
+  background: rgba(239, 68, 68, 0.03);
+  border-color: rgba(239, 68, 68, 0.08);
+}
+
+html.modo-claro .fc-item.warning .fc-name {
+  color: #dc2626;
+}
+
+html.modo-claro .fc-item.suggestion-item {
+  background: rgba(251, 191, 36, 0.04);
+  border-color: rgba(251, 191, 36, 0.1);
+}
+
+/* --- NEWS FEED --- */
+html.modo-claro .news-feed-container {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .news-sidebar {
+  border-right-color: var(--border-subtle);
+}
+
+html.modo-claro .news-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .news-version-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .news-version-item.active {
+  background: rgba(35, 123, 255, 0.06);
+  border-color: rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro .news-v-tag {
+  color: var(--text-white);
+}
+
+html.modo-claro .news-v-date {
+  color: var(--text-muted);
+}
+
+html.modo-claro .news-detail-header {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .news-detail-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .news-detail-meta {
+  color: var(--text-muted);
+}
+
+html.modo-claro .news-section-title {
+  border-bottom-color: var(--border-subtle);
+}
+
+html.modo-claro .news-item {
+  color: var(--text-light);
+}
+
+html.modo-claro .news-game-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .news-game-card:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.modo-claro .news-game-info h4 {
+  color: var(--text-white);
+}
+
+html.modo-claro .news-content-area::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+html.modo-claro .news-content-area::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* --- LIVE STREAMERS --- */
+html.modo-claro .live-streamers-container {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .live-creator-card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .live-creator-card:hover {
+  border-color: rgba(35, 123, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .live-creator-card.premium-card {
+  border-color: rgba(255, 180, 50, 0.2);
+}
+
+html.modo-claro .live-creator-card.premium-card:hover {
+  border-color: rgba(255, 180, 50, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .live-creator-card.performance-card {
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+html.modo-claro .live-creator-card.performance-card:hover {
+  border-color: rgba(37, 99, 235, 0.44);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+html.modo-claro .live-creator-card.founder-card {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(251, 191, 36, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(255, 255, 255, 0.92));
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow:
+    inset 0 0 22px rgba(245, 158, 11, 0.06),
+    0 12px 24px rgba(148, 90, 0, 0.1);
+}
+
+html.modo-claro .live-creator-card.founder-card:hover {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow:
+    inset 0 0 26px rgba(245, 158, 11, 0.08),
+    0 12px 26px rgba(148, 90, 0, 0.14);
+}
+
+html.modo-claro .live-creator-card.ambassador-card {
+  border-color: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 255, 0.94)) padding-box,
+    linear-gradient(105deg, #0381e3 0%, #7d4ddd 50%, #ed5357 78%, #ff8a3d 100%) border-box;
+  box-shadow:
+    inset 0 0 22px rgba(3, 129, 227, 0.06),
+    0 12px 24px rgba(3, 129, 227, 0.1);
+}
+
+html.modo-claro .live-creator-card.ambassador-card:hover {
+  box-shadow:
+    inset 0 0 26px rgba(237, 83, 87, 0.06),
+    0 12px 26px rgba(125, 77, 221, 0.14);
+}
+
+html.modo-claro .user-type-tag.ambassador-tag {
+  color: #fff;
+  text-shadow:
+    0 0 0.35px rgba(255, 255, 255, 0.95),
+    0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .creator-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .live-streamers-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .dash-live .live-streamers-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.modo-claro .dash-live .live-streamers-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.78), rgba(37, 99, 235, 0.72));
+  border-color: rgba(245, 247, 251, 0.92);
+}
+
+/* ---- HOME: Extended overrides (complementary to section 5) ---- */
+html.modo-claro .home-step-num {
+  color: #fff;
+}
+
+html.modo-claro .news-version-badge {
+  background: rgba(35, 123, 255, 0.08);
+  border-color: rgba(35, 123, 255, 0.2);
+}
+
+html.modo-claro .news-new-badge {
+  color: #fff;
+}
+
+/* ── Ajustes adicionales: hero y cards ── */
+html.modo-claro .home-hero {
+  background-color: var(--bg-elevated);
+}
+
+html.modo-claro .home-step {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .live-streamers-container {
+  background: var(--bg-card);
+  border-color: rgba(35, 123, 255, 0.15);
+}
+
+html.modo-claro .live-creator-card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .qa-customize-dropdown {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+
+/* --- LOADING OVERLAY --- */
+html.modo-claro #inicio-loading-overlay {
+  background: var(--bg-main);
+}
+
+html.modo-claro .inicio-loading-spinner {
+  border-color: rgba(0, 0, 0, 0.08);
+  border-top-color: #237BFF;
+}
+
+/* --- TREND PERIOD SWITCH --- */
+html.modo-claro .trend-period-btn {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .trend-period-btn.active {
+  background: #237BFF;
+  color: #fff;
+  border-color: #237BFF;
+}
+
+html.modo-claro .trend-period-btn:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* --- CHART --- */
+html.modo-claro .trend-chart-empty {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* --- RECOMMENDATIONS --- */
+html.modo-claro .home-rec-card:first-child {
+  background: linear-gradient(135deg, rgba(0, 180, 180, 0.06), rgba(0, 180, 180, 0.02));
+  border-color: rgba(0, 180, 180, 0.2);
+}
+
+html.modo-claro .home-rec-card:last-child {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(59, 130, 246, 0.02));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+html.modo-claro .home-rec-title {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+html.modo-claro .home-rec-text {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-rec-text strong {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-rec-text--empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* --- EVENT CARD ICONS --- */
+html.modo-claro .event-card-icon.official {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.12));
+}
+
+html.modo-claro .event-card-icon.agency {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(234, 179, 8, 0.12));
+}
+
+html.modo-claro .event-card-icon.user {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.12), rgba(16, 185, 129, 0.12));
+}
+
+html.modo-claro .event-card-meta {
+  color: var(--text-muted);
+}
+
+html.modo-claro .event-card-desc {
+  color: var(--text-muted);
+}
+
+/* --- EVENT TAGS --- */
+html.modo-claro .event-tag {
+  opacity: 0.9;
+}
+
+/* --- REMINDER ICONS --- */
+html.modo-claro .reminder-icon {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.modo-claro .reminder-icon.birthday {
+  background: rgba(251, 191, 36, 0.12);
+}
+
+html.modo-claro .reminder-icon.milestone {
+  background: rgba(96, 165, 250, 0.12);
+}
+
+html.modo-claro .reminder-icon.event {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+/* --- TOP 5 --- */
+html.modo-claro .top5-mode-tab {
+  color: var(--text-muted);
+}
+
+html.modo-claro .top5-mode-tab.active {
+  color: var(--text-primary, #1a1a2e);
+}
+
+html.modo-claro .top5-analytics-link {
+  color: #237BFF;
+}
+
+html.modo-claro .top5-card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .top5-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+html.modo-claro .top5-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .top5-value {
+  color: var(--text-white);
+}
+
+html.modo-claro .top5-pct {
+  color: var(--text-muted);
+}
+
+html.modo-claro .top5-empty {
+  color: var(--text-muted);
+}
+
+/* --- LIVE CREATORS INSIDE GRID --- */
+html.modo-claro .dash-live .live-streamers-container {
+  background: none;
+}
+
+html.modo-claro .dash-live .live-streamers-empty-text p,
+html.modo-claro .dash-live .live-streamers-empty-text span {
+  color: var(--text-muted);
+}
+
+html.modo-claro .dash-live .live-streamers-empty-icon {
+  color: var(--text-muted);
+}
+
+/* --- AGENCIAS --- */
+html.modo-claro .home-agencias-header {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-agencias-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-agencias-bar {
+  background: var(--border-subtle);
+}
+
+html.modo-claro .home-agencias-section-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-agencias-btn {
+  color: #237BFF;
+  background: none;
+  border-color: transparent;
+}
+
+html.modo-claro .home-agencias-btn:hover {
+  color: #1a6ae0;
+  background: none;
+  border-color: transparent;
+}
+
+html.modo-claro .ag-card-empty {
+  color: var(--text-muted);
+}
+
+html.modo-claro .ag-card-more {
+  color: var(--text-muted);
+}
+html.modo-claro .ag-card-more.ag-card-more-link {
+  color: #237BFF;
+}
+html.modo-claro .ag-card-more.ag-card-more-link:hover {
+  color: #1a6ae6;
+}
+
+/* --- AGENCIAS EXPLORER --- */
+html.modo-claro .home-agencias-explorer-title {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-agencias-top-card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .home-agencias-top-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+html.modo-claro .home-agencias-top-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-agencias-top-members {
+  color: var(--text-muted);
+}
+
+/* --- CTA FEATURE CARDS --- */
+html.modo-claro .home-feature-cta-card {
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .home-feature-cta-card:hover {
+  border-color: rgba(35, 123, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+html.modo-claro .home-feature-cta-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .home-feature-cta-desc {
+  color: var(--text-muted);
+}
+
+/* --- AGENCIA BADGES (override !important from dark) --- */
+html.modo-claro .ag-card-badge-diamonds { background: rgba(99,102,241,0.10) !important; color: #4f46e5 !important; border-color: rgba(99,102,241,0.25) !important; }
+html.modo-claro .ag-card-badge-battles  { background: rgba(239,68,68,0.10) !important;  color: #dc2626 !important; border-color: rgba(239,68,68,0.25) !important; }
+html.modo-claro .ag-card-badge-hours    { background: rgba(245,158,11,0.10) !important; color: #d97706 !important; border-color: rgba(245,158,11,0.25) !important; }
+html.modo-claro .ag-card-badge-days     { background: rgba(16,185,129,0.10) !important; color: #059669 !important; border-color: rgba(16,185,129,0.25) !important; }
+html.modo-claro .ag-card-badge-followers{ background: rgba(59,130,246,0.10) !important; color: #2563eb !important; border-color: rgba(59,130,246,0.25) !important; }
+html.modo-claro .ag-card-badge-custom   { background: rgba(0,0,0,0.04) !important; color: var(--text-muted) !important; border-color: rgba(0,0,0,0.1) !important; }
+
+/* --- AGENCIA MISC --- */
+html.modo-claro .home-agencias-label {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-logo {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .home-agencias-resolving {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-resolving-spinner {
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: #237BFF;
+}
+
+html.modo-claro .home-agencias-explorer-desc {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-explorer-btn {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.06));
+  border-color: rgba(59, 130, 246, 0.25);
+  color: #2563eb;
+}
+
+html.modo-claro .home-agencias-explorer-btn:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(99, 102, 241, 0.1));
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+html.modo-claro .home-agencias-top-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--border-subtle);
+}
+
+html.modo-claro .home-agencias-top-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+html.modo-claro .home-agencias-top-loading {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-top-loading .loading-spinner {
+  border-color: rgba(0, 0, 0, 0.1);
+  border-top-color: #237BFF;
+}
+
+html.modo-claro .home-agencias-top-logo {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+html.modo-claro .home-agencias-top-logo-placeholder {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-top-count {
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-agencias-top-empty {
+  color: var(--text-muted);
+}
+
+/* --- TREND PERIOD SWITCH CONTAINER --- */
+html.modo-claro .trend-period-switch {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border-subtle);
+}
+
+/* --- TOP 5 DETAILED --- */
+html.modo-claro .top5-card-name {
+  color: var(--text-white);
+}
+
+html.modo-claro .top5-card-value {
+  color: var(--text-white);
+}
+
+html.modo-claro .top5-card-value .top5-card-unit {
+  color: var(--text-primary, #1a1a2e);
+}
+
+html.modo-claro .top5-card-pct {
+  color: var(--text-muted);
+}
+
+html.modo-claro .top5-card-avatar-fallback {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-primary, #1a1a2e);
+}
+
+html.modo-claro .top5-mode-sep {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* --- LOADING TEXT --- */
+html.modo-claro .inicio-loading-text {
+  color: var(--text-muted);
+}
+
+/* --- COMMUNITY VER TODO / ADD DETAILS BUTTONS --- */
+html.modo-claro .community-ver-todo-btn,
+html.modo-claro .community-ver-todo-link {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+html.modo-claro .community-ver-todo-btn:hover,
+html.modo-claro .community-ver-todo-link:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+html.modo-claro .reminders-add-details-btn {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.06);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+html.modo-claro .reminders-add-details-btn:hover {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+html.modo-claro .home-events-create-btn {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.06);
+  border-color: rgba(79, 70, 229, 0.2);
+}
+
+html.modo-claro .home-events-create-btn:hover {
+  background: rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.35);
+}
+
+/* --- NEWS FEED --- */
+html.modo-claro .news-feed-container.news-feed-no-outer-border {
+  background: none;
+  border: none;
+}
+
+/* --- REMINDER ACTIVE BADGE --- */
+html.modo-claro .reminder-active-badge {
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+/* --- SVG CHART IN LIGHT MODE --- */
+html.modo-claro .trend-history-svg line {
+  stroke: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.modo-claro .trend-history-svg circle {
+  stroke: var(--bg-card) !important;
+}
+
+html.modo-claro .trend-stat--clickable:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+html.modo-claro .trend-stat--clickable.active {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+html.modo-claro .trend-chart-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+html.modo-claro .trend-tt-date {
+  color: var(--text-muted);
+}
+
+/* --- WIDGET SHOWCASE --- */
+html.modo-claro .home-widget-showcase-item {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+html.modo-claro .home-widget-showcase-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(227, 46, 53, 0.25);
+}
+
+html.modo-claro .home-widget-showcase-item > span:last-child {
+  color: var(--text-primary);
+}
+

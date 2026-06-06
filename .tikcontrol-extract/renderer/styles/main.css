@@ -1,0 +1,38 @@
+/*
+ * TikControl - Main CSS Entry Point
+ * Modular Architecture v2.0
+ */
+
+/* Core */
+@import './variables.css';
+@import './base.css';
+
+/* Layout */
+@import './header.css';
+
+/* Components */
+@import './components/index.css';
+
+/* Views */
+@import './views/home.css';
+@import './views/widgets.css';
+@import './views/spotify.css';
+@import './views/sounds.css';
+@import './views/tts.css';
+@import './views/overlay.css';
+@import './views/gifts.css';
+@import './views/goals.css';
+@import './views/actions.css';
+@import './views/action-editor.css';
+@import './views/account.css';
+@import './views/points.css';
+@import './views/agencies.css';
+@import './views/eventos.css';
+@import './views/soporte.css';
+@import './views/perfiles.css';
+@import './views/storage.css';
+/* Utilities */
+@import './utilities.css';
+
+/* Light Theme (debe ir al final para ganar por cascada) */
+@import './themes/light/index.css';

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_2" data-name="Capa 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85.1 25.01">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <g id="LIVE_texto" data-name="LIVE texto">
+    <g>
+      <polygon class="cls-1" points="72.68 20.09 72.71 14.69 83.3 14.58 83.15 10.16 72.69 10.09 72.82 4.89 84.79 4.85 84.73 0 66.87 .01 66.86 25 85.1 25.01 85 20.16 72.68 20.09"/>
+      <path class="cls-1" d="M55.68.16l-6.96,16.76L41.85.21c-1.87-.18-4.05-.17-6.16.03l9.94,24.63c2.05.08,3.99.07,5.78-.06L61.34.27c-1.82-.19-3.92-.24-5.67-.1Z"/>
+      <polygon class="cls-1" points="5.84 20.09 5.79 .05 0 .17 0 25 17.35 25 17.2 20.15 5.84 20.09"/>
+      <polygon class="cls-1" points="24.12 .17 24.14 24.91 29.64 24.86 29.6 .05 24.12 .17"/>
+    </g>
+  </g>
+</svg>

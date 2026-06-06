@@ -1,0 +1,381 @@
+﻿<!doctype html>
+<meta charset="utf-8"/>
+<title>Roulette Carousel</title>
+<!-- Pre-mock socket.io para AWS -->
+<script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+<script>
+  if (window.location.hostname.includes('tikcontrol.live') && !window.io) {
+    window.__ioListeners = [];
+    window.__ioSocket = { _listeners: {}, connected: false };
+    window.io = function() {
+      return window.__ioSocket;
+    };
+    window.__ioSocket.on = function(e, cb) {
+      if (!this._listeners[e]) this._listeners[e] = [];
+      this._listeners[e].push(cb);
+      window.__ioListeners.push({e, cb});
+      return this;
+    };
+    window.__ioSocket.emit = function(e, ...args) {
+      (this._listeners[e] || []).forEach(cb => { try { cb(...args); } catch(err) {} });
+      return this;
+    };
+    window.__ioSocket.off = function(e, cb) { return this; };
+    window.__ioSocket.disconnect = function() {};
+    window.__ioSocket.connect = function() {};
+  }
+</script>
+<script src="core/font-loader.js?v=1.0.29-cache7"></script>
+<script src="tikcontrol-widget-base.js?v=1.0.29-cache7"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: rgba(15, 15, 25, 0.85);
+    --bg-elevated: rgba(20, 20, 35, 0.92);
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --border-medium: rgba(255, 255, 255, 0.18);
+    --accent: #00d9ff;
+    --accent2: #7a5cff;
+    --accent-glow: rgba(0, 217, 255, 0.5);
+    --accent2-glow: rgba(122, 92, 255, 0.35);
+    --shadow-ambient: 0 10px 40px rgba(0, 0, 0, 0.5);
+    --blur: blur(12px);
+    --font: 'Poppins', system-ui, -apple-system, sans-serif;
+    --radius: 16px;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: var(--font);
+    overflow: hidden;
+  }
+
+  .container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-base);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: 1px solid var(--border-medium);
+    box-shadow: 0 0 20px var(--accent-glow), var(--shadow-ambient);
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-40px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .user-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--border-medium);
+    box-shadow: 0 0 12px var(--accent-glow);
+    object-fit: cover;
+  }
+
+  .user-nickname {
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    text-shadow: 0 0 10px var(--accent-glow), 0 2px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0.5px;
+  }
+
+  .roulette-machine {
+    position: relative;
+    width: min(820px, 92vw);
+    height: 180px;
+    background: var(--bg-elevated);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-ambient), inset 0 1px 0 rgba(255,255,255,0.06);
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .carousel-window {
+    position: absolute;
+    inset: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, black 6%, black 94%, transparent 100%);
+  }
+
+  .carousel-track {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    transform: translateX(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .carousel-item {
+    flex-shrink: 0;
+    width: 140px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  .carousel-item-image {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));
+  }
+
+  .carousel-item-text {
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+    text-align: center;
+    max-width: 120px;
+    line-height: 1.2;
+  }
+
+  .selection-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, transparent 0%, var(--accent) 15%, var(--accent2) 85%, transparent 100%);
+    box-shadow: 0 0 12px var(--accent-glow), 0 0 24px var(--accent-glow);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .selection-indicator::before,
+  .selection-indicator::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+  }
+
+  .selection-indicator::before {
+    top: -1px;
+    border-top: 10px solid var(--accent);
+    filter: drop-shadow(0 0 6px var(--accent-glow));
+  }
+
+  .selection-indicator::after {
+    bottom: -1px;
+    border-bottom: 10px solid var(--accent2);
+    filter: drop-shadow(0 0 6px var(--accent2-glow));
+  }
+
+  .winner-display {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: var(--bg-elevated);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 30px 60px;
+    border-radius: 20px;
+    border: 1px solid var(--border-medium);
+    box-shadow: 0 0 50px var(--accent-glow), 0 0 80px var(--accent2-glow), var(--shadow-ambient);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    text-align: center;
+  }
+
+  .winner-display.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    animation: winnerPop 0.5s cubic-bezier(0.16, 1, 0.3, 1), glowPulse 2s ease-in-out 0.5s infinite;
+  }
+
+  @keyframes winnerPop {
+    0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+    60% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+    80% { transform: translate(-50%, -50%) scale(0.97); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 50px var(--accent-glow), 0 0 80px var(--accent2-glow), var(--shadow-ambient); }
+    50% { box-shadow: 0 0 70px var(--accent-glow), 0 0 110px var(--accent2-glow), var(--shadow-ambient); }
+  }
+
+  .winner-title {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .winner-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .winner-image {
+    max-width: 120px;
+    max-height: 120px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+    border-radius: 8px;
+  }
+
+  .winner-text {
+    color: #fff;
+    font-size: 36px;
+    font-weight: 800;
+    text-shadow: 0 0 15px var(--accent-glow), 0 2px 4px rgba(0,0,0,0.6);
+    letter-spacing: 1px;
+  }
+</style>
+
+<div class="container" id="rouletteContainer" style="display: none;">
+  <div class="user-info" id="userInfo" style="display: none;">
+    <img id="userAvatar" alt="Avatar" class="user-avatar">
+    <div class="user-nickname" id="userNickname"></div>
+  </div>
+
+  <div class="roulette-machine">
+    <div class="carousel-window">
+      <div class="selection-indicator"></div>
+      <div class="carousel-track" id="carouselTrack"></div>
+    </div>
+  </div>
+
+  <div class="winner-display" id="winnerDisplay">
+    <div class="winner-title">WINNER!</div>
+    <div class="winner-content">
+      <img class="winner-image" id="winnerImage" style="display:none">
+      <div class="winner-text" id="winnerText"></div>
+    </div>
+  </div>
+</div>
+
+<canvas id="confettiCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:200;"></canvas>
+
+<script>
+(function(){
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  let raf = null;
+
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const colors = ['#00d9ff','#7a5cff','#ff3ea5','#ffd700','#22c55e','#ff6b6b','#fff'];
+
+  function burst(){
+    particles = [];
+    const cx = canvas.width / 2, cy = canvas.height / 2;
+    for(let i = 0; i < 90; i++){
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 6;
+      particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        size: 4 + Math.random() * 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        life: 1
+      });
+    }
+    if(!raf) animate();
+  }
+
+  function animate(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for(const p of particles){
+      if(p.life <= 0) continue;
+      alive = true;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.12;
+      p.rotation += p.rotSpeed;
+      p.life -= 0.012;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    }
+    if(alive){ raf = requestAnimationFrame(animate); }
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); raf = null; }
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for(const m of mutations){
+      if(m.type === 'attributes' && m.attributeName === 'class'){
+        const el = document.getElementById('winnerDisplay');
+        if(el && el.classList.contains('show')) burst();
+      }
+    }
+  });
+
+  const target = document.getElementById('winnerDisplay');
+  if(target) observer.observe(target, { attributes: true });
+})();
+</script>
+
+<script src="roulette.js"></script>
+
+

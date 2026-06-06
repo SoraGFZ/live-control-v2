@@ -1,0 +1,1005 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Combo - TikControl</title>
+  <link rel="stylesheet" href="/widgets/core/tikcontrol-widget.css">
+  <style>
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       TOP COMBO V2 - DiseÃ±o compacto cuadrado
+       â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+    :root {
+      --tc-title-color: #ff6b35;
+      --tc-text-color: #ffffff;
+      --tc-value-color: #44ff44;
+      --tc-bg: rgba(0, 0, 0, 0.5);
+      --tc-border: rgba(255, 255, 255, 0.1);
+      --tc-nickname-max-width: 150px;
+      --tc-new-glow-duration: 0.5s;
+      --tc-new-pop-duration: 0.4s;
+      --tc-img-pulse-duration: 1.5s;
+      --tc-img-bounce-duration: 1s;
+      --tc-img-spin-duration: 3s;
+      --tc-img-shake-duration: 0.5s;
+      --tc-img-glow-duration: 2s;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent !important;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #widget {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--tc-bg);
+      border-radius: 12px;
+      border: 1px solid var(--tc-border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-sizing: border-box;
+      gap: 4px;
+    }
+
+    #widget.no-bg {
+      background: transparent !important;
+      border-color: transparent !important;
+      backdrop-filter: none !important;
+    }
+
+    /* TÃ­tulo - compacto */
+    .tc-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--tc-title-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+      margin-bottom: 2px;
+      position: relative;
+    }
+
+    /* Contenedor del regalo */
+    .tc-gift-container {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tc-gift-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .tc-gift-placeholder {
+      font-size: 50px;
+      opacity: 0.5;
+    }
+
+    /* Valor principal - grande y destacado */
+    .tc-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--tc-value-color);
+      text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+      line-height: 1;
+    }
+
+    /* Info compacta */
+    .tc-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .tc-gift-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--tc-text-color);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tc-username {
+      display: block;
+      max-width: min(var(--tc-nickname-max-width), calc(100vw - 16px));
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.15;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Estado vacÃ­o */
+    .tc-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.6;
+      padding: 10px;
+    }
+
+    .tc-empty-icon {
+      font-size: 40px;
+    }
+
+    .tc-empty-text {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Efectos de tÃ­tulo */
+    .tc-title.effect-glow {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 2px 2px 0 #000;
+    }
+
+    .tc-title.effect-neon {
+      text-shadow: 0 0 5px #fff, 0 0 10px currentColor, 0 0 20px currentColor, 2px 2px 0 #000;
+    }
+
+    .tc-title.effect-rainbow {
+      background: linear-gradient(90deg, #ff0040, #ff8a00, #ffe600, #00d200, #00b7ff, #a500ff);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: rainbow-move 3s linear infinite;
+      text-shadow: none;
+    }
+
+    .tc-title.effect-rainbow.has-stroke::before {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: -1;
+      -webkit-text-fill-color: transparent;
+      -webkit-text-stroke: var(--stroke-width, 2px) var(--stroke-color, #000);
+      background: none;
+      text-shadow: none;
+      animation: none;
+    }
+
+    .tc-title.effect-rainbow.has-shadow::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: -2;
+      color: var(--shadow-color, rgba(0,0,0,0.8));
+      -webkit-text-fill-color: var(--shadow-color, rgba(0,0,0,0.8));
+      -webkit-text-stroke: 0;
+      background: none;
+      text-shadow: none;
+      animation: none;
+      filter: blur(var(--shadow-blur, 3px));
+      transform: translate(var(--shadow-x, 2px), var(--shadow-y, 2px));
+    }
+
+    .tc-title.has-text-shadow {
+      text-shadow: var(--shadow-x, 2px) var(--shadow-y, 2px) var(--shadow-blur, 3px) var(--shadow-color, rgba(0,0,0,0.8));
+    }
+
+    @keyframes rainbow-move {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 300% 50%;
+      }
+    }
+
+    /* AnimaciÃ³n sutil de brillo */
+    @keyframes tc-glow {
+
+      0%,
+      100% {
+        filter: brightness(1);
+      }
+
+      50% {
+        filter: brightness(1.2);
+      }
+    }
+
+    .tc-new .tc-gift-img {
+      animation: tc-glow var(--tc-new-glow-duration) ease-out;
+    }
+
+    .tc-new .tc-value {
+      animation: tc-pop var(--tc-new-pop-duration) ease-out;
+    }
+
+    @keyframes tc-pop {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.15);
+      }
+    }
+
+    /* Contorno de texto */
+    .tc-stroke {
+      -webkit-text-stroke: var(--stroke-width, 0px) var(--stroke-color, #000);
+      text-stroke: var(--stroke-width, 0px) var(--stroke-color, #000);
+      paint-order: stroke fill;
+    }
+
+    @keyframes tc-img-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    @keyframes tc-img-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes tc-img-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes tc-img-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    @keyframes tc-img-glow {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(255,255,255,0.3)); }
+      50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+    }
+    .tc-gift-img.anim-pulse { animation: tc-img-pulse var(--tc-img-pulse-duration) ease-in-out infinite; }
+    .tc-gift-img.anim-bounce { animation: tc-img-bounce var(--tc-img-bounce-duration) ease-in-out infinite; }
+    .tc-gift-img.anim-spin { animation: tc-img-spin var(--tc-img-spin-duration) linear infinite; }
+    .tc-gift-img.anim-shake { animation: tc-img-shake var(--tc-img-shake-duration) ease-in-out infinite; }
+    .tc-gift-img.anim-glow { animation: tc-img-glow var(--tc-img-glow-duration) ease-in-out infinite; }
+
+    /* TikControl SVG icon fallbacks: no emoji fonts, no mojibake. */
+    .tc-svg-icon { display:inline-block; width:1em; height:1em; vertical-align:-0.15em; background:currentColor; -webkit-mask: var(--tc-icon) center / contain no-repeat; mask: var(--tc-icon) center / contain no-repeat; }
+    .tc-svg-icon.gift { color:#ff66d9; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 7h-3.2c.5-.5.8-1.2.8-2 0-1.7-1.3-3-3-3-1.5 0-2.5 1-3.6 2.6C9.9 3 8.9 2 7.4 2c-1.7 0-3 1.3-3 3 0 .8.3 1.5.8 2H2v5h2v10h16V12h2V7h-2ZM7.4 4c.7 0 1.3.5 2.1 2H7.4c-.6 0-1-.4-1-1s.4-1 1-1Zm7.2 0c.6 0 1 .4 1 1s-.4 1-1 1h-2.1c.8-1.5 1.4-2 2.1-2ZM4 9h7v2H4V9Zm2 4h5v7H6v-7Zm7 7v-7h5v7h-5Zm7-9h-7V9h7v2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.coin { color:#ffd34d; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v1.1c1.8.3 3 1.3 3 2.7h-2c0-.6-.8-1-2-1s-2 .4-2 1c0 .7.8.9 2.5 1.3 1.8.4 3.8 1 3.8 3.1 0 1.5-1.2 2.6-3.3 2.9V19h-2v-1c-2-.3-3.4-1.4-3.4-3h2c0 .7.9 1.2 2.4 1.2 1.4 0 2.2-.4 2.2-1.1 0-.8-.8-1-2.6-1.4-1.8-.4-3.7-1-3.7-3 0-1.4 1.2-2.4 3.1-2.7V7h2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.heart { color:#ff4d6d; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21s-7.5-4.6-10-10.2C.6 7.4 2.4 3.5 6.3 3.5c2 0 3.7 1 5.7 3.2 2-2.2 3.7-3.2 5.7-3.2 3.9 0 5.7 3.9 4.3 7.3C19.5 16.4 12 21 12 21Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.comment { color:#54c7ff; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-7l-5 4v-4H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm4 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm4 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.star { color:#ffd34d; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m12 2 3 6.7 7 .7-5.2 4.8 1.5 6.8L12 17.5 5.7 21l1.5-6.8L2 9.4l7-.7L12 2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.trophy { color:#ffd34d; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 3h10v3h4v3a5 5 0 0 1-5 5h-.4A6 6 0 0 1 13 16.9V20h4v2H7v-2h4v-3.1A6 6 0 0 1 8.4 14H8a5 5 0 0 1-5-5V6h4V3Zm0 5H5v1a3 3 0 0 0 2.7 3A7 7 0 0 1 7 9V8Zm12 0h-2v1c0 1-.2 2-.7 3A3 3 0 0 0 19 9V8Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.crown { color:#ffd34d; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m3 7 5 4 4-7 4 7 5-4-2 11H5L3 7Zm2 13h14v2H5v-2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.chart { color:#8aa4ff; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 20V4h2v16H4Zm4 0v-7h2v7H8Zm4 0V8h2v12h-2Zm4 0v-4h2v4h-2Zm4 0V6h2v14h-2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.tv { color:#79b8ff; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 5h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-6v2h3v2H7v-2h3v-2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 2v9h16V7H4Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.user { color:#a7f3d0; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-9 9a9 9 0 0 1 18 0v1H3v-1Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.share { color:#7dd3fc; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18 16.1c-1 0-1.9.4-2.5 1.1L8.9 13a3 3 0 0 0 0-2l6.6-4.2A3 3 0 1 0 14.5 5L7.9 9.2a3 3 0 1 0 0 5.6l6.6 4.2a3 3 0 1 0 3.5-2.9Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.bolt { color:#facc15; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 3 14h7l-1 8 10-12h-7l1-8Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.swords { color:#93c5fd; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m14 3 7 7-2 2-2-2-4 4 2 2-2 2-4-4 2-2 4-4-3-3 2-2ZM10 3l2 2-3 3 4 4 2 2-4 4-2-2 2-2-4-4-2 2-2-2 7-7Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.handshake { color:#a78bfa; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 12 4 8l4-4 3 3h2l3-3 4 4-4 4-2-2h-4l-2 2Zm-1 2 2-2 2 2-2 2-2-2Zm4 2 2-2 2 2-2 2-2-2Zm4-2 2-2 2 2-2 2-2-2Z'/%3E%3C/svg%3E"); }
+    .tc-svg-icon.fire { color:#ff7a1a; --tc-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2s1 4-2 7c-2 2-4 4-4 7a5 5 0 0 0 10 0c0-2-1-4-3-6 0 2-1 3-2 4 1-4 4-6 1-12Z'/%3E%3C/svg%3E"); }
+
+  </style>
+</head>
+
+<body>
+  <div id="widget">
+    <div class="tc-title" id="title"><span class="tc-svg-icon fire"></span> TOP COMBO</div>
+    <div class="tc-gift-container" id="giftContainer">
+      <div class="tc-gift-placeholder"><span class="tc-svg-icon gift"></span></div>
+    </div>
+    <div class="tc-value" id="valueEl">x0</div>
+    <div class="tc-gift-name" id="giftNameEl"></div>
+    <div class="tc-username" id="nicknameEl"></div>
+    <div class="tc-info" id="info" style="display:none">
+      <div class="tc-empty">
+        <div class="tc-empty-text">Esperando...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/widgets/core/env.js?v=20260507-ws-storage"></script>
+  <script src="/widgets/core/font-loader.js?v=20260526-storage-token-fix"></script>
+  <script src="/widgets/core/tikcontrol-widget.js?v=1.0.19-local-ws"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // Datos de ejemplo
+      const EXAMPLE_DATA = {
+        giftId: 'example',
+        name: 'Rosa',
+        count: 5,
+        icon: 'https://p19-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp',
+        userId: 'example_user',
+        nickname: 'Esperando...',
+        isExample: true
+      };
+
+      const state = {
+        best: null,
+        hasRealData: false,
+        title: 'TOP COMBO',
+        showTitle: true,
+        titleSize: 18,
+        titleColor: '#ff6b35',
+        titleEffect: 'none',
+        textColor: '#ffffff',
+        valueColor: '#44ff44',
+        fontSize: 14,
+        nicknameSize: 14,
+        nicknameColor: '#ffffff',
+        nicknameMaxChars: 16,
+        fontFamily: '',
+        fontUrl: '',
+        giftSize: 80,
+        giftImgAnimation: 'none',
+        giftAnimationSpeed: 1,
+        showBg: true,
+        fireThreshold: 10,
+        strokeEnabled: false,
+        strokeColor: '#000000',
+        strokeWidth: 2,
+        shadowEnabled: false,
+        shadowColor: 'rgba(0,0,0,0.8)',
+        shadowBlur: 3,
+        shadowX: 2,
+        shadowY: 2,
+        // Visibilidad + posiciÃ³n X/Y por elemento (v1.0.25)
+        showGiftName: true,
+        showNickname: true,
+        showValue: true,
+        offsetTitleX: 0, offsetTitleY: 0,
+        offsetValueX: 0, offsetValueY: 0,
+        offsetGiftNameX: 0, offsetGiftNameY: 0,
+        offsetNicknameX: 0, offsetNicknameY: 0
+      };
+
+      const widgetEl = document.getElementById('widget');
+      const titleEl = document.getElementById('title');
+      const giftContainer = document.getElementById('giftContainer');
+      const valueEl = document.getElementById('valueEl');
+      const giftNameEl = document.getElementById('giftNameEl');
+      const nicknameEl = document.getElementById('nicknameEl');
+      const infoEl = document.getElementById('info');
+
+      TikControl.init('top-combo', { persistent: true, sessionBased: false });
+
+      TikControl.onConfig((config) => {
+        if (config.title !== undefined) state.title = config.title;
+        if (config.showTitle !== undefined) state.showTitle = config.showTitle;
+        if (config.titleSize !== undefined) state.titleSize = parseInt(config.titleSize);
+        if (config.titleColor !== undefined) state.titleColor = config.titleColor;
+        if (config.titleEffect !== undefined) state.titleEffect = config.titleEffect;
+        if (config.textColor !== undefined) state.textColor = config.textColor;
+        if (config.valueColor !== undefined) state.valueColor = config.valueColor;
+        if (config.fontSize !== undefined) state.fontSize = parseInt(config.fontSize);
+        if (config.nicknameSize !== undefined) state.nicknameSize = parseInt(config.nicknameSize);
+        if (config.nicknameColor !== undefined) state.nicknameColor = config.nicknameColor;
+        if (config.nicknameMaxChars !== undefined) state.nicknameMaxChars = parseInt(config.nicknameMaxChars) || 16;
+        if (config.fontFamily !== undefined) state.fontFamily = config.fontFamily;
+        if (config.fontUrl !== undefined) state.fontUrl = config.fontUrl;
+        if (config.giftSize !== undefined) state.giftSize = parseInt(config.giftSize);
+        if (config.giftImgAnimation !== undefined) state.giftImgAnimation = config.giftImgAnimation;
+        if (config.giftAnimationSpeed !== undefined) state.giftAnimationSpeed = Math.min(2, Math.max(0.25, parseFloat(config.giftAnimationSpeed) || 1));
+        if (config.showBg !== undefined) state.showBg = config.showBg;
+        if (config.fireThreshold !== undefined) state.fireThreshold = parseInt(config.fireThreshold);
+        if (config.strokeEnabled !== undefined) state.strokeEnabled = config.strokeEnabled;
+        if (config.strokeColor !== undefined) state.strokeColor = config.strokeColor;
+        if (config.strokeWidth !== undefined) state.strokeWidth = parseInt(config.strokeWidth);
+        if (config.shadowEnabled !== undefined) state.shadowEnabled = config.shadowEnabled;
+        if (config.shadowColor !== undefined) state.shadowColor = config.shadowColor;
+        if (config.shadowBlur !== undefined) state.shadowBlur = parseInt(config.shadowBlur);
+        if (config.shadowX !== undefined) state.shadowX = parseInt(config.shadowX);
+        if (config.shadowY !== undefined) state.shadowY = parseInt(config.shadowY);
+        if (config.showGiftName !== undefined) state.showGiftName = config.showGiftName;
+        if (config.showNickname !== undefined) state.showNickname = config.showNickname;
+        if (config.showValue !== undefined) state.showValue = config.showValue;
+        ['Title','Value','GiftName','Nickname'].forEach(k => {
+          if (config['offset'+k+'X'] !== undefined) state['offset'+k+'X'] = parseInt(config['offset'+k+'X']) || 0;
+          if (config['offset'+k+'Y'] !== undefined) state['offset'+k+'Y'] = parseInt(config['offset'+k+'Y']) || 0;
+        });
+
+        applyStyles();
+        render();
+      });
+
+      TikControl.onData((data) => {
+        if (data && data.best && !data.best.isExample) {
+          state.best = data.best;
+          state.hasRealData = true;
+          hydrateBestFromCatalog();
+          render();
+        }
+      });
+
+      setTimeout(() => {
+        if (!state.hasRealData && !state.best) {
+          state.best = { ...EXAMPLE_DATA };
+          render();
+        }
+      }, 3000);
+
+      // Aceptar gift-solo y gift para cubrir ambos modos del conector.
+      TikControl.on('gift-solo', handleGiftEvent);
+      TikControl.on('gift', handleGiftEvent);
+
+      function firstString(value) {
+        if (!value) return '';
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const found = firstString(item);
+            if (found) return found;
+          }
+          return '';
+        }
+        if (typeof value === 'object') {
+          const keys = [
+            'urls', 'urlList', 'url_list', 'url', 'p',
+            'image', 'imageUrl', 'image_url', 'img',
+            'icon', 'iconUrl', 'icon_url',
+            'picture', 'pictureUrl', 'picture_url', 'pictureList',
+            'giftImage', 'gift_image', 'giftImageUrl', 'gift_image_url',
+            'giftPicture', 'gift_picture', 'giftPictureUrl', 'gift_picture_url',
+            'displayImage', 'display_image', 'displayUrl', 'display_url',
+            'thumbnail', 'thumbnailUrl', 'thumbnail_url',
+            'webp', 'origin', 'medium', 'thumb',
+            'uri', 'mUri'
+          ];
+          for (const key of keys) {
+            const found = firstString(value[key]);
+            if (found) return found;
+          }
+        }
+        return '';
+      }
+
+      function normalizeGiftImageUrl(value) {
+        const raw = firstString(value).trim();
+        if (!raw) return '';
+        if (/^(https?:|data:|blob:)/i.test(raw)) return raw;
+        if (raw.startsWith('//')) return 'https:' + raw;
+
+        const clean = raw.replace(/^\/+/, '');
+        if (!clean || clean.includes(' ')) return '';
+        const suffix = /(?:~tplv-|[.](?:png|jpe?g|webp|gif|avif)(?:[?#]|$))/i.test(clean) ? '' : '~tplv-obj.webp';
+        if (clean.startsWith('img/maliva/')) {
+          return 'https://p19-webcast.tiktokcdn.com/' + clean + suffix;
+        }
+        if (clean.startsWith('maliva/')) {
+          return 'https://p19-webcast.tiktokcdn.com/img/' + clean + suffix;
+        }
+        if (/^(webcast-|resource\/|webcast-va\/|webcast-sg\/|webcast-useast\d*\/)/i.test(clean)) {
+          return 'https://p19-webcast.tiktokcdn.com/img/maliva/' + clean + suffix;
+        }
+        return '';
+      }
+
+      const giftCatalogById = new Map();
+      const giftCatalogByName = new Map();
+      const KNOWN_GIFT_BY_ID = new Map([
+        ['6369', {
+          id: '6369',
+          name: 'Lion',
+          icon: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/4fb89af2082a290b37d704e20f4fe729~tplv-obj.webp'
+        }],
+        ['6646', {
+          id: '6646',
+          name: 'Leon the Kitten',
+          icon: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/a7748baba012c9e2d98a30dce7cc5a27~tplv-obj.webp'
+        }]
+      ]);
+      let giftCatalogRequested = false;
+
+      function normalizeGiftName(value) {
+        return String(value || '')
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^\p{L}\p{N}]+/gu, ' ')
+          .trim()
+          .toLowerCase();
+      }
+
+      function getGiftIdFromCatalogEntry(entry) {
+        if (!entry || typeof entry !== 'object') return '';
+        return entry.id ?? entry.giftId ?? entry.gift_id ?? entry.i ?? '';
+      }
+
+      function ingestGiftCatalog(payload) {
+        const gifts = Array.isArray(payload) ? payload : (payload?.gifts || payload?.catalog || []);
+        if (!Array.isArray(gifts)) return;
+        gifts.forEach(g => {
+          const id = getGiftIdFromCatalogEntry(g);
+          const name = g.n || g.name || g.giftName || g.gift_name || '';
+          if ((id === '' || id === null || id === undefined) && !name) return;
+          const fallback = KNOWN_GIFT_BY_ID.get(String(id));
+          const icon = normalizeGiftImageUrl([
+            g.p, g.picture, g.pictureUrl, g.pictureList,
+            g.image, g.imageUrl, g.img, g.icon, g.iconUrl,
+            g.giftPicture, g.giftPictureUrl, g.giftImage, g.giftImageUrl,
+            g.url_list, g.urlList, g.urls
+          ]) || fallback?.icon || '';
+          const entry = {
+            id,
+            name: name || fallback?.name || '',
+            icon,
+            raw: g
+          };
+          if (id !== '' && id !== null && id !== undefined) giftCatalogById.set(String(id), entry);
+          const normalizedName = normalizeGiftName(entry.name);
+          if (normalizedName) giftCatalogByName.set(normalizedName, entry);
+        });
+        hydrateBestFromCatalog();
+      }
+
+      function findCatalogGift(giftId, giftName) {
+        const idKey = giftId !== undefined && giftId !== null && giftId !== '' ? String(giftId) : '';
+        const byId = idKey ? giftCatalogById.get(idKey) : null;
+        const fallback = idKey ? KNOWN_GIFT_BY_ID.get(idKey) : null;
+        if (byId) {
+          if (!byId.icon && fallback?.icon) byId.icon = fallback.icon;
+          if (!byId.name && fallback?.name) byId.name = fallback.name;
+          return byId;
+        }
+        if (fallback) return { ...fallback, raw: fallback };
+        const lower = normalizeGiftName(giftName);
+        if (!lower) return null;
+        const byName = giftCatalogByName.get(lower);
+        if (byName) return byName;
+        for (const gift of giftCatalogById.values()) {
+          const catalogName = normalizeGiftName(gift.name);
+          if (catalogName && (catalogName === lower || catalogName.includes(lower) || lower.includes(catalogName))) return gift;
+        }
+        return null;
+      }
+
+      function requestGiftCatalog() {
+        try {
+          TikControl._instance?._send?.({ type: 'getGiftCatalog', uid: TikControl.getUserId?.() || '' });
+        } catch (_) {}
+        const host = window.location?.hostname || '';
+        const canFetchLocalCatalog = window.location?.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+        const storageBase = (window.__tcEnv && typeof window.__tcEnv.st === 'function')
+          ? window.__tcEnv.st()
+          : 'https://storage.tikcontrol.live';
+        const catalogUrl = canFetchLocalCatalog ? '/api/gifts/catalog' : storageBase.replace(/\/$/, '') + '/catalog/gifts.json';
+        if (giftCatalogRequested && !canFetchLocalCatalog) return;
+        giftCatalogRequested = true;
+        try {
+          fetch(catalogUrl, { cache: 'no-store' })
+            .then(r => r && r.ok ? r.json() : null)
+            .then(data => { if (data) ingestGiftCatalog(data.gifts || data.catalog || data); })
+            .catch(() => {});
+        } catch (_) {}
+      }
+
+      function hydrateBestFromCatalog() {
+        if (!state.best || normalizeGiftImageUrl(state.best.icon)) return false;
+        const resolved = findCatalogGift(state.best.giftId, state.best.name);
+        if (!resolved?.icon) return false;
+        state.best.icon = resolved.icon;
+        if (resolved.name) state.best.name = resolved.name;
+        try { TikControl.saveData({ best: state.best }); } catch (_) {}
+        render();
+        return true;
+      }
+
+      TikControl.on('giftCatalog', ingestGiftCatalog);
+      TikControl.on('connect', requestGiftCatalog);
+      setTimeout(requestGiftCatalog, 1000);
+
+      function getGiftIcon(data, gift, giftDetails, giftId, giftName) {
+        data = data || {};
+        gift = gift || {};
+        giftDetails = giftDetails || {};
+        const giftInfo = data.giftInfo || {};
+        const catalogGift = findCatalogGift(giftId, giftName);
+        const candidates = [
+          data.giftPictureUrl,
+          data.giftImage,
+          data.giftImageUrl,
+          data.gift_image,
+          data.gift_image_url,
+          data.image,
+          data.imageUrl,
+          data.icon,
+          data.iconUrl,
+          data.pictureUrl,
+          data.picture,
+          data.pictureList,
+          data.url_list,
+          data.urlList,
+          data.urls,
+          data.gift?.image,
+          data.gift?.icon,
+          data.gift?.iconUrl,
+          data.gift?.giftImage,
+          data.gift?.giftImageUrl,
+          data.gift?.giftPicture,
+          data.gift?.giftPictureUrl,
+          data.gift?.picture,
+          data.gift?.pictureUrl,
+          data.gift?.pictureList,
+          data.giftDetails?.image,
+          data.giftDetails?.icon,
+          data.giftDetails?.iconUrl,
+          data.giftDetails?.giftImage,
+          data.giftDetails?.giftImageUrl,
+          data.giftDetails?.giftPicture,
+          data.giftDetails?.giftPictureUrl,
+          data.giftDetails?.picture,
+          data.giftDetails?.pictureUrl,
+          data.giftDetails?.pictureList,
+          giftInfo.image,
+          giftInfo.icon,
+          giftInfo.iconUrl,
+          giftInfo.giftImage,
+          giftInfo.giftImageUrl,
+          giftInfo.giftPicture,
+          giftInfo.giftPictureUrl,
+          giftInfo.picture,
+          giftInfo.pictureUrl,
+          giftInfo.pictureList,
+          giftDetails.giftPictureUrl,
+          giftDetails.giftImage,
+          giftDetails.giftImageUrl,
+          giftDetails.giftPicture,
+          giftDetails.image,
+          giftDetails.icon,
+          giftDetails.iconUrl,
+          giftDetails.imageUrl,
+          giftDetails.image_url,
+          giftDetails.picture,
+          giftDetails.pictureUrl,
+          giftDetails.pictureList,
+          gift.image,
+          gift.icon,
+          gift.iconUrl,
+          gift.giftImage,
+          gift.giftImageUrl,
+          gift.picture,
+          gift.pictureUrl,
+          gift.displayImage,
+          gift.thumbnail,
+          gift.giftPictureUrl,
+          gift.giftPicture,
+          gift.gift_picture_url,
+          gift.imageUrl,
+          gift.image_url,
+          gift.pictureList,
+          catalogGift?.icon,
+          catalogGift?.raw
+        ];
+        for (const candidate of candidates) {
+          const url = normalizeGiftImageUrl(candidate);
+          if (url) return url;
+        }
+        return '';
+      }
+
+      function buildTitleTextShadow() {
+        const shadows = [];
+        const strokeWidth = state.strokeEnabled ? 1 : 0;
+        const strokeColor = state.strokeColor || '#000000';
+
+        if (strokeWidth > 0) {
+          for (let x = -strokeWidth; x <= strokeWidth; x++) {
+            for (let y = -strokeWidth; y <= strokeWidth; y++) {
+              if (x === 0 && y === 0) continue;
+              if (Math.abs(x) === strokeWidth || Math.abs(y) === strokeWidth) {
+                shadows.push(`${x}px ${y}px 0 ${strokeColor}`);
+              }
+            }
+          }
+        }
+
+        if (state.titleEffect === 'glow') {
+          shadows.push(`0 0 10px ${state.titleColor}`, `0 0 20px ${state.titleColor}`);
+        } else if (state.titleEffect === 'neon') {
+          shadows.push(`0 0 5px #ffffff`, `0 0 10px ${state.titleColor}`, `0 0 20px ${state.titleColor}`);
+        }
+
+        if (state.shadowEnabled) {
+          shadows.push(`${state.shadowX || 2}px ${state.shadowY || 2}px ${state.shadowBlur || 3}px ${state.shadowColor || 'rgba(0,0,0,0.8)'}`);
+        }
+
+        return shadows.join(', ');
+      }
+
+      function buildTitleFilter() {
+        const filters = [];
+        const strokeColor = state.strokeColor || '#000000';
+        if (state.strokeEnabled) {
+          filters.push(
+            `drop-shadow(1px 0 0 ${strokeColor})`,
+            `drop-shadow(-1px 0 0 ${strokeColor})`,
+            `drop-shadow(0 1px 0 ${strokeColor})`,
+            `drop-shadow(0 -1px 0 ${strokeColor})`
+          );
+        }
+        if (state.shadowEnabled) {
+          filters.push(`drop-shadow(${state.shadowX || 2}px ${state.shadowY || 2}px ${state.shadowBlur || 3}px ${state.shadowColor || 'rgba(0,0,0,0.8)'})`);
+        }
+        return filters.join(' ');
+      }
+
+      function handleGiftEvent(data) {
+        // Estructura igual que gift-cannon.js
+        const giftDetails = data.giftDetails || {};
+        const gift = data.gift || giftDetails || {};
+        const user = data.user || data;
+
+        const giftId = gift.id || data.giftId || data.gift_id || giftDetails.giftId || giftDetails.gift_id || gift.giftId;
+        const catalogGift = findCatalogGift(giftId, giftDetails.giftName || gift.name || gift.giftName || data.giftName);
+        const giftName = giftDetails.giftName || gift.name || gift.giftName || data.giftName || catalogGift?.name || 'Regalo';
+        const repeatCount = Number(data.comboTotal || data.comboCount || data.repeatCount || data.repeat_count || data.giftCount || 1) || 1;
+        const userId = user.userId || user.uniqueId || data.uniqueId || '';
+        const nickname = user.nickname || data.nickname || userId;
+
+        const icon = getGiftIcon(data, gift, giftDetails, giftId, giftName);
+
+        // Log reducido para rendimiento
+
+        const currentBest = state.best?.count || 0;
+        const isCurrentExample = state.best?.isExample;
+        const currentGiftId = state.best?.giftId != null ? String(state.best.giftId) : '';
+        const incomingGiftId = giftId != null ? String(giftId) : '';
+        const currentGiftName = normalizeGiftName(state.best?.name);
+        const incomingGiftName = normalizeGiftName(giftName);
+        const sameGift = !!state.best && (
+          (currentGiftId && incomingGiftId && currentGiftId === incomingGiftId) ||
+          (currentGiftName && incomingGiftName && currentGiftName === incomingGiftName)
+        );
+
+        if (isCurrentExample || !state.best || repeatCount > currentBest) {
+          state.best = { giftId, name: giftName, count: repeatCount, icon, userId, nickname };
+          state.hasRealData = true;
+          TikControl.saveData({ best: state.best });
+          render(true);
+        } else if (icon && sameGift && !normalizeGiftImageUrl(state.best.icon)) {
+          state.best.icon = icon;
+          state.hasRealData = true;
+          TikControl.saveData({ best: state.best });
+          render();
+        }
+      }
+
+      function applyStyles() {
+        document.documentElement.style.setProperty('--tc-title-color', state.titleColor);
+        document.documentElement.style.setProperty('--tc-text-color', state.textColor);
+        document.documentElement.style.setProperty('--tc-value-color', state.valueColor);
+        document.documentElement.style.setProperty('--stroke-color', state.strokeColor);
+        document.documentElement.style.setProperty('--stroke-width', state.strokeEnabled ? `${state.strokeWidth}px` : '0px');
+        document.documentElement.style.setProperty('--shadow-color', state.shadowColor || 'rgba(0,0,0,0.8)');
+        document.documentElement.style.setProperty('--shadow-blur', `${state.shadowBlur || 3}px`);
+        document.documentElement.style.setProperty('--shadow-x', `${state.shadowX || 2}px`);
+        document.documentElement.style.setProperty('--shadow-y', `${state.shadowY || 2}px`);
+        const nicknameMaxChars = Math.min(32, Math.max(4, parseInt(state.nicknameMaxChars, 10) || 16));
+        const nicknameWidth = Math.max(80, Math.ceil(nicknameMaxChars * Math.max(10, (state.nicknameSize || 12) * 0.95) + 8));
+        document.documentElement.style.setProperty('--tc-nickname-max-width', `${nicknameWidth}px`);
+        const giftAnimationSpeed = Math.min(2, Math.max(0.25, parseFloat(state.giftAnimationSpeed) || 1));
+        const duration = (seconds) => `${Math.max(0.1, seconds / giftAnimationSpeed).toFixed(3)}s`;
+        document.documentElement.style.setProperty('--tc-new-glow-duration', duration(0.5));
+        document.documentElement.style.setProperty('--tc-new-pop-duration', duration(0.4));
+        document.documentElement.style.setProperty('--tc-img-pulse-duration', duration(1.5));
+        document.documentElement.style.setProperty('--tc-img-bounce-duration', duration(1));
+        document.documentElement.style.setProperty('--tc-img-spin-duration', duration(3));
+        document.documentElement.style.setProperty('--tc-img-shake-duration', duration(0.5));
+        document.documentElement.style.setProperty('--tc-img-glow-duration', duration(2));
+
+        widgetEl.classList.toggle('no-bg', !state.showBg);
+
+        titleEl.innerHTML = `<span class="tc-svg-icon fire"></span> ${escapeHtml(state.title)}`;
+        titleEl.setAttribute('data-text', state.title);
+        titleEl.style.fontSize = `${state.titleSize}px`;
+        titleEl.style.display = state.showTitle === false ? 'none' : '';
+
+        titleEl.classList.remove('effect-glow', 'effect-neon', 'effect-rainbow', 'has-stroke', 'has-shadow', 'has-text-shadow', 'tc-stroke');
+
+        if (state.titleEffect && state.titleEffect !== 'none') {
+          titleEl.classList.add(`effect-${state.titleEffect}`);
+        }
+
+        if (state.titleEffect === 'rainbow') {
+          titleEl.style.color = 'transparent';
+          titleEl.style.webkitTextFillColor = 'transparent';
+          titleEl.style.textShadow = 'none';
+          titleEl.style.webkitTextStroke = '0px';
+          titleEl.style.filter = buildTitleFilter();
+        } else {
+          titleEl.style.color = '';
+          titleEl.style.webkitTextFillColor = '';
+          titleEl.style.webkitTextStroke = '0px';
+          titleEl.style.filter = '';
+
+          if (state.shadowEnabled) {
+            titleEl.classList.add('has-text-shadow');
+          }
+          titleEl.style.textShadow = buildTitleTextShadow();
+        }
+
+        if (state.fontFamily) loadCustomFont(state.fontFamily, state.fontUrl);
+
+        giftContainer.style.width = `${state.giftSize}px`;
+        giftContainer.style.height = `${state.giftSize}px`;
+
+        // PosiciÃ³n X/Y por elemento usando position:relative + left/top.
+        // NO usar transform: translate() â€” crea un stacking context que rompe
+        // la animaciÃ³n rainbow del tÃ­tulo.
+        const applyOffset = (el, x, y) => {
+          const vx = x || 0, vy = y || 0;
+          el.style.position = 'relative';
+          el.style.left = vx ? `${vx}px` : '';
+          el.style.top = vy ? `${vy}px` : '';
+        };
+        applyOffset(titleEl, state.offsetTitleX, state.offsetTitleY);
+        applyOffset(valueEl, state.offsetValueX, state.offsetValueY);
+        applyOffset(giftNameEl, state.offsetGiftNameX, state.offsetGiftNameY);
+        applyOffset(nicknameEl, state.offsetNicknameX, state.offsetNicknameY);
+
+        valueEl.style.display = state.showValue === false ? 'none' : '';
+        giftNameEl.style.display = state.showGiftName === false ? 'none' : '';
+        nicknameEl.style.display = state.showNickname === false ? 'none' : '';
+      }
+
+      function loadCustomFont(fontFamily, fontUrl) {
+        if (!fontFamily) return;
+        if (!fontUrl && fontFamily.match(/\.(otf|ttf|woff|woff2)$/i)) {
+          var uid = new URLSearchParams(window.location.search).get('uid');
+          fontUrl = ((window.__tcEnv && window.__tcEnv.st) ? window.__tcEnv.st() : '') + '/users-data/' + uid + '/fonts/' + fontFamily;
+        }
+        if (window.__tcLoadFont) {
+          var cssVal = window.__tcLoadFont(fontFamily, fontUrl);
+          if (cssVal) document.body.style.fontFamily = cssVal;
+        } else if (fontUrl) {
+          document.body.style.fontFamily = '"' + fontFamily + '", system-ui, sans-serif';
+        }
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function escapeAttr(text) {
+        return escapeHtml(text).replace(/"/g, '&quot;');
+      }
+
+      function splitVisibleChars(value) {
+        const text = String(value || '');
+        try {
+          if (window.Intl && typeof Intl.Segmenter === 'function') {
+            const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+            return Array.from(segmenter.segment(text), part => part.segment);
+          }
+        } catch (_) {}
+        return Array.from(text);
+      }
+
+      function setNickname(value, fallback = 'An\u00f3nimo') {
+        const raw = String(value || fallback).trim() || fallback;
+        const maxChars = Math.min(32, Math.max(4, parseInt(state.nicknameMaxChars, 10) || 16));
+        const chars = splitVisibleChars(raw);
+        nicknameEl.textContent = chars.length > maxChars ? `${chars.slice(0, maxChars).join('')}...` : raw;
+        nicknameEl.title = raw;
+      }
+
+      function render(isNew = false) {
+        const strokeClass = state.strokeEnabled ? 'tc-stroke' : '';
+
+        if (!state.best) {
+          giftContainer.innerHTML = '<div class="tc-gift-placeholder"><span class="tc-svg-icon gift"></span></div>';
+          valueEl.textContent = 'x0';
+          valueEl.style.color = state.valueColor;
+          giftNameEl.textContent = '';
+          setNickname('Esperando...', 'Esperando...');
+          nicknameEl.className = `tc-username ${strokeClass}`;
+          nicknameEl.style.fontSize = `${state.nicknameSize}px`;
+          nicknameEl.style.color = state.nicknameColor;
+          return;
+        }
+
+        const { name, count, nickname, giftId } = state.best;
+        const icon = state.best.icon || findCatalogGift(giftId, name)?.icon || '';
+
+        // Imagen del regalo (sin bocadillo)
+        if (icon) {
+          const animClass = state.giftImgAnimation && state.giftImgAnimation !== 'none' ? ` anim-${state.giftImgAnimation}` : '';
+          giftContainer.innerHTML = `<img class="tc-gift-img${animClass}" src="${escapeAttr(icon)}" alt="${escapeAttr(name)}" onerror="this.style.display='none';if(this.parentNode){this.parentNode.innerHTML='<div class=tc-gift-placeholder><span class=&quot;tc-svg-icon gift&quot;></span></div>';}">`;
+        } else {
+          giftContainer.innerHTML = '<div class="tc-gift-placeholder"><span class="tc-svg-icon gift"></span></div>';
+        }
+
+        // Valor grande
+        valueEl.textContent = `x${count}`;
+        valueEl.style.color = state.valueColor;
+        valueEl.style.fontSize = `${state.fontSize + 16}px`;
+        valueEl.className = `tc-value ${strokeClass}`;
+
+        // Nombre del regalo + nickname. NO usar cssText: sobrescribe display y transform.
+        giftNameEl.textContent = name;
+        giftNameEl.className = `tc-gift-name ${strokeClass}`;
+        giftNameEl.style.color = state.textColor;
+        giftNameEl.style.fontSize = `${state.fontSize}px`;
+
+        setNickname(nickname);
+        nicknameEl.className = `tc-username ${strokeClass}`;
+        nicknameEl.style.fontSize = `${state.nicknameSize}px`;
+        nicknameEl.style.color = state.nicknameColor;
+
+        // AnimaciÃ³n sutil
+        if (isNew) {
+          giftContainer.classList.add('tc-new');
+          valueEl.classList.add('tc-new');
+          setTimeout(() => {
+            giftContainer.classList.remove('tc-new');
+            valueEl.classList.remove('tc-new');
+          }, 500);
+        }
+      }
+
+      function showTestCombo(data) {
+        const best = (data && data.best) || EXAMPLE_DATA;
+        state.best = { ...best, isExample: false };
+        state.hasRealData = false;
+        render(true);
+      }
+
+      TikControl.on('widget:test', (data) => {
+        if (!data || data.widget !== 'top-combo') return;
+        showTestCombo(data.data);
+      });
+
+      window.addEventListener('message', (event) => {
+        const data = event.data || {};
+        if (data.type !== 'TOP_COMBO_TEST') return;
+        showTestCombo(data.data);
+      });
+
+      function clearBest() {
+        state.best = null;
+        state.hasRealData = false;
+        render();
+      }
+
+      TikControl.on('reset', () => {
+        clearBest();
+      });
+
+      applyStyles();
+      render();
+
+    })();
+  </script>
+</body>
+
+</html>
+

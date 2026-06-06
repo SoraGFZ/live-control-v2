@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Widget Demo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:transparent;overflow:hidden;width:100%;height:100%;font-family:system-ui,'Segoe UI',Roboto,sans-serif}
+
+/* ── Gift Alert Demo ── */
+.demo-gift-alert{position:relative;width:100%;height:100%;overflow:hidden}
+.blimp-container{position:absolute;top:30%;display:flex;align-items:center;gap:8px;animation:blimpFly 6s linear infinite}
+.blimp-img{font-size:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+.blimp-banner{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.22);border-radius:8px;padding:4px 8px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.blimp-gift{width:20px;height:20px}
+.blimp-text{color:#fff;font-size:10px;font-weight:700;text-shadow:1px 1px 2px rgba(0,0,0,.8)}
+.blimp-nick{color:#fbbf24}
+@keyframes blimpFly{0%{left:-40%;opacity:0}5%{opacity:1}95%{opacity:1}100%{left:110%;opacity:0}}
+
+/* ── Ranks Demo ── */
+.demo-ranks{display:flex;gap:4px;padding:4px;width:100%;height:100%;align-items:stretch}
+.demo-tier{flex:1;background:transparent;border:1.5px solid rgba(100,116,139,.3);border-radius:8px;padding:6px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.tier-hdr{text-align:center;padding-bottom:4px;border-bottom:1.5px solid rgba(100,116,139,.3);margin-bottom:4px;flex-shrink:0}
+.tier-hdr .tier-icon{font-size:16px}
+.tier-hdr .tier-name{font-size:9px;font-weight:700;color:#f1f5f9;text-shadow:1px 1px 3px rgba(0,0,0,.5)}
+.tier-hdr .tier-min{font-size:7px;color:#94a3b8;font-style:italic}
+.rank-user{display:flex;align-items:center;gap:3px;padding:3px;border-radius:4px;margin-bottom:2px;animation:rankSlideIn .5s ease-out both}
+.rank-user:nth-child(1){animation-delay:.1s}.rank-user:nth-child(2){animation-delay:.3s}.rank-user:nth-child(3){animation-delay:.5s}
+.rank-avatar{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(59,130,246,.5);overflow:hidden;flex-shrink:0;background:#1e293b}
+.rank-avatar img{width:100%;height:100%;object-fit:cover}
+.rank-name{font-size:7px;color:#e2e8f0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-diamonds{font-size:7px;color:#60a5fa;font-weight:700;white-space:nowrap}
+.rank-gold .rank-user{background:rgba(251,191,36,.08)}.rank-gold .tier-hdr{border-bottom-color:rgba(251,191,36,.3)}
+.rank-silver .rank-user{background:rgba(148,163,184,.08)}.rank-silver .tier-hdr{border-bottom-color:rgba(148,163,184,.3)}
+.rank-bronze .rank-user{background:rgba(180,83,9,.08)}.rank-bronze .tier-hdr{border-bottom-color:rgba(180,83,9,.3)}
+@keyframes rankSlideIn{from{transform:translateX(-8px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── Roulette Demo ── */
+.demo-roulette{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.roulette-user{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(42,157,244,.9),rgba(30,123,184,.9));padding:4px 10px;border-radius:20px;border:2px solid #ffd700;box-shadow:0 0 12px rgba(255,215,0,.4);animation:rouletteUserSlide .5s ease-out}
+.roulette-avatar{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);object-fit:cover}
+.roulette-nick{color:#fff;font-size:10px;font-weight:900;text-shadow:1px 1px 3px rgba(0,0,0,.8)}
+.roulette-machine{position:relative;width:90%;height:48px;background:linear-gradient(180deg,#2c1810,#1a0f08);border:3px solid #ffd700;border-radius:10px;box-shadow:0 0 15px rgba(255,215,0,.4),inset 0 0 20px rgba(0,0,0,.8);overflow:hidden}
+.carousel-window{position:absolute;left:12px;right:12px;top:6px;bottom:6px;background:#000;border:2px solid #8b4513;border-radius:6px;overflow:hidden;box-shadow:inset 0 0 15px rgba(0,0,0,.9)}
+.carousel-track{position:absolute;left:0;top:0;height:100%;display:flex;align-items:center;animation:carouselSpin 4s cubic-bezier(.17,.67,.12,.99) infinite}
+.carousel-slot{flex-shrink:0;width:50px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-right:2px solid rgba(0,0,0,.8);border-left:1px solid rgba(255,255,255,.1)}
+.carousel-slot-icon{font-size:14px}
+.carousel-slot-name{color:#fff;font-size:6px;font-weight:900;text-shadow:1px 1px 3px rgba(0,0,0,1);text-align:center}
+.selection-line{position:absolute;left:50%;top:4px;bottom:4px;width:2px;background:linear-gradient(to bottom,transparent,#ff0000 20%,#ff0000 80%,transparent);z-index:2;transform:translateX(-50%);box-shadow:0 0 8px rgba(255,0,0,.6)}
+@keyframes rouletteUserSlide{from{opacity:0;transform:translateY(-15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes carouselSpin{0%{transform:translateX(0)}70%{transform:translateX(-350px)}100%{transform:translateX(-350px)}}
+
+/* ── Level Up Demo ── */
+.demo-levelup{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.levelup-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px;border-radius:12px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:#fff;animation:levelCardEnter .5s ease-out both}
+.levelup-title{font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:1px;text-shadow:0 0 8px rgba(255,255,255,.6),0 0 16px rgba(255,255,255,.3);animation:levelPulse 1.5s ease-in-out infinite}
+.levelup-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.25);box-shadow:0 0 8px rgba(0,0,0,.5)}
+.levelup-nick{font-weight:800;font-size:10px;color:#ffcc00;text-shadow:1px 1px 3px rgba(0,0,0,.8)}
+.levelup-levels{display:flex;align-items:center;gap:6px;font-weight:800}
+.levelup-prev{font-size:10px;color:#aaa;animation:levelFadePrev .6s .8s ease-out forwards}
+.levelup-arrow{font-size:9px;color:rgba(255,255,255,.4)}
+.levelup-new{font-size:14px;color:#7dff9e;text-shadow:0 0 10px rgba(125,255,158,.6);animation:levelPopNew .5s 1s ease-out both}
+@keyframes levelCardEnter{0%{opacity:0;transform:scale(.85) translateY(8px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes levelPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes levelFadePrev{0%{opacity:1;transform:translateX(0)}100%{opacity:.3;transform:translateX(-4px)}}
+@keyframes levelPopNew{0%{opacity:0;transform:scale(.5)}60%{transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
+
+/* ── Win/Life Demo ── */
+.demo-winlife{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:8px}
+.wl-container{display:flex;gap:20px;align-items:center}
+.wl-stat{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wl-emoji{font-size:28px;line-height:1}
+.wl-value{font-size:20px;font-weight:700;text-shadow:2px 2px 4px rgba(0,0,0,.8);line-height:1;font-family:'Bangers',system-ui,sans-serif}
+.wl-emoji-bounce{animation:wlBounce 1s ease-in-out infinite}
+.wl-emoji-pulse{animation:wlPulse 1.5s ease-in-out infinite}
+.wl-value-glow{animation:wlGlow 2s ease-in-out infinite}
+@keyframes wlBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes wlPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes wlGlow{0%,100%{filter:drop-shadow(0 0 5px currentColor) drop-shadow(0 0 15px currentColor)}50%{filter:drop-shadow(0 0 20px currentColor) drop-shadow(0 0 40px currentColor)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function(){
+  var type = new URLSearchParams(window.location.search).get('type') || 'gifts';
+  var root = document.getElementById('root');
+
+  var AVATARS = [
+    'https://p16-sign.tiktokcdn-us.com/tos-useast5-avt-0068-tx/dbfee51456594b48bc1cc0ca2d5db8fa~c5_100x100.webp',
+    'https://p16-sign.tiktokcdn-us.com/tos-useast5-avt-0068-tx/734b0dc99c7d448a9d2fde4b5b2e4295~c5_100x100.webp',
+    'https://p16-sign.tiktokcdn-us.com/tos-useast5-avt-0068-tx/ce9e2da50f614b5983ecc1956dd09db7~c5_100x100.webp'
+  ];
+  var FALLBACK_AV = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="40" height="40" rx="20" fill="%231e293b"/><text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" fill="%2394a3b8" font-size="16" font-family="sans-serif">?</text></svg>';
+
+  function av(i){ return AVATARS[i % AVATARS.length]; }
+  function fallback(img){ img.onerror=null; img.src=FALLBACK_AV; }
+
+  if(type==='gifts'){
+    root.innerHTML=
+      '<div class="demo-gift-alert">'+
+        '<div class="blimp-container">'+
+          '<div class="blimp-img">🎈</div>'+
+          '<div class="blimp-banner">'+
+            '<span class="blimp-text"><span class="blimp-nick">Luna_Star</span> regaló Rose x5</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="blimp-container" style="animation-delay:3s;top:55%">'+
+          '<div class="blimp-img">🎈</div>'+
+          '<div class="blimp-banner">'+
+            '<span class="blimp-text"><span class="blimp-nick">DarkKnight</span> regaló TikTok x1</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+  }
+
+  else if(type==='ranks'){
+    var tiers = [
+      { name:'Diamond', icon:'💎', min:'500+', color:'gold', users:[
+        {n:'Luna_Star',d:'2,450',a:0},{n:'SkyRider',d:'1,890',a:1},{n:'NovaX',d:'980',a:2}
+      ]},
+      { name:'Gold', icon:'🥇', min:'100+', color:'silver', users:[
+        {n:'BlazeKing',d:'420',a:1},{n:'MoonChild',d:'310',a:2},{n:'RoseQueen',d:'180',a:0}
+      ]},
+      { name:'Silver', icon:'🥈', min:'10+', color:'bronze', users:[
+        {n:'StarLight',d:'75',a:2},{n:'NightOwl',d:'45',a:0},{n:'FireFox',d:'22',a:1}
+      ]}
+    ];
+    var h='<div class="demo-ranks">';
+    tiers.forEach(function(t){
+      h+='<div class="demo-tier rank-'+t.color+'"><div class="tier-hdr"><div class="tier-icon">'+t.icon+'</div><div class="tier-name">'+t.name+'</div><div class="tier-min">Min: '+t.min+'</div></div>';
+      t.users.forEach(function(u){
+        h+='<div class="rank-user"><div class="rank-avatar"><img src="'+av(u.a)+'" onerror="this.onerror=null;this.src=\''+FALLBACK_AV+'\'"></div><span class="rank-name">'+u.n+'</span><span class="rank-diamonds">💎'+u.d+'</span></div>';
+      });
+      h+='</div>';
+    });
+    h+='</div>';
+    root.innerHTML=h;
+  }
+
+  else if(type==='roulette'){
+    var items=['🎁 Rose','💎 Diamond','🦁 Lion','🌹 Rose','⭐ Star','🎪 Circus','🌈 Rainbow','💖 Heart','🔥 Fire','🎭 Mask','🦋 Butterfly','🌺 Flower'];
+    var slots='';
+    for(var i=0;i<items.length;i++){
+      var parts=items[i].split(' ');
+      slots+='<div class="carousel-slot"><span class="carousel-slot-icon">'+parts[0]+'</span><span class="carousel-slot-name">'+parts[1]+'</span></div>';
+    }
+    root.innerHTML=
+      '<div class="demo-roulette">'+
+        '<div class="roulette-user">'+
+          '<img class="roulette-avatar" src="'+av(0)+'" onerror="this.onerror=null;this.src=\''+FALLBACK_AV+'\'">'+
+          '<span class="roulette-nick">Luna_Star</span>'+
+        '</div>'+
+        '<div class="roulette-machine">'+
+          '<div class="carousel-window">'+
+            '<div class="carousel-track">'+slots+'</div>'+
+          '</div>'+
+          '<div class="selection-line"></div>'+
+        '</div>'+
+      '</div>';
+  }
+
+  else if(type==='level'){
+    root.innerHTML=
+      '<div class="demo-levelup">'+
+        '<div class="levelup-card">'+
+          '<div class="levelup-title">NEW LEVEL!</div>'+
+          '<img class="levelup-avatar" src="'+av(1)+'" onerror="this.onerror=null;this.src=\''+FALLBACK_AV+'\'">'+
+          '<div class="levelup-nick">SkyRider</div>'+
+          '<div class="levelup-levels">'+
+            '<span class="levelup-prev">Lv 14</span>'+
+            '<span class="levelup-arrow">➔</span>'+
+            '<span class="levelup-new">Lv 15</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    setTimeout(function(){
+      var card=document.querySelector('.levelup-card');
+      if(card){card.style.opacity='0';card.style.transform='scale(.85) translateY(8px)';}
+      setTimeout(function(){
+        if(card){card.style.transition='all .5s ease-out';card.style.opacity='1';card.style.transform='scale(1) translateY(0)';}
+      },200);
+    },3000);
+    setInterval(function(){
+      var card=document.querySelector('.levelup-card');
+      if(card){
+        card.style.transition='all .4s ease-in';card.style.opacity='0';card.style.transform='scale(.85) translateY(8px)';
+        setTimeout(function(){
+          card.style.transition='all .5s ease-out';card.style.opacity='1';card.style.transform='scale(1) translateY(0)';
+        },800);
+      }
+    },5000);
+  }
+
+  else if(type==='winlife'){
+    root.innerHTML=
+      '<div class="demo-winlife">'+
+        '<div class="wl-container">'+
+          '<div class="wl-stat">'+
+            '<div class="wl-emoji wl-emoji-bounce">🏆</div>'+
+            '<div class="wl-value wl-value-glow" style="color:#FFD700">3 / 10</div>'+
+          '</div>'+
+          '<div class="wl-stat">'+
+            '<div class="wl-emoji wl-emoji-pulse">❤️</div>'+
+            '<div class="wl-value wl-value-glow" style="color:#FF1744">7 / 10</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    var wins=3,lives=7;
+    setInterval(function(){
+      if(Math.random()>.5){wins=Math.min(10,wins+1);lives=Math.max(0,lives-1);}
+      else{lives=Math.min(10,lives+1);}
+      if(wins>=10||lives<=0){wins=0;lives=10;}
+      var wv=document.querySelector('.wl-stat:first-child .wl-value');
+      var lv=document.querySelector('.wl-stat:last-child .wl-value');
+      if(wv)wv.textContent=wins+' / 10';
+      if(lv)lv.textContent=lives+' / 10';
+    },3000);
+  }
+})();
+</script>
+</body>
+</html>
