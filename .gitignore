@@ -1,4 +1,4 @@
-# Logs
+﻿# Logs
 logs
 *.log
 npm-debug.log*
@@ -20,19 +20,34 @@ bridge-config.json
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
+.DS-Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
+# Secrets & user data
 .env
 .env.*
+desktop.env
+*.pem
+*.key
+
+# Large / generated / temp (never commit)
+.tikcontrol-extract/
 node_modules/
 release/
 dist/
-.tikcontrol-extract/
 storage/
 tmp-*.txt
 *.log
+*.tmp
+*.zip
+*.rar
+*.7z
+*.tar.gz
+apptiktoklive*
+
+# OS
+Thumbs.db

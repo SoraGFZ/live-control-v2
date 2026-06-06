@@ -1452,6 +1452,15 @@ async function handleMusicPlayRequest(requester, query, musicState, source = 'co
     'info',
     `${nextRequest.requester} pidio ${nextRequest.name} · ${nextRequest.artists.join(', ')}`,
   )
+
+  // Chatbot-style response in the live chat (like Tikfinity)
+  // Only for real chat comments, not manual simulator tests
+  if (source !== 'manual') {
+    const songInfo = `${nextRequest.name} de ${Array.isArray(nextRequest.artists) ? nextRequest.artists.join(', ') : ''}`
+    const chatMessage = `La cancion ${songInfo} se agrego correctamente a la fila de reproduccion usa !quitar si esa no era la que querias - @soragfz28`
+    await sendTikTokLiveMessage(chatMessage)
+  }
+
   await syncSpotifyPlaybackState({ queueNextIfNeeded: true })
   return true
 }
@@ -1547,6 +1556,21 @@ async function handleMusicRemoveRequest(requester, filterQuery, musicState) {
   )
   await syncSpotifyPlaybackState({ queueNextIfNeeded: true })
   return true
+}
+
+async function sendTikTokLiveMessage(text) {
+  if (!tikTokConnection || !text) return false
+  try {
+    if (typeof tikTokConnection.sendMessage === 'function') {
+      // TikTok live comments have practical length limits ~100-200 chars
+      const safeText = String(text).slice(0, 180).trim()
+      await tikTokConnection.sendMessage(safeText)
+      return true
+    }
+  } catch (err) {
+    console.warn('[tiktok] No se pudo enviar mensaje al chat en vivo:', err?.message || err)
+  }
+  return false
 }
 
 async function handleMusicCommentCommand(event, state) {

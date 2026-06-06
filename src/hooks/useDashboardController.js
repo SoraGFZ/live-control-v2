@@ -512,19 +512,23 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
   const publicSmartBarUrl = appState.profile.publicBaseUrl
     ? buildSmartBarUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
+  // For OBS / Live Studio links: automatically use the public base if set, so all widget URLs
+  // switch to the new public address (e.g. Render) without the user having to manually pick "public" versions.
+  // The true localBase is kept only for "open local preview" buttons where possible.
+  const effectiveBase = appState.profile.publicBaseUrl || localBaseUrl
   const localSongRequestUrl = buildSongRequestUrl(
-    localBaseUrl,
+    effectiveBase,
     overlaySlug,
     appState.profile.overlayKey,
   )
   const publicSongRequestUrl = appState.profile.publicBaseUrl
     ? buildSongRequestUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
-  const localTopLikesUrl = buildTopLikesUrl(localBaseUrl, overlaySlug, appState.profile.overlayKey)
+  const localTopLikesUrl = buildTopLikesUrl(effectiveBase, overlaySlug, appState.profile.overlayKey)
   const publicTopLikesUrl = appState.profile.publicBaseUrl
     ? buildTopLikesUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
-  const localTopGiftsUrl = buildTopGiftsUrl(localBaseUrl, overlaySlug, appState.profile.overlayKey)
+  const localTopGiftsUrl = buildTopGiftsUrl(effectiveBase, overlaySlug, appState.profile.overlayKey)
   const publicTopGiftsUrl = appState.profile.publicBaseUrl
     ? buildTopGiftsUrl(appState.profile.publicBaseUrl, overlaySlug, appState.profile.overlayKey)
     : ''
@@ -551,6 +555,14 @@ export function useDashboardController({ initialPanelSection = null } = {}) {
     : ''
   const liveStudioTunnelRejected = isLiveStudioRejectedTunnel(appState.profile.publicBaseUrl)
   const preferredOverlayUrl = publicOverlayUrl || localOverlayUrl
+
+  // Preferred URLs for OBS / Live Studio: automatically use publicBaseUrl if set,
+  // so all widget links switch to the new public address (e.g. Render) without manual copy of "public" versions.
+  const songRequestUrl = publicSongRequestUrl || localSongRequestUrl
+  const topLikesUrl = publicTopLikesUrl || localTopLikesUrl
+  const topGiftsUrl = publicTopGiftsUrl || localTopGiftsUrl
+  const smartBarUrl = publicSmartBarUrl || localSmartBarUrl
+  const overlayUrl = publicOverlayUrl || localOverlayUrl
   const chaosModCatalog = appState.integrations?.chaosmod?.catalog || []
   const tikTokGiftCatalog = Array.isArray(appState.integrations?.tiktok?.giftCatalog)
     ? appState.integrations.tiktok.giftCatalog

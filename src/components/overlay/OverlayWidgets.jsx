@@ -266,7 +266,9 @@ function TopLikesWidget({ widgets, leaderboards, preview = false }) {
   const liveEntries = Array.isArray(leaderboards?.topLikes) ? leaderboards.topLikes : []
   const previewSample = preview && liveEntries.length === 0 ? buildLeaderboardPreviewData('likes') : null
   const entries = previewSample?.topLikes || liveEntries
-  const visibleEntries = entries.slice(0, maxVisible)
+  // Ensure sorted by rank for correct display (fix for potential unsorted data from backend)
+  const sortedEntries = [...entries].sort((a, b) => (a.rank || 99) - (b.rank || 99))
+  const visibleEntries = sortedEntries.slice(0, maxVisible)
   const totalLikes = previewSample?.totalLikes ?? leaderboards?.totalLikes ?? 0
   const showHeartIcons = config.showHeartIcons !== false
   const showUsername = config.showUsername !== false
@@ -320,7 +322,9 @@ function TopGiftsWidget({ widgets, leaderboards, preview = false }) {
   const liveEntries = Array.isArray(leaderboards?.topGifts) ? leaderboards.topGifts : []
   const previewSample = preview && liveEntries.length === 0 ? buildLeaderboardPreviewData('gifts') : null
   const entries = previewSample?.topGifts || liveEntries
-  const visibleEntries = entries.slice(0, maxVisible)
+  // Ensure sorted by rank for correct display (fix for potential unsorted data from backend)
+  const sortedEntries = [...entries].sort((a, b) => (a.rank || 99) - (b.rank || 99))
+  const visibleEntries = sortedEntries.slice(0, maxVisible)
   const totalCoins = previewSample?.totalCoins ?? leaderboards?.totalCoins ?? 0
   const showCoinIcons = config.showCoinIcons !== false
   const showUsername = config.showUsername !== false
